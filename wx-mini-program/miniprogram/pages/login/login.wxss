@@ -1,0 +1,10 @@
+/* pages/login.wxss */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: rgb(28, 29, 33);
+  color: rgb(238, 239, 247);
+  font-size: 20px;
+}

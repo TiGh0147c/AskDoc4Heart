@@ -1,0 +1,23 @@
+<!--pages/alter/alter.wxml-->
+<view class="container">
+  <view class="form-outer-box"> 
+    <button bindtap="showModal">修改昵称</button>
+    <button bindtap="chooseImage">修改头像</button>
+    <view class="modal" wx:if="{{isModalVisible}}">
+      <view class="modal-content">
+        <view class="form-group">
+          <label>当前昵称：</label>
+          <text>{{userName}}</text>
+        </view>
+        <view class="form-group">
+          <label>新昵称：</label>
+          <input type="text" placeholder="请输入新昵称" value="{{newNickname}}" bindinput="onNicknameInput"/>
+        </view>
+        <view class="modal-buttons">
+          <button bindtap="hideModal">取消</button>
+          <button bindtap="altername">保存</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

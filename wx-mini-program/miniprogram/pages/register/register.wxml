@@ -1,0 +1,24 @@
+<!--pages/register.wxml-->
+<view class="container">
+  <view class="form-outer-box"> 
+    <view class="title">注册</view>
+    <form bindsubmit="formSubmit" class="form-container">
+      <view class="section">
+        <label>昵称</label>
+        <input name="nickname" placeholder="请输入您的昵称" />
+      </view>
+      <view class="section">
+        <label>出生年份</label>
+        <input name="birthYear" placeholder="请输入出生年份" />
+      </view>
+      <view class="section"> 
+        <label>性别</label>
+        <radio-group name="gender">
+          <label><radio value="男" checked="{{gender == '男'}}"/>男</label>
+          <label><radio value="女" checked="{{gender == '女'}}"/>女</label>
+        </radio-group>
+      </view>
+      <button formType="submit" type="primary">提交</button>
+    </form>
+  </view>
+</view>

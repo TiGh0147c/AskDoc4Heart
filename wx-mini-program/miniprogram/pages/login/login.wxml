@@ -1,0 +1,4 @@
+<!--pages/login.wxml-->
+<view class="container">
+  <text>正在验证您的身份...</text>
+</view>

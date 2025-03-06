@@ -1,0 +1,106 @@
+/* pages/dialogue/dialogue.wxss */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: rgb(28, 29, 33);
+}
+
+.scroll-view {
+  flex: 1;
+}
+
+.message-container {
+  display: flex;
+  flex-direction: column;
+  padding-left: 23px;
+  padding-right: 23px;
+  font-family: 'Heiti SC', 'SimHei', sans-serif;
+}
+
+.message {
+  padding: 10px;
+  margin-top: 20px;
+  border-radius: 10px;
+  max-width: 89%;
+  position: relative; /* 确保伪元素可以绝对定位 */
+  display: inline-block; /* 让元素根据内容大小调整宽度 */
+  color: rgb(28, 29, 33);
+  font-size: 18px;
+}
+
+.my-message {
+  background-color: rgb(146, 205, 207);
+  align-self: flex-end;
+}
+
+.my-message::after {
+  content: '';
+  position: absolute;
+  right: -15px;
+  bottom: 10px;
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 15px solid rgb(146, 205, 207);
+}
+
+.other-message {
+  background-color: rgb(238, 239, 247);
+  align-self: flex-start;
+}
+
+.other-message::after {
+  content: '';
+  position: absolute;
+  left: -15px;
+  bottom: 10px;
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 15px solid rgb(238, 239, 247);
+}
+
+.sys-message{
+  background-color: rgb(28, 29, 33);
+  color: rgb(68, 88, 120);
+  font-size: 16px;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.input-area {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgb(68, 88, 120); /*rgb(57, 116, 184);*/
+  padding: 0rpx 20rpx; /* 内边距 */
+  height: 80px; /* 设置高度 */
+  align-items: center; /* 确保内容垂直居中 */
+  border: 1px solid rgb(28, 29, 33);
+  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-area input {
+  flex: 1;
+  padding: 10px;
+  margin-bottom: 30rpx;
+  margin-right: 10px;
+  border: 1px solid rgb(238, 239, 247);
+  border-radius: 5px;
+}
+
+.input-area button {
+  background-color: rgb(238, 239, 247);
+  width: 120rpx; 
+  height: 60rpx; 
+  padding: 5px;
+  font-size: 14px; 
+  box-sizing: border-box;
+  margin-bottom: 30rpx;
+}

@@ -1,0 +1,23 @@
+<!--pages/counseling/counseling.wxml-->
+<view class="container">
+  <view class="counselorList">
+    <!-- 显示加载中的提示 -->
+    <view wx:if="{{loading}}" class="reminder">正在加载...</view>
+    <!-- 如果没有数据时显示提示信息 -->
+    <view wx:elif="{{!loading && (!counselors || counselors.length == 0)}}" class="reminder">暂无数据</view>
+    <block wx:for="{{counselors}}" wx:key="_id">
+      <view class="counselor-item">
+        <button bindtap="toggleDetails" style="background-color: {{bgColor}}; color: {{color}}" data-id="{{item._id}}">{{item.name}}</button>
+        <view class="details" wx:if="{{showDetails[item._id]}}">
+            <text class="tag-text">擅长:</text>
+            <view wx:for="{{item.tag}}" wx:key="index">
+              <text class="intro-text">- {{item}}</text>
+            </view>
+            <text class="tag-text">简介:</text>
+            <text class="intro-text">- {{item.intro}}</text>
+            <button bindtap="navigateToDialogue" data-id="{{item._id}}" data-name="{{item.name}}">咨询</button>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>

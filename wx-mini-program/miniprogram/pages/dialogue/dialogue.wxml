@@ -1,0 +1,32 @@
+<!--pages/dialogue/dialogue.wxml-->
+<view class="container">
+  <scroll-view scroll-y="true" style="height: {{scrollViewHeight}}px">
+    <view class="message-container">
+      <view class="sys-message">-- 开始咨询 --</view>
+      <view class="message my-message">用户发送了：测试数据</view>
+      <view class="message other-message">咨询师发送了：测试数据</view>
+      <view class="sys-message">-- 以下内容由ai生成 --</view>
+      <view class="message my-message">最近我总是感觉很焦虑，工作压力大，回到家也放松不下来，不知道该怎么办。</view>
+      <view class="message other-message">听起来你正经历一段非常具有挑战性的时期。能具体说说是什么让你感到如此焦虑吗？比如最近有没有发生什么特别的事情让你感觉到这种压力？</view>
+      <view class="message my-message">主要是工作任务堆积如山，而且总担心自己做不好，达不到上司的期望。即使完成了任务，心里还是不安。</view>
+      <view class="message other-message">这种对自我要求高、害怕失败的感觉确实会给人带来很大的心理负担。你觉得是什么导致了你对自己有这么高的期待呢？可以分享一下你的想法吗？</view>
+      <view class="message my-message">我觉得是从小到大父母对我的教育方式吧，他们总是告诉我必须做到最好，所以我习惯了追求完美。</view>
+      <view class="message other-message">明白了，成长背景对我们每个人都有着深远的影响。认识到这一点是非常重要的一步。那我们可以尝试一起探索一些方法来帮助你减轻这份压力。比如说，学会接受“足够好”而非追求绝对的完美，可能会让你感到更加轻松和满足。你怎么看待这个建议？</view>
+      <view class="message my-message">听起来不错，但我担心如果我不力求完美，就会错过机会或者被人看低。</view>
+      <view class="message other-message">这是一个很正常的担忧。不过，我们可以从一个小目标开始练习，比如在一个小项目上尝试采用“足够好”的标准，而不是完美的标准。之后我们可以评估结果，看看是否真的像你担心的那样。这样你可以逐步建立起信心，同时减少不必要的焦虑感。愿意试试看吗？</view>
+      <view class="message my-message">好的，我觉得可以试试。谢谢你的建议和支持！</view>
+      <view class="message other-message">不用谢，我很高兴能够帮到你。记住，改变需要时间，对自己要有耐心。如果你在实践过程中遇到任何困难或疑问，请随时联系我。</view>
+      <block wx:for="{{messages}}" wx:key="timestamp">
+        <view class="message {{item.tag === 0 ? 'my-message' : item.tag === 1 ? 'other-message' : 'sys-message'}}"
+          wx:key="timestamp">
+            {{item.content}}
+        </view>
+      </block>
+    </view>
+  </scroll-view>
+  
+  <view class="input-area">
+    <input type="text" placeholder="请输入消息..." bindinput="bindMessageInput" value="{{messageContent}}" />
+    <button bindtap="sendMessage">发送</button>
+  </view>
+</view>

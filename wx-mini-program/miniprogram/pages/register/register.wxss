@@ -1,0 +1,95 @@
+/* pages/register.wxss */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* 使容器高度为视窗高度，让内容垂直居中 */
+  background-image: url('https://ts1.cn.mm.bing.net/th/id/R-C.e496a8342baa1e4f6868dced04559e33?rik=tQP5u5zC5TXurA&riu=http%3a%2f%2fpic.bizhi360.com%2fbbpic%2f4%2f9704_3.jpg&ehk=7GzuM%2by06brWC9brOjmufH3BnGcOXDGVrbT0VElclXY%3d&risl=&pid=ImgRaw&r=0'); 
+  background-size: cover; /* 确保背景图片覆盖整个容器而不重复 */
+  background-position: center; /* 将背景图片居中显示 */
+}
+
+/* 外部框的样式 */
+.form-outer-box {
+  border: 2px solid rgb(184, 197, 196);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 70%; /* 根据需要调整宽度 */
+  max-width: 400px; /* 最大宽度限制 */
+  overflow: hidden; /* 确保内部元素不会超出边界 */
+  padding: 20px; /* 内边距 */
+  background-color: rgba(255, 255, 255, 0.7); /* 背景颜色 */
+}
+
+/* 标题样式 */
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 5px; 
+  margin-bottom: 40px; 
+}
+
+/* 表单容器的样式 */
+.form-container {
+  padding: 0; /* 移除padding以避免重复 */
+}
+
+/* 表单项的样式 */
+.section {
+  margin-bottom: 30px;
+}
+
+/* 输入框和标签的样式 */
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+/* 输入框和标签的样式 */
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.input-field {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 15px; /* 增加高度 */
+  width: calc(100% - 40px); /* 减少宽度，留出空间给padding */
+  box-sizing: border-box; /* 确保padding不会影响宽度 */
+  margin-bottom: 10px; /* 增加与下一个表单项之间的间距 */
+}
+
+/* 单选按钮组的样式 */
+radio-group {
+  display: flex;
+  flex-direction: row;
+}
+
+radio-group label {
+  margin-right: 10px;
+}
+
+.input-field {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 15px; 
+  width: calc(80%);
+  box-sizing: border-box; /* 确保padding不会影响宽度 */
+  margin-bottom: 10px; /* 增加与下一个表单项之间的间距 */
+}
+
+/* 提交按钮的样式 */
+button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #6b9b6b;
+  color: rgb(255, 255, 255);
+  font-size: 16px;
+}
