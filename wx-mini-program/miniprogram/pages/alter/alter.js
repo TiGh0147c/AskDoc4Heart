@@ -1,6 +1,5 @@
 // pages/alter/alter.js
 const app = getApp(); // 获取全局应用实例
-const db = wx.cloud.database();
 
 Page({
 
@@ -56,23 +55,30 @@ Page({
 
     wx.cloud.uploadFile({
       cloudPath: 'avatar/' + this.data.openid + '.png', // 使用 openid 作为文件名的一部分
-      filePath: this.data.avatarUrl,
+      filePath: this.data.avatarUrl, // 这里应为选择图片后得到的临时路径
       success: res => {
         const fileID = res.fileID;
-        // 更新数据库中的用户信息
-        db.collection('user_account').where({
-          _openid: this.data.openid
-        }).update({
+        // 调用云函数更新数据库中的用户信息
+        wx.cloud.callFunction({
+          name: 'updateAvatar', // 确保这是您云函数的名字
           data: {
-            avatarUrl: fileID
+            fileID: fileID,
+            openid: this.data.openid
+          },
+          success: res => {
+            const result = res.result;
+            if (result.success) {
+              wx.showToast({
+                title: '上传成功',
+              });
+              app.setGlobalData('avatarUrl', fileID);
+            } else {
+              console.error('更新用户头像失败', result.message);
+            }
+          },
+          fail: err => {
+            console.error('调用云函数失败', err);
           }
-        }).then(() => {
-          wx.showToast({
-            title: '上传成功',
-          });
-          app.setGlobalData('avatarUrl', fileID); 
-        }).catch(err => {
-          console.error('更新用户头像失败', err);
         });
       },
       fail: err => {
@@ -110,28 +116,38 @@ Page({
       return;
     }
 
-    db.collection('user_account').where({
-      _openid: this.data.openid
-    }).update({
+    // 调用云函数进行昵称更新
+    wx.cloud.callFunction({
+      name: 'updateNickname',
       data: {
-        nickname: newNickname
+        openid: this.data.openid,
+        newNickname: newNickname
+      },
+      success: res => {
+        if(res.result.success){
+          wx.showToast({
+            title: '修改成功',
+          });
+          app.setGlobalData('userName', newNickname); 
+          this.setData({
+            userName: newNickname,
+            newNickname: '',
+            isModalVisible: false // 关闭弹窗
+          });
+        }else{
+          wx.showToast({
+            title: res.result.message || '修改失败，请稍后再试',
+            icon: 'none'
+          });
+        }
+      },
+      fail: err => {
+        console.error('[云函数] [updateNickname] 调用失败：', err);
+        wx.showToast({
+          title: '网络错误，请稍后再试',
+          icon: 'none'
+        });
       }
-    }).then(() => {
-      wx.showToast({
-        title: '修改成功',
-      });
-      app.setGlobalData('userName', newNickname); 
-      this.setData({
-        userName: newNickname,
-        newNickname: '',
-        isModalVisible: false // 关闭弹窗
-      });
-    }).catch(err => {
-      console.error('更新昵称失败', err);
-      wx.showToast({
-        title: '修改失败，请稍后再试',
-        icon: 'none'
-      });
     });
   }
 })

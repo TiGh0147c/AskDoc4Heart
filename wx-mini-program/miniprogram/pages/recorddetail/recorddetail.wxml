@@ -1,0 +1,6 @@
+<!--pages/recorddetail/recorddetail.wxml-->
+<view class="container">
+  <view class="form-outer-box"> 
+    <text>此处显示id:"{{recordId}}"的历史记录</text>
+  </view>
+</view>

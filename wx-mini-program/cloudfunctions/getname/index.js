@@ -11,7 +11,7 @@ exports.main = async (event, context) => {
     // 查询 user_account 集合
     return await db.collection('user_account')
       .where({
-        _openid: openid // 根据openid查询
+        wid: openid // 根据openid查询
       })
       .field({
         nickname: true, 

@@ -6,7 +6,11 @@
     "pages/home/home",
     "pages/alter/alter",
     "pages/counseling/counseling",
-    "pages/dialogue/dialogue"
+    "pages/dialogue/dialogue",
+    "pages/report/report",
+    "pages/record/record",
+    "pages/reportdetail/reportdetail",
+    "pages/recorddetail/recorddetail"
   ],
   "window": {
     "backgroundColor": "#F6F6F6",

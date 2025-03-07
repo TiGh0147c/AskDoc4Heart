@@ -38,8 +38,8 @@ Page({
     });
   },
 
+  // 目前还没实现，先放着
   createChatRecord: function(counselorId, counselorName) {
-    const db = wx.cloud.database();
     const openid = app.getGlobalData('openid'); 
     if(!openid){
       wx.cloud.callFunction({
@@ -111,27 +111,6 @@ Page({
     if (!messageContent) return;
 
     console.log('发送了', messageContent);
-    /*
-    const db = wx.cloud.database();
-    db.collection(this.data.messageTableName).add({
-      data: {
-        tag: 0,
-        content: messageContent,
-        timestamp: new Date()
-      }
-    }).then(() => {
-      // 清空输入框并提示成功
-      this.setData({ messageContent: '' });
-      wx.showToast({
-        title: '发送成功',
-        icon: 'success'
-      });
-    }).catch(err => {
-      console.error('发送消息失败', err);
-      wx.showToast({
-        title: '发送失败，请重试',
-        icon: 'none'
-      });
-    });*/
+    
   }
 })

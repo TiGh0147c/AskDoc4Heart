@@ -1,4 +1,4 @@
-/* pages/alter/alter.wxss */
+/* pages/report/report.wxss */
 
 page {
   display: flex;
@@ -11,15 +11,11 @@ page {
   flex: 1; 
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* 内容顶部对齐 */
+  justify-content: center·; /* 竖直居中 */
   align-items: center; /* 水平居中 */
   padding-bottom: constant(safe-area-inset-bottom); /* iOS 底部安全区适配 */
   padding-bottom: env(safe-area-inset-bottom); /* iOS 底部安全区适配 */
   background-color: rgb(28, 29, 33); /* #2a2b2c; 设置背景颜色 */
-}
-
-.container text {
-  font-family: 'Heiti SC', 'SimHei', sans-serif;
 }
 
 /* 外部框的样式 */
@@ -49,6 +45,13 @@ page {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.reminder{
+  margin-top: 450rpx;
+  margin-left: 260rpx;
+  font-size: 35rpx;
+  color: rgb(49, 53, 61);
+}
+
 .container button {
   width: 100%;
   height: 65px;
@@ -64,61 +67,4 @@ page {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   color: rgb(28, 29, 33);
   font-family: 'Heiti SC', 'SimHei', sans-serif;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 80%;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-label {
-  font-size: 20px;
-  display: block;
-  margin-bottom: 15px;
-  font-weight: bold;
-}
-
-.input-field {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 10px;
-  width: calc(100% - 40px); /* 减少宽度，留出空间给padding */
-  box-sizing: border-box; /* 确保padding不会影响宽度 */
-  margin-bottom: 10px; 
-}
-.modal-buttons {
-  display: flex;
-  flex-direction:center;
-  align-items: center; /* 水平居中 */
-  justify-content: space-between; /* 使两个按钮之间有间隔 */
-}
-
-.modal-buttons button {
-  display: flex;
-  flex-direction:center;
-  align-items: center; /* 水平居中 */
-  margin-top: 10px;
-  flex: 1; /* 让每个按钮占据相等的空间 */
-  margin-right: 50px; /* 给右边的按钮添加一些间距 */
-  width: 20%;
-  height: 40px;
-  font-size: 18px;
 }

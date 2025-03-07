@@ -13,7 +13,7 @@ Page({
         if (res.result.openid) {
           // 将OpenID存入全局变量
           app.setGlobalData('openid', res.result.openid); 
-          // 调用 checkUserExistence 函数查询用户是否存在
+          // 调用 getname 函数查询用户名和头像
           wx.cloud.callFunction({
             name: 'getname',
             data: {

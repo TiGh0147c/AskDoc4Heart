@@ -15,10 +15,17 @@ Page({
     wx.cloud.callFunction({
       name: 'checkduty',
       success: res => {
+        /* 初始化常驻咨询师 */
+        const everyday = [{
+          _id: "7456afe067c8eeeb007246c80553c0f5",
+          name: "苏轼",
+          intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
+          tag: ["东坡肉", "出去玩", "被贬"]
+        }];
         /* 将传回的双层数组转为单层 */
         const counselorsData = Array.isArray(res.result.data[0]) ? res.result.data[0] : res.result.data;
         this.setData({
-          counselors: counselorsData || [],
+          counselors: everyday || counselorsData || [],
           loading: false
         });
       },
@@ -30,6 +37,7 @@ Page({
       }
     });
   },
+  
   toggleDetails(e) {
     const currentBgColor = this.data.bgColor === 'rgb(68, 88, 120)' ? 'rgb(28, 29, 33)' : 'rgb(68, 88, 120)'; // 改变背景颜色
     const currentColor = this.data.color === 'rgb(238, 239, 247)' ? 'rgb(146, 205, 207)' : 'rgb(238, 239, 247)';     // 改变文字颜色
@@ -50,6 +58,5 @@ Page({
       url: `/pages/dialogue/dialogue?counselorId=${counselorId}&counselorName=${counselorName}`
     });
   }
-
 
 })
