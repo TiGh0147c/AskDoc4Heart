@@ -1,0 +1,6 @@
+<!--pages/reportdetail/reportdetail.wxml-->
+<view class="container">
+  <view class="form-outer-box"> 
+    <text>此处显示id:"{{reportId}}"的评估报告</text>
+  </view>
+</view>

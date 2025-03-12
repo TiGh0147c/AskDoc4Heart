@@ -1,0 +1,26 @@
+<!--pages/home/home.wxml-->
+<view class="home-container">
+  <view class="form-outer-box"> 
+    <view class="head"> 
+      <image src="{{avatarUrl ? avatarUrl : '/images/nobody.jpg'}}" class="avatar"></image>
+      <text>{{userName}}</text>
+    </view>
+    <navigator url="/pages/alter/alter" hover-class="navigator-hover">
+      <text>修改个人信息</text>
+    </navigator>
+    <navigator url="/pages/report/report" hover-class="navigator-hover">
+      <text>评估报告</text>
+    </navigator>
+    <navigator url="/pages/record/record" hover-class="navigator-hover">
+      <text>历史记录</text>
+    </navigator>
+  </view>
+</view>
+
+<!-- 底部标签栏 -->
+<view class="tab-bar">
+  <button bindtap="navigateToCounseling" hover-class="button-hover">心理咨询</button>
+  <!-- 分隔线 -->
+  <view class="divider"></view>
+  <button bindtap="navigateToHome" hover-class="button-hover">个人中心</button>
+</view>

@@ -1,0 +1,25 @@
+<!--index.wxml-->
+<view class="welcome-container">
+  <view class="form-outer-box"> 
+    <image src="/images/hello.jpg" mode="widthFix" class="hello-image"></image>
+    <view class="options-container">
+      <navigator url="/pages/counseling/counseling" hover-class="none">
+        <image src="/images/咨询.png" mode="aspectFit"></image>
+        <text>咨询</text>
+      </navigator>
+      <!-- 分隔线 -->
+      <view class="wel-divider"></view>
+      <navigator url="/pages/subscribe/subscribe" hover-class="none">
+        <image src="/images/预约.png" mode="aspectFit"></image>
+        <text>预约</text>
+      </navigator>
+    </view>
+  </view>
+</view>
+<!-- 底部标签栏 -->
+<view class="tab-bar">
+  <button bindtap="navigateToCounseling" hover-class="button-hover">心理咨询</button>
+  <!-- 分隔线 -->
+  <view class="divider"></view>
+  <button bindtap="navigateToHome" hover-class="button-hover">个人中心</button>
+</view>
