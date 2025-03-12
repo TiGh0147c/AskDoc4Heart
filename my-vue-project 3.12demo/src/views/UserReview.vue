@@ -8,6 +8,7 @@
         <div class="sidebar-item" @click="goTo('settings')">设置</div>
         <div class="sidebar-item" @click="goTo('history')">历史会话</div>
         <div class="sidebar-item active" @click="goTo('review')">评价</div>
+        <div class="sidebar-item" @click="goTo('currentChat')">当前对话</div>
       </div>
   
       <!-- 主内容区域 -->
@@ -62,6 +63,9 @@
             break
           case 'review':
             router.push('/user/review')
+            break
+          case 'currentChat':
+          router.push('/user/currentChat')
             break
           default:
             console.error('Invalid path')

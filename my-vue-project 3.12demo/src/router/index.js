@@ -8,6 +8,7 @@ import UserAppointment from '../views/UserAppointment.vue'  // 用户预约页�
 import UserSettings from '../views/UserSettings.vue'  // 用户设置页面
 import UserHistory from '../views/UserHistory.vue'  // 用户历史会话页面
 import UserReview from '../views/UserReview.vue'  // 用户评价页面
+import UserCurrentChat from '../views/UserCurrentChat.vue'
 //咨询师
 import CounselorHome from '../views/CounselorHome.vue'
 import CounselorSettings from '../views/CounselorSettings.vue' 
@@ -72,6 +73,12 @@ const routes = [
     name: 'UserReview',
     component: UserReview,
     meta: { requiresAuth: true, role: 'user' }
+  },
+  {
+    path: '/user/currentChat',
+    name: 'UserCurrentChat',
+    component: UserCurrentChat,
+    meta: { requiresAuth: true, role: 'user' }  // 添加当前对话路由
   },
   //咨询师部分
   {

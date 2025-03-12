@@ -2,22 +2,22 @@
   <div class="container">
     <!-- 侧边栏 -->
     <div class="sidebar">
+      <div class="sidebar-item" @click="goTo('home')">返回主页</div>
       <div class="sidebar-item" @click="goTo('tutorial')">教程</div>
       <div class="sidebar-item" @click="goTo('appointment')">预约</div>
-      <div class="sidebar-item" @click="goTo('userSettings')">设置</div>
+      <div class="sidebar-item" @click="goTo('settings')">设置</div>
       <div class="sidebar-item" @click="goTo('history')">历史会话</div>
       <div class="sidebar-item" @click="goTo('review')">评价</div>
+      <div class="sidebar-item" @click="goTo('currentChat')">当前对话</div> <!-- 添加当前对话 -->
     </div>
 
     <!-- 主内容区域 -->
     <div class="main-content">
-      <!-- 右上角欢迎信息和退出登录 -->
       <div class="top-right">
         <p class="welcome">欢迎回来，{{ username }}！</p>
         <button class="logout-btn" @click="logout">退出登录</button>
       </div>
 
-      <!-- 主内容卡片 -->
       <div class="card">
         <h1>用户主页</h1>
         <p>这是用户的主页界面。您可以在这里查看或预约咨询服务。</p>
@@ -46,20 +46,26 @@ export default {
 
     const goTo = (path) => {
       switch (path) {
+        case 'home':
+          router.push('/user/home')
+          break
         case 'tutorial':
           router.push('/user/tutorial')
           break
         case 'appointment':
           router.push('/user/appointment')
           break
-        case 'userSettings':
-          router.push('/user/settings') // 用户的设置页面
+        case 'settings':
+          router.push('/user/settings')
           break
         case 'history':
           router.push('/user/history')
           break
         case 'review':
           router.push('/user/review')
+          break
+        case 'currentChat':  // 添加当前对话路由
+          router.push('/user/currentChat')
           break
         default:
           console.error('Invalid path')

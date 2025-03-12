@@ -3,11 +3,12 @@
       <!-- 侧边栏 -->
       <div class="sidebar">
         <div class="sidebar-item" @click="goTo('home')">返回主页</div>
-        <div class="sidebar-item" @click="goTo('tutorial')">教程</div>
-        <div class="sidebar-item active" @click="goTo('appointment')">预约</div>
+        <div class="sidebar-item active" @click="goTo('tutorial')">教程</div>
+        <div class="sidebar-item" @click="goTo('appointment')">预约</div>
         <div class="sidebar-item" @click="goTo('settings')">设置</div>
         <div class="sidebar-item" @click="goTo('history')">历史会话</div>
         <div class="sidebar-item" @click="goTo('review')">评价</div>
+        <div class="sidebar-item" @click="goTo('currentChat')">当前对话</div>
       </div>
   
       <!-- 主内容区域 -->
@@ -18,8 +19,8 @@
         </div>
   
         <div class="card">
-          <h1>预约</h1>
-          <p>这是用户的预约页面。您可以在这里预约咨询服务。</p>
+          <h1>教程</h1>
+          <p>这是用户的教程页面。您可以在这里查看使用指南。</p>
         </div>
       </div>
     </div>
@@ -31,7 +32,7 @@
   import { useRouter } from 'vue-router'
   
   export default {
-    name: 'UserAppointment',
+    name: 'UserTutorial',
     setup() {
       const store = useStore()
       const router = useRouter()
@@ -62,6 +63,9 @@
             break
           case 'review':
             router.push('/user/review')
+            break
+          case 'currentChat':
+            router.push('/user/currentChat')
             break
           default:
             console.error('Invalid path')
