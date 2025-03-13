@@ -3,12 +3,10 @@
       <!-- 侧边栏 -->
       <div class="sidebar">
         <div class="sidebar-item" @click="goTo('home')">返回主页</div>
-        <div class="sidebar-item" @click="goTo('tutorial')">教程</div>
-        <div class="sidebar-item" @click="goTo('appointment')">预约</div>
-        <div class="sidebar-item" @click="goTo('settings')">设置</div>
-        <div class="sidebar-item" @click="goTo('history')">历史会话</div>
-        <div class="sidebar-item" @click="goTo('review')">评价</div>
-        <div class="sidebar-item active" @click="goTo('currentChat')">当前对话</div>
+        <div class="sidebar-item active" @click="goTo('settings')">设置</div>
+        <div class="sidebar-item" @click="goTo('requests')">用户申请</div>
+        <div class="sidebar-item" @click="goTo('chat')">咨询窗口</div>
+        <div class="sidebar-item" @click="goTo('schedule')">排班表</div>
       </div>
   
       <!-- 主内容区域 -->
@@ -19,16 +17,8 @@
         </div>
   
         <div class="card">
-          <h1>当前对话</h1>
-          <p>这是用户的当前对话页面。您可以在这里查看正在进行的对话。</p>
-          <!-- 示例对话列表 -->
-          <div class="chat-list">
-            <div class="chat-item" v-for="(chat, index) in chats" :key="index">
-              <p><strong>{{ chat.name }}</strong></p>
-              <p>{{ chat.lastMessage }}</p>
-              <p class="timestamp">{{ chat.timestamp }}</p>
-            </div>
-          </div>
+          <h1>咨询师设置</h1>
+          <p>这是咨询师的设置页面。您可以在这里修改个人信息或系统设置。</p>
         </div>
       </div>
     </div>
@@ -40,21 +30,12 @@
   import { useRouter } from 'vue-router'
   
   export default {
-    name: 'UserCurrentChat',
+    name: 'CounselorSettings',
     setup() {
       const store = useStore()
       const router = useRouter()
   
       const username = computed(() => store.getters.username)
-  
-      // 示例对话数据
-      const chats = [
-        {
-          name: '咨询师A',
-          lastMessage: '你好，有什么问题吗？',
-          timestamp: '2025-03-12 10:00'
-        }
-      ]
   
       const logout = () => {
         store.dispatch('logout')
@@ -64,26 +45,20 @@
       const goTo = (path) => {
         switch (path) {
           case 'home':
-            router.push('/user/home')
-            break
-          case 'tutorial':
-            router.push('/user/tutorial')
-            break
-          case 'appointment':
-            router.push('/user/appointment')
+            router.push('/counselor/home')
             break
           case 'settings':
-            router.push('/user/settings')
+            router.push('/counselor/settings')
             break
-          case 'history':
-            router.push('/user/history')
+          case 'requests':
+            router.push('/counselor/requests')
             break
-          case 'review':
-            router.push('/user/review')
+          case 'chat':
+            router.push('/counselor/chat')
             break
-          case 'currentChat':
-            router.push('/user/currentChat')
-            break
+          case 'schedule':
+            router.push('/counselor/schedule')
+          break
           default:
             console.error('Invalid path')
         }
@@ -91,7 +66,6 @@
   
       return {
         username,
-        chats,
         logout,
         goTo
       }
@@ -100,7 +74,7 @@
   </script>
   
   <style scoped>
-  /* 样式保持与 UserHome.vue 一致 */
+  /* 样式保持与咨询师主页一致 */
   .container {
     display: flex;
     height: 100vh;
@@ -175,24 +149,5 @@
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     margin-top: 60px;
-  }
-  
-  /* 对话列表样式 */
-  .chat-list {
-    margin-top: 20px;
-  }
-  
-  .chat-item {
-    border-bottom: 1px solid #ddd;
-    padding: 10px 0;
-  }
-  
-  .chat-item:last-child {
-    border-bottom: none;
-  }
-  
-  .timestamp {
-    font-size: 0.8rem;
-    color: #666;
   }
   </style>

@@ -6,6 +6,7 @@
         <div class="sidebar-item" @click="goTo('settings')">设置</div>
         <div class="sidebar-item active" @click="goTo('requests')">用户申请</div>
         <div class="sidebar-item" @click="goTo('chat')">咨询窗口</div>
+        <div class="sidebar-item" @click="goTo('schedule')">排班表</div>
       </div>
   
       <!-- 主内容区域 -->
@@ -55,6 +56,9 @@
           case 'chat':
             router.push('/counselor/chat')
             break
+          case 'schedule':
+            router.push('/counselor/schedule')
+          break
           default:
             console.error('Invalid path')
         }
