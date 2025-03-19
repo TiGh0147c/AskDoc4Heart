@@ -1,4 +1,4 @@
-/* pages/dialogue/dialogue.wxss */
+/* pages/ai-dialogue/ai-dialogue.wxss */
 .container {
   display: flex;
   flex-direction: column;

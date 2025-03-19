@@ -16,6 +16,7 @@ App({
     openid: null, // 定义一个全局变量用于存储OpenID
     userName: null, // 定义一个全局变量用于存储用户名
     avatarUrl: null, // 定义一个全局变量用于存储用户头像Url
+    counseling: 0, // 定义一个全局变量用于存储用户是否在咨询中
   },
   setGlobalData: function(key, value) {
     this.globalData[key] = value;

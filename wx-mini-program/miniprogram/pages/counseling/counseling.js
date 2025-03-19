@@ -4,25 +4,40 @@ const app = getApp(); // 获取全局应用实例
 Page({
 
   data: {
-    counselors: [],
+    counselors: [{
+      _id: "7456afe067c8eeeb007246c80553c0f5",
+      type: "ai",
+      name: "苏轼",
+      intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
+      tag: ["东坡肉", "出去玩", "被贬"]
+    }],
+    description: '',
     showDetails: {}, // 控制每个咨询师详情是否显示的状态对象
     loading: true, // 添加一个加载状态变量
     bgColor: 'rgb(68, 88, 120)', // 初始背景颜色
     color: 'rgb(238, 239, 247)'   // 初始文字颜色
   },
 
-  onLoad: function () {
+  onLoad: function (options) {
+    console.log('问题类型:', decodeURIComponent(options.problemType));
+    console.log('问题简述:', decodeURIComponent(options.description));
+    this.setData({
+      description: decodeURIComponent(options.description),
+      loading: false // 启用云函数时删掉
+    });
+    /* 
     wx.cloud.callFunction({
       name: 'checkduty',
       success: res => {
-        /* 初始化常驻咨询师 */
+        // 初始化常驻咨询师 
         const everyday = [{
           _id: "7456afe067c8eeeb007246c80553c0f5",
+          type: "ai",
           name: "苏轼",
           intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
           tag: ["东坡肉", "出去玩", "被贬"]
         }];
-        /* 将传回的双层数组转为单层 */
+        // 将传回的双层数组转为单层 
         const counselorsData = Array.isArray(res.result.data[0]) ? res.result.data[0] : res.result.data;
         this.setData({
           counselors: everyday || counselorsData || [],
@@ -36,6 +51,7 @@ Page({
         });
       }
     });
+    */
   },
   
   toggleDetails(e) {
@@ -54,9 +70,17 @@ Page({
     const dataset = e.currentTarget.dataset;
     const counselorId = dataset.id;
     const counselorName = dataset.name;
-    wx.navigateTo({
-      url: `/pages/dialogue/dialogue?counselorId=${counselorId}&counselorName=${counselorName}`
-    });
+    const description = this.data.description;
+    if(dataset.type == "ai"){
+      console.log('选择了ai咨询师');
+      wx.reLaunch({
+        url: `/pages/ai-dialogue/ai-dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
+      });
+    } else {
+      wx.reLaunch({
+        url: `/pages/dialogue/dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
+      });
+    }
   }
 
 })

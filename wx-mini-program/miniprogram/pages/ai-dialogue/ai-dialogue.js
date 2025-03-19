@@ -1,9 +1,10 @@
-// pages/dialogue/dialogue.js
+// pages/ai-dialogue/ai-dialogue.js
 const app = getApp(); // 获取全局应用实例
 
 Page({
 
   data: {
+    openid: '',
     scrollViewHeight: 650, // 示例高度，请根据实际情况调整
     messages: [],
     messageTableName: '',
@@ -17,10 +18,12 @@ Page({
     const counselorId = options.counselorId;
     const counselorName = options.counselorName;
     const description = options.description;
+    const openid = app.getGlobalData('openid');
     console.log('Counselor ID:', counselorId);
     console.log('Counselor name:', counselorName);
-    console.log('问题简述:', description);
+    //console.log('问题简述:', description);
     app.setGlobalData('counseling', 1); 
+    this.setData({openid: openid});
     this.addMessage(description);
 
     // 动态计算scroll-view的高度，例如减去顶部导航栏和底部输入框的高度
@@ -53,6 +56,36 @@ Page({
       // 可选：滚动到底部确保最新消息可见
       this.scrollToBottom();
     });
+
+    wx.cloud.callFunction({
+      name: 'SuShi',
+      data: {
+        userId: this.data.openid,
+        message: message
+      },
+      success: (res) => {
+        console.log(res.result.data.data.choices[0].messages[0].content);
+        const aimessage = res.result.data.data.choices[0].messages[0].content;
+        // 根据返回结果更新UI
+        const aitimestamp = new Date().getTime(); // 获取当前时间戳
+        const aiMessage = {
+          content: aimessage,
+          tag: 1, 
+          timestamp: aitimestamp
+        };
+
+        // 更新messages数组并将新消息添加进去
+        this.setData({
+          messages: this.data.messages.concat([aiMessage])
+        }, () => {
+          // 可选：滚动到底部确保最新消息可见
+          this.scrollToBottom();
+        });
+      },
+      fail(err) {
+        console.error(err)
+      }
+    })
   },
 
   bindMessageInput: function(e) {
@@ -144,7 +177,7 @@ Page({
   scrollToBottom: function() {
     wx.pageScrollTo({
       scrollTop: 999999, // 将页面滚动到底部
-      duration: 300 // 滚动动画的持续时间
+      duration: 10 // 滚动动画的持续时间
     });
   },
 
