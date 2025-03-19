@@ -4,7 +4,10 @@
       <div class="sidebar">
         <div class="sidebar-item" @click="goTo('home')">返回主页</div>
         <div class="sidebar-item" @click="goTo('manage')">管理注册</div>
-        <div class="sidebar-item active" @click="goTo('notifications')">通知</div>
+        <div class="sidebar-item" @click="goTo('schedules')">排班管理</div>
+        <div class="sidebar-item" @click="goTo('accounts')">账号管理</div>
+        <div class="sidebar-item" @click="goTo('supervision')">督导绑定</div>
+        <div class="sidebar-item" @click="goTo('notifications')">通知</div>
       </div>
   
       <!-- 主内容区域 -->
@@ -69,6 +72,15 @@
             break
           case 'manage':
             router.push('/admin/manage')
+            break
+          case 'schedules':
+            router.push('/admin/schedules')
+            break
+          case 'accounts':
+            router.push('/admin/accounts')
+            break
+          case 'supervision':
+            router.push('/admin/supervision')
             break
           case 'notifications':
             router.push('/admin/notifications')

@@ -18,7 +18,11 @@ import CounselorSchedule from '../views/CounselorSchedule.vue'  // 添加排班�
 //管理员
 import AdminHome from '../views/AdminHome.vue'
 import AdminManage from '../views/AdminManage.vue'  // 管理注册页面
+import AdminSchedule from '../views/AdminSchedule.vue'  // 管理排班表页面
+import AdminAccounts from '../views/AdminAccounts.vue'
+import AdminSupervision from '../views/AdminSupervision.vue'
 import AdminNotifications from '../views/AdminNotifications.vue'  // 通知页面
+//其他
 
 
 
@@ -126,11 +130,31 @@ const routes = [
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
+    path: '/admin/schedules',
+    name: 'AdminSchedule',
+    component: AdminSchedule,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/accounts',
+    name: 'AdminAccounts',
+    component: AdminAccounts,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/supervision',
+    name: 'AdminSupervision',
+    component: AdminSupervision,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
     path: '/admin/notifications',
     name: 'AdminNotifications',
     component: AdminNotifications,
     meta: { requiresAuth: true, role: 'admin' }
   }
+  //其他
+
 ]
 
 
