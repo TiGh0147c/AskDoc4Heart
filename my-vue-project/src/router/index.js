@@ -7,7 +7,7 @@ import UserTutorial from '../views/UserTutorial.vue'  // 用户教程页面
 import UserAppointment from '../views/UserAppointment.vue'  // 用户预约页面
 import UserSettings from '../views/UserSettings.vue'  // 用户设置页面
 import UserHistory from '../views/UserHistory.vue'  // 用户历史会话页面
-import UserReview from '../views/UserReview.vue'  // 用户评价页面
+
 import UserCurrentChat from '../views/UserCurrentChat.vue'
 //咨询师
 import CounselorHome from '../views/CounselorHome.vue'
@@ -71,12 +71,6 @@ const routes = [
     path: '/user/history',
     name: 'UserHistory',
     component: UserHistory,
-    meta: { requiresAuth: true, role: 'user' }
-  },
-  {
-    path: '/user/review',
-    name: 'UserReview',
-    component: UserReview,
     meta: { requiresAuth: true, role: 'user' }
   },
   {

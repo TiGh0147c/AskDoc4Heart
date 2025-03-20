@@ -7,7 +7,6 @@
       <div class="sidebar-item" @click="goTo('appointment')">预约</div>
       <div class="sidebar-item active" @click="goTo('settings')">设置</div>
       <div class="sidebar-item" @click="goTo('history')">历史会话</div>
-      <div class="sidebar-item" @click="goTo('review')">评价</div>
       <div class="sidebar-item" @click="goTo('currentChat')">当前对话</div>
     </div>
 
@@ -327,9 +326,6 @@ export default {
           break
         case 'history':
           router.push('/user/history')
-          break
-        case 'review':
-          router.push('/user/review')
           break
         case 'currentChat':
           router.push('/user/currentChat')
