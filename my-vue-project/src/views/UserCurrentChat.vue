@@ -24,7 +24,7 @@
         
         <div v-if="activeChats.length === 0" class="no-chat-message">
           <div class="empty-icon">
-            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTTUwIDEwQzI3LjkxIDEwIDEwIDI3LjkxIDEwIDUwQzEwIDcyLjA5IDI3LjkxIDkwIDUwIDkwQzcyLjA5IDkwIDkwIDcyLjA5IDkwIDUwQzkwIDI3LjkxIDcyLjA5IDEwIDUwIDEwWk01MCA4MEM2Ni41NyA4MCA4MCA2Ni41NyA4MCA1MEM4MCAzMy40MyA2Ni41NyAyMCA1MCAyMEMzMy40MyAyMCAyMCAzMy40MyAyMCA1MEMyMCA2Ni41NyAzMy40MyA4MCA1MCA4MFoiIGZpbGw9IiNjY2MiLz48cGF0aCBkPSJNNTAgNDVDNTIuNzYgNDUgNTUgNDIuNzYgNTUgNDBDNTUgMzcuMjQgNTIuNzYgMzUgNTAgMzVDNDcuMjQgMzUgNDUgMzcuMjQgNDUgNDBDNDUgNDIuNzYgNDcuMjQgNDUgNTAgNDVaIiBmaWxsPSIjY2NjIi8+PHBhdGggZD0iTTUwIDQ3LjVDNDYuNDEgNDcuNSA0MyA0OC42OSA0MyA1Mi41VjYwSDU3VjUyLjVDNTcgNDguNjkgNTMuNTkgNDcuNSA1MCA0Ny41WiIgZmlsbD0iI2NjYyIvPjwvc3ZnPg==" alt="无会话">
+            <img src="/basic_avatar/basic_male.jpg" alt="无会话">
           </div>
           <p>您目前没有进行中的咨询会话</p>
           <button class="primary-btn" @click="goTo('appointment')">前往预约</button>
@@ -195,7 +195,7 @@ export default {
         id: 102,
         counselorId: 1,
         counselorName: '李明',
-        counselorAvatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM2NjYiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM2NjYiLz48L3N2Zz4=',
+        counselorAvatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5OTkiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5OTkiLz48L3N2Zz4=',
         type: '焦虑症咨询',
         lastMessage: '您好，请问有什么可以帮助您的？',
         lastMessageTime: '11:20',
@@ -255,7 +255,7 @@ export default {
           id: counselorData.id,
           name: counselorData.name,
           type: counselorData.type,
-          avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM2NjYiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM2NjYiLz48L3N2Zz4='
+          avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5OTkiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5OTkiLz48L3N2Zz4='
         }
         
         // 设置当前咨询师
