@@ -1,0 +1,15 @@
+<!--components/star-rating/star-rating.wxml-->
+<view class="star-rating">
+  <block wx:for="{{stars}}" wx:key="index">
+    <view 
+      class="star-container"
+      data-index="{{index}}"
+      bindtap="setRating"
+      catchtouchstart="onTouchStart"
+      catchtouchmove="onTouchMove"
+      catchtouchend="onTouchEnd"
+    >
+      <image src="{{item.icon}}" class="star-icon"></image>
+    </view>
+  </block>
+</view>

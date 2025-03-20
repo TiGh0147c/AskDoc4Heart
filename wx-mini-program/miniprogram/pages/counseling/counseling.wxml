@@ -15,7 +15,7 @@
             </view>
             <text class="tag-text">简介:</text>
             <text class="intro-text">- {{item.intro}}</text>
-            <button bindtap="navigateToDialogue" data-id="{{item._id}}" data-name="{{item.name}}">咨询</button>
+            <button bindtap="navigateToDialogue" data-id="{{item._id}}" data-name="{{item.name}}" data-type="{{item.type}}">咨询</button>
         </view>
       </view>
     </block>

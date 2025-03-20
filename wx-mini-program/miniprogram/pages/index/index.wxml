@@ -3,7 +3,7 @@
   <view class="form-outer-box"> 
     <image src="/images/hello.jpg" mode="widthFix" class="hello-image"></image>
     <view class="options-container">
-      <navigator url="/pages/counseling/counseling" hover-class="none">
+      <navigator url="/pages/brief/brief" hover-class="none">
         <image src="/images/咨询.png" mode="aspectFit"></image>
         <text>咨询</text>
       </navigator>

@@ -1,4 +1,4 @@
-<!--pages/dialogue/dialogue.wxml-->
+<!--pages/ai-dialogue/ai-dialogue.wxml-->
 <view class="container">
   <scroll-view scroll-y="true" style="height: {{scrollViewHeight}}px">
     <view class="message-container">
