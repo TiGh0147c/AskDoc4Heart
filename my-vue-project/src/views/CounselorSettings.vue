@@ -7,6 +7,8 @@
         <div class="sidebar-item" @click="goTo('requests')">用户申请</div>
         <div class="sidebar-item" @click="goTo('chat')">咨询窗口</div>
         <div class="sidebar-item" @click="goTo('schedule')">排班表</div>
+        <div class="sidebar-item" @click="goTo('history')">历史会话</div>
+        <div class="sidebar-item" @click="goTo('evaluation')">用户评估</div>
       </div>
   
       <!-- 主内容区域 -->
@@ -58,6 +60,12 @@
             break
           case 'schedule':
             router.push('/counselor/schedule')
+          break
+          case 'history':
+          router.push('/counselor/history')
+          break
+          case 'evaluation':
+          router.push('/counselor/evaluation')
           break
           default:
             console.error('Invalid path')

@@ -7,7 +7,6 @@
       <div class="sidebar-item active" @click="goTo('appointment')">预约</div>
       <div class="sidebar-item" @click="goTo('settings')">设置</div>
       <div class="sidebar-item" @click="goTo('history')">历史会话</div>
-
       <div class="sidebar-item" @click="goTo('currentChat')">当前对话</div>
     </div>
 
@@ -361,32 +360,46 @@ export default {
     }
     
     // 计算用户当前有效预约数量
-const currentAppointmentsCount = computed(() => {
-  return pendingAppointments.value.length + activeAppointments.value.length + upcomingAppointments.value.length;
-});
+    const currentAppointmentsCount = computed(() => {
+      return pendingAppointments.value.length + activeAppointments.value.length + upcomingAppointments.value.length;
+    });
 
-// 检查用户是否可以预约
-const canMakeAppointment = computed(() => {
-  return currentAppointmentsCount.value < 2;
-});
+    // 检查用户是否可以预约
+    const canMakeAppointment = computed(() => {
+      return currentAppointmentsCount.value < 2;
+    });
 
-// 3.20修改bookAppointment函数
-const bookAppointment = (counselor) => {
-  if (!canMakeAppointment.value) {
-    alert('您当前已有两个预约，无法创建更多预约。请先完成或取消现有预约。');
-    return;
-  }
-  
-  // 其余预约逻辑保持不变
-  alert(`您正在预约${counselor.name}咨询师，一旦确认会显示在您的预约列表中`);
-  
-  /* 
-  后端需要实现：
-  1. POST /api/appointments
-  2. 需要传递的数据: counselorId, userId, dateTime, type
-  3. 返回预约ID和状态
-  */
-}
+    // 预约咨询师
+    const bookAppointment = (counselor) => {
+      if (!canMakeAppointment.value) {
+        alert('您当前已有两个预约，无法创建更多预约。请先完成或取消现有预约。');
+        return;
+      }
+      
+      // 提示用户预约成功
+      alert(`您正在预约${counselor.name}咨询师，一旦确认会显示在您的预约列表中`);
+      
+      // 后端需要实现：
+      // 1. POST /api/appointments
+      // 2. 需要传递的数据: counselorId, userId, dateTime, type
+      // 3. 返回预约ID和状态
+      // 示例代码：
+      const appointmentData = {
+        counselorId: counselor.id,
+        userId: store.getters.userId, // 假设用户ID存储在Vuex中
+        dateTime: new Date().toISOString(), // 示例预约时间，实际应由用户选择
+        type: '示例咨询类型' // 示例咨询类型，实际应由用户选择
+      };
+      // axios.post('/api/appointments', appointmentData)
+      //   .then(response => {
+      //     // 处理响应
+      //     console.log(response.data);
+      //   })
+      //   .catch(error => {
+      //     // 处理错误
+      //     console.error(error);
+      //   });
+    }
     
     // 显示待确认预约
     const showPendingAppointments = () => {
@@ -413,11 +426,19 @@ const bookAppointment = (counselor) => {
         // 实际项目中应该调用API
         alert(`已取消预约 #${appointmentId}`)
         
-        /* 
-        后端需要实现：
-        1. DELETE 或 PUT /api/appointments/{id}/cancel
-        2. 更新预约状态为cancelled
-        */
+        // 后端需要实现：
+        // 1. DELETE 或 PUT /api/appointments/{id}/cancel
+        // 2. 更新预约状态为cancelled
+        // 示例代码：
+        // axios.delete(`/api/appointments/${appointmentId}/cancel`)
+        //   .then(response => {
+        //     // 处理响应
+        //     console.log(response.data);
+        //   })
+        //   .catch(error => {
+        //     // 处理错误
+        //     console.error(error);
+        //   });
       }
     }
     
