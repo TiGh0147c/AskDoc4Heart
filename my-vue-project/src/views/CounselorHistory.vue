@@ -44,10 +44,10 @@
         <div v-if="isLoading" class="loading-indicator">
           加载中...
         </div>
-        
+        <!-- img src中图片后期添加数据库储存 -->
         <div v-else-if="filteredHistory.length === 0" class="empty-state">
           <div class="empty-icon">
-            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cGF0aCBmaWxsPSIjRTBFMEUwIiBkPSJNMTAzIDI1SDI1YTYgNiAwIDAwLTYgNnY2N2E2IDYgMCAwMDYgNmg3OGE2IDYgMCAwMDYtNlYzMWE2IDYgMCAwMC02LTZ6Ii8+PHBhdGggZmlsbD0iI0E1RDZBNyIgZD0iTTU3IDQzdjQzTDMxIDYyeiIvPjwvc3ZnPg==" alt="历史记录为空">
+            <img src="/basic_avatar/basic_male.jpg" alt="历史记录为空"> 
           </div>
           <p>暂无符合条件的历史会话</p>
         </div>
@@ -185,7 +185,7 @@ export default {
           {
             id: "SESS10025",
             userName: "张小明",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM0Mjg1RjQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM0Mjg1RjQiLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",
             consultationType: "焦虑障碍治疗",
             date: new Date(2025, 2, 15),
             expiryDate: new Date(2025, 3, 15),
@@ -215,7 +215,7 @@ export default {
           {
             id: "SESS10023",
             userName: "王红",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiNGRjQwODEiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiNGRjQwODEiLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",
             consultationType: "亲子关系咨询",
             date: new Date(2025, 2, 10),
             expiryDate: new Date(2025, 3, 10),
@@ -240,7 +240,7 @@ export default {
           {
             id: "SESS10020",
             userName: "刘志强",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM0M0E0N0MiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM0M0E0N0MiLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",
             consultationType: "职场压力咨询",
             date: new Date(2025, 2, 5),
             expiryDate: new Date(2025, 3, 5),
@@ -420,7 +420,7 @@ export default {
           chatHistory.value.unshift({
             id: historyData.id || `SESS${Date.now().toString().slice(-5)}`,
             userName: historyData.userName,
-            userAvatar: historyData.userAvatar || "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM0Mjg1RjQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM0Mjg1RjQiLz48L3N2Zz4=",
+            userAvatar: historyData.userAvatar || "data:image/svg+xml;base64,",
             consultationType: historyData.consultationType || "常规咨询",
             date: new Date(),
             expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),

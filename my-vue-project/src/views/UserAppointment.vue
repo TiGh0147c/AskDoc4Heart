@@ -221,7 +221,7 @@ export default {
         certification: '一级',
         status: '空闲',
         description: '专注于焦虑症治疗，拥有10年临床经验',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM2NjYiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM2NjYiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 2,
@@ -229,7 +229,7 @@ export default {
         certification: '二级',
         status: '繁忙',
         description: '婚姻家庭咨询专家，擅长沟通技巧辅导',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM4ODgiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM4ODgiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 3,
@@ -237,7 +237,7 @@ export default {
         certification: '一级',
         status: '空闲',
         description: '抑郁症和情绪管理专家，心理学博士',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5OTkiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5OTkiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 4,
@@ -245,7 +245,7 @@ export default {
         certification: '三级',
         status: '空闲',
         description: '青少年心理辅导专家，关注成长问题',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM3NzciLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM3NzciLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 5,
@@ -253,7 +253,7 @@ export default {
         certification: '二级',
         status: '繁忙',
         description: '压力管理和职场心理健康顾问',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiNhYWEiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiNhYWEiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 6,
@@ -261,7 +261,7 @@ export default {
         certification: '一级',
         status: '空闲',
         description: '创伤后应激障碍(PTSD)治疗专家',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM4ODgiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM4ODgiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 7,
@@ -269,7 +269,7 @@ export default {
         certification: '三级',
         status: '空闲',
         description: '人际关系和社交焦虑问题咨询师',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5OTkiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5OTkiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       }
     ])
     
@@ -464,27 +464,19 @@ export default {
 
     // 页面导航
     const goTo = (path) => {
-      switch (path) {
-        case 'home':
-          router.push('/user/home')
-          break
-        case 'tutorial':
-          router.push('/user/tutorial')
-          break
-        case 'appointment':
-          router.push('/user/appointment')
-          break
-        case 'settings':
-          router.push('/user/settings')
-          break
-        case 'history':
-          router.push('/user/history')
-          break
-        case 'currentChat':
-          router.push('/user/currentChat')
-          break
-        default:
-          console.error('Invalid path')
+      const paths = {
+        home: '/user/home',
+        tutorial: '/user/tutorial',
+        appointment: '/user/appointment',
+        settings: '/user/settings',
+        history: '/user/history',
+        currentChat: '/user/currentChat'
+      }
+      const targetPath = paths[path]
+      if (targetPath) {
+        router.push(targetPath)
+      } else {
+        console.error('Invalid path')
       }
     }
     
