@@ -4,6 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# 排除 MySQL 数据文件夹
+/docker/mysql-data/
+
+
 ### STS ###
 .apt_generated
 .classpath
