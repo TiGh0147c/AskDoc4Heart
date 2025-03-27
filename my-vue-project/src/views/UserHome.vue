@@ -111,27 +111,19 @@ export default {
     }
 
     const goTo = (path) => {
-      switch (path) {
-        case 'home':
-          router.push('/user/home')
-          break
-        case 'tutorial':
-          router.push('/user/tutorial')
-          break
-        case 'appointment':
-          router.push('/user/appointment')
-          break
-        case 'settings':
-          router.push('/user/settings')
-          break
-        case 'history':
-          router.push('/user/history')
-          break
-        case 'currentChat':
-          router.push('/user/currentChat')
-          break
-        default:
-          console.error('Invalid path')
+      const paths = {
+        home: '/user/home',
+        tutorial: '/user/tutorial',
+        appointment: '/user/appointment',
+        settings: '/user/settings',
+        history: '/user/history',
+        currentChat: '/user/currentChat'
+      }
+      const targetPath = paths[path]
+      if (targetPath) {
+        router.push(targetPath)
+      } else {
+        console.error('Invalid path')
       }
     }
 

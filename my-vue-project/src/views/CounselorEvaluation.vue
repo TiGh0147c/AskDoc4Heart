@@ -154,7 +154,7 @@ export default {
           {
             id: 1,
             userName: "张小明",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM0Mjg1RjQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM0Mjg1RjQiLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",//后期添加图片
             rating: 5,
             comment: "李医生非常专业，也很有耐心，帮我解决了很多困扰我多年的问题。感谢！",
             date: new Date(2025, 2, 15),
@@ -164,7 +164,7 @@ export default {
           {
             id: 2,
             userName: "王红",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiNGRjQwODEiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiNGRjQwODEiLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",
             rating: 4,
             comment: "咨询过程很顺利，给了我很多实用的建议，希望下次还能有机会咨询。",
             date: new Date(2025, 2, 10),
@@ -174,7 +174,7 @@ export default {
           {
             id: 3,
             userName: "刘志强",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM0M0E0N0MiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM0M0E0N0MiLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",
             rating: 5,
             comment: "李医生提供的方法帮我走出了职场压力的困境，非常感谢！",
             date: new Date(2025, 2, 5),
@@ -184,7 +184,7 @@ export default {
           {
             id: 4,
             userName: "周琳",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiNGRkMxMDciLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiNGRkMxMDciLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",
             rating: 3,
             comment: "咨询过程中有些问题没有得到很好的解决，希望下次能更有针对性。",
             date: new Date(2025, 1, 28),
@@ -194,7 +194,7 @@ export default {
           {
             id: 5,
             userName: "张晓华",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5QzI3QjAiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5QzI3QjAiLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",
             rating: 5,
             comment: "",
             date: new Date(2025, 1, 20),
@@ -204,7 +204,7 @@ export default {
           {
             id: 6,
             userName: "李强",
-            userAvatar: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiMwMDk2ODgiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiMwMDk2ODgiLz48L3N2Zz4=",
+            userAvatar: "data:image/svg+xml;base64,",
             rating: 4,
             comment: "医生很专业，但是咨询时间有点短，希望能延长一些。",
             date: new Date(2025, 1, 15),
@@ -310,7 +310,7 @@ export default {
           allReviews.value.unshift({
             id: Date.now(), // 使用时间戳作为临时ID
             userName: reviewData.userName,
-            userAvatar: reviewData.userAvatar || "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM0Mjg1RjQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM0Mjg1RjQiLz48L3N2Zz4=",
+            userAvatar: reviewData.userAvatar || "data:image/svg+xml;base64,",//后期添加图片
             rating: reviewData.rating,
             comment: reviewData.comment,
             date: new Date(),

@@ -184,7 +184,7 @@ export default {
     const isTyping = ref(false)
     
     // 用户头像
-    const userAvatar = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM0Mjg1RjQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM0Mjg1RjQiLz48L3N2Zz4='
+    const userAvatar = 'data:image/svg+xml;base64,'
     
     // 当前选中的咨询师，初始为 null
     const currentCounselor = ref(null)
@@ -195,7 +195,7 @@ export default {
         id: 102,
         counselorId: 1,
         counselorName: '李明',
-        counselorAvatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5OTkiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5OTkiLz48L3N2Zz4=',
+        counselorAvatar: 'data:image/svg+xml;base64,',
         type: '焦虑症咨询',
         lastMessage: '您好，请问有什么可以帮助您的？',
         lastMessageTime: '11:20',
@@ -255,7 +255,7 @@ export default {
           id: counselorData.id,
           name: counselorData.name,
           type: counselorData.type,
-          avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5OTkiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5OTkiLz48L3N2Zz4='
+          avatar: 'data:image/svg+xml;base64,'
         }
         
         // 设置当前咨询师
@@ -464,27 +464,19 @@ export default {
 
     // 页面导航
     const goTo = (path) => {
-      switch (path) {
-        case 'home':
-          router.push('/user/home')
-          break
-        case 'tutorial':
-          router.push('/user/tutorial')
-          break
-        case 'appointment':
-          router.push('/user/appointment')
-          break
-        case 'settings':
-          router.push('/user/settings')
-          break
-        case 'history':
-          router.push('/user/history')
-          break
-        case 'currentChat':
-          router.push('/user/currentChat')
-          break
-        default:
-          console.error('Invalid path')
+      const paths = {
+        home: '/user/home',
+        tutorial: '/user/tutorial',
+        appointment: '/user/appointment',
+        settings: '/user/settings',
+        history: '/user/history',
+        currentChat: '/user/currentChat'
+      }
+      const targetPath = paths[path]
+      if (targetPath) {
+        router.push(targetPath)
+      } else {
+        console.error('Invalid path')
       }
     }
 
