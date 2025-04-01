@@ -9,13 +9,22 @@ Page({
       type: "ai",
       name: "苏轼",
       intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
-      tag: ["东坡肉", "出去玩", "被贬"]
+      tag: ["东坡肉", "出去玩", "被贬"],
+      isActive: false
+    }, {
+      _id: "2134556yhgbfd32122345yh564t321r",
+      type: "counselor",
+      name: "张三",
+      intro: "这是咨询师，真的是咨询师。",
+      tag: ["犯法", "文盲", "被捕"],
+      isActive: false
     }],
     description: '',
     showDetails: {}, // 控制每个咨询师详情是否显示的状态对象
     loading: true, // 添加一个加载状态变量
     bgColor: 'rgb(68, 88, 120)', // 初始背景颜色
-    color: 'rgb(238, 239, 247)'   // 初始文字颜色
+    color: 'rgb(238, 239, 247)',  // 初始文字颜色
+    buttonMargins: {}, // 按钮的 margin-bottom 样式
   },
 
   onLoad: function (options) {
@@ -55,15 +64,50 @@ Page({
   },
   
   toggleDetails(e) {
-    const currentBgColor = this.data.bgColor === 'rgb(68, 88, 120)' ? 'rgb(28, 29, 33)' : 'rgb(68, 88, 120)'; // 改变背景颜色
-    const currentColor = this.data.color === 'rgb(238, 239, 247)' ? 'rgb(146, 205, 207)' : 'rgb(238, 239, 247)';     // 改变文字颜色
     const id = e.currentTarget.dataset.id;
-    // 使用ES6计算属性名称来切换特定辅导员的详情显示状态
-    this.setData({
-      [`showDetails.${id}`]: !this.data.showDetails[id],
-      bgColor: currentBgColor,
-      color: currentColor
+  
+    // 更新所有顾问的 isActive 状态，并关闭其他详情栏
+    const updatedCounselors = this.data.counselors.map(counselor => {
+      if (counselor._id === id) {
+        return { ...counselor, isActive: !counselor.isActive }; // 切换当前顾问的激活状态
+      } else {
+        return { ...counselor, isActive: false }; // 其他顾问重置为未激活
+      }
     });
+
+    // 关闭所有详情栏
+    const showDetails = {};
+    if (!this.data.showDetails[id]) {
+      showDetails[id] = true; // 打开当前顾问的详情栏
+    }
+
+    this.setData({
+      counselors: updatedCounselors,
+      showDetails: showDetails, // 更新详情栏状态
+    });
+    
+    // 动态调整按钮样式
+    if (showDetails[id]) {
+      // 如果详情显示，获取高度并设置 margin-bottom
+      this.getDetailsHeight(id);
+    } else {
+      // 如果详情隐藏，重置 margin-bottom
+      const buttonMargins = { ...this.data.buttonMargins };
+      buttonMargins[id] = 0;
+      this.setData({ buttonMargins });
+    }
+  },
+
+  // 获取 details 高度并设置按钮的 margin-bottom
+  getDetailsHeight(id) {
+    const query = wx.createSelectorQuery();
+    query.select(`#details-${id}`).boundingClientRect((rect) => {
+      if (rect) {
+        const buttonMargins = { ...this.data.buttonMargins };
+        buttonMargins[id] = rect.height + 10; // 设置 margin-bottom 为详情高度 + 10px
+        this.setData({ buttonMargins });
+      }
+    }).exec();
   },
 
   navigateToDialogue(e) {

@@ -1,21 +1,24 @@
 <!--pages/counseling/counseling.wxml-->
 <view class="container">
+  <view class="title">选择咨询师</view>
   <view class="counselorList">
     <!-- 显示加载中的提示 -->
     <view wx:if="{{loading}}" class="reminder">正在加载...</view>
     <!-- 如果没有数据时显示提示信息 -->
     <view wx:elif="{{!loading && (!counselors || counselors.length == 0)}}" class="reminder">暂无数据</view>
     <block wx:for="{{counselors}}" wx:key="_id">
-      <view class="counselor-item">
-        <button bindtap="toggleDetails" style="background-color: {{bgColor}}; color: {{color}}" data-id="{{item._id}}">{{item.name}}</button>
-        <view class="details" wx:if="{{showDetails[item._id]}}">
-            <text class="tag-text">擅长:</text>
-            <view wx:for="{{item.tag}}" wx:key="index">
-              <text class="intro-text">- {{item}}</text>
-            </view>
-            <text class="tag-text">简介:</text>
-            <text class="intro-text">- {{item.intro}}</text>
-            <button bindtap="navigateToDialogue" data-id="{{item._id}}" data-name="{{item.name}}" data-type="{{item.type}}">咨询</button>
+      <view class="counselor-item" style="margin-bottom: {{buttonMargins[item._id] || 0}}px;">
+        <button bindtap="toggleDetails" style="background-color: {{item.isActive ? 'rgb(28, 29, 33)' : 'rgb(68, 88, 120)'}}; color: {{item.isActive ? 'rgb(146, 205, 207)' : 'rgb(238, 239, 247)'}};" data-id="{{item._id}}"  wx:key="index">
+          {{item.name}}
+        </button>
+        <view class="details" id="details-{{item._id}}" wx:if="{{showDetails[item._id]}}">
+          <text class="tag-text">擅长:</text>
+          <view wx:for="{{item.tag}}" wx:key="index">
+            <text class="intro-text">- {{item}}</text>
+          </view>
+          <text class="tag-text">简介:</text>
+          <text class="intro-text">- {{item.intro}}</text>
+          <button bindtap="navigateToDialogue" data-id="{{item._id}}" data-name="{{item.name}}" data-type="{{item.type}}">咨询</button>
         </view>
       </view>
     </block>
