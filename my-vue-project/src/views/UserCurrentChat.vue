@@ -7,7 +7,6 @@
       <div class="sidebar-item" @click="goTo('appointment')">预约</div>
       <div class="sidebar-item" @click="goTo('settings')">设置</div>
       <div class="sidebar-item" @click="goTo('history')">历史会话</div>
-      <div class="sidebar-item" @click="goTo('review')">评价</div>
       <div class="sidebar-item active" @click="goTo('currentChat')">当前对话</div>
     </div>
 
@@ -25,7 +24,7 @@
         
         <div v-if="activeChats.length === 0" class="no-chat-message">
           <div class="empty-icon">
-            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTTUwIDEwQzI3LjkxIDEwIDEwIDI3LjkxIDEwIDUwQzEwIDcyLjA5IDI3LjkxIDkwIDUwIDkwQzcyLjA5IDkwIDkwIDcyLjA5IDkwIDUwQzkwIDI3LjkxIDcyLjA5IDEwIDUwIDEwWk01MCA4MEM2Ni41NyA4MCA4MCA2Ni41NyA4MCA1MEM4MCAzMy40MyA2Ni41NyAyMCA1MCAyMEMzMy40MyAyMCAyMCAzMy40MyAyMCA1MEMyMCA2Ni41NyAzMy40MyA4MCA1MCA4MFoiIGZpbGw9IiNjY2MiLz48cGF0aCBkPSJNNTAgNDVDNTIuNzYgNDUgNTUgNDIuNzYgNTUgNDBDNTUgMzcuMjQgNTIuNzYgMzUgNTAgMzVDNDcuMjQgMzUgNDUgMzcuMjQgNDUgNDBDNDUgNDIuNzYgNDcuMjQgNDUgNTAgNDVaIiBmaWxsPSIjY2NjIi8+PHBhdGggZD0iTTUwIDQ3LjVDNDYuNDEgNDcuNSA0MyA0OC42OSA0MyA1Mi41VjYwSDU3VjUyLjVDNTcgNDguNjkgNTMuNTkgNDcuNSA1MCA0Ny41WiIgZmlsbD0iI2NjYyIvPjwvc3ZnPg==" alt="无会话">
+            <img src="/basic_avatar/basic_male.jpg" alt="无会话">
           </div>
           <p>您目前没有进行中的咨询会话</p>
           <button class="primary-btn" @click="goTo('appointment')">前往预约</button>
@@ -133,6 +132,37 @@
         </div>
       </div>
     </div>
+
+    <!-- 弹窗形式的评价窗口 -->
+    <div v-if="showRatingModal" class="modal-overlay" @click="closeRatingModal">
+      <div class="modal-content" @click.stop>
+        <h2>评价本次咨询</h2>
+        <p>请为{{ endedCounselor?.name }}咨询师的服务进行评价</p>
+        
+        <div class="star-rating">
+          <span 
+            v-for="star in 5" 
+            :key="star"
+            class="star" 
+            :class="{ 'active': star <= rating }"
+            @click="rating = star"
+          >★</span>
+        </div>
+        
+        <div class="rating-comment">
+          <textarea 
+            v-model="reviewComment" 
+            placeholder="请输入您的评价（可选）" 
+            rows="3"
+          ></textarea>
+        </div>
+        
+        <div class="rating-actions">
+          <button @click="submitRating" class="submit-rating-btn">提交评价</button>
+          <button @click="closeRatingModal" class="close-rating-btn">关闭</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -154,7 +184,7 @@ export default {
     const isTyping = ref(false)
     
     // 用户头像
-    const userAvatar = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM0Mjg1RjQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM0Mjg1RjQiLz48L3N2Zz4='
+    const userAvatar = 'data:image/svg+xml;base64,'
     
     // 当前选中的咨询师，初始为 null
     const currentCounselor = ref(null)
@@ -165,9 +195,9 @@ export default {
         id: 102,
         counselorId: 1,
         counselorName: '李明',
-        counselorAvatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM2NjYiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM2NjYiLz48L3N2Zz4=',
+        counselorAvatar: 'data:image/svg+xml;base64,',
         type: '焦虑症咨询',
-        lastMessage: '您好，今天我们来讨论一下如何面对日常焦虑...',
+        lastMessage: '您好，请问有什么可以帮助您的？',
         lastMessageTime: '11:20',
         unreadCount: 2
       }
@@ -225,7 +255,7 @@ export default {
           id: counselorData.id,
           name: counselorData.name,
           type: counselorData.type,
-          avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM2NjYiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM2NjYiLz48L3N2Zz4='
+          avatar: 'data:image/svg+xml;base64,'
         }
         
         // 设置当前咨询师
@@ -288,18 +318,30 @@ export default {
     }
     
     // 结束咨询
+    const showRatingModal = ref(false);
+    const rating = ref(5); // 默认5星
+    const reviewComment = ref('');
+    const endedCounselor = ref(null);
+
     const endConsultation = () => {
       if (confirm('确定要结束本次咨询吗？')) {
-        alert('咨询已结束，请记得在"评价"页面给咨询师评分')
+        // 保存当前咨询师信息
+        endedCounselor.value = { ...currentCounselor.value };
+        
+        // 显示评分弹窗
+        showRatingModal.value = true;
         
         // 移除活跃会话
-        const chatIndex = activeChats.value.findIndex(c => c.counselorId === currentCounselor.value.id)
+        const chatIndex = activeChats.value.findIndex(c => c.counselorId === currentCounselor.value.id);
         if (chatIndex !== -1) {
-          activeChats.value.splice(chatIndex, 1)
+          activeChats.value.splice(chatIndex, 1);
         }
         
+        // 将消息保存到历史记录中
+        saveToHistory();
+        
         // 返回会话列表
-        currentCounselor.value = null
+        currentCounselor.value = null;
         
         /* 
         后端需要实现：
@@ -308,32 +350,72 @@ export default {
         */
       }
     }
+
+    // 添加保存到历史记录的函数
+    const saveToHistory = () => {
+      const now = new Date();
+      const chatHistory = {
+        id: Date.now(), // 使用时间戳作为临时ID
+        counselorId: currentCounselor.value.id,
+        counselorName: currentCounselor.value.name,
+        type: currentCounselor.value.type,
+        date: now.toISOString().split('T')[0],
+        messages: [...messages.value],
+        expiryDate: new Date(now.setMonth(now.getMonth() + 1)).toISOString() // 1个月后过期
+      };
+      
+      // 这里应该调用API保存历史记录
+      // 在实际应用中，这些历史记录应该存储在后端数据库中
+      
+      /* 
+      后端需要实现：
+      1. POST /api/chat-history
+      2. 需要发送完整的聊天历史记录
+      3. 设置过期时间为1个月
+      */
+      
+      console.log('对话已保存到历史记录', chatHistory);
+    }
+
+    // 添加提交评价的函数
+    const submitRating = () => {
+      alert(`感谢您的评价！您给${endedCounselor.value.name}咨询师的评分是${rating.value}星`);
+      
+      /* 
+      后端需要实现：
+      1. POST /api/counselors/{id}/ratings
+      2. 发送评分和评价内容
+      */
+      
+      showRatingModal.value = false;
+      reviewComment.value = '';
+      rating.value = 5;
+      endedCounselor.value = null;
+    }
+
+    // 关闭评价弹窗
+    const closeRatingModal = () => {
+      showRatingModal.value = false;
+      reviewComment.value = '';
+      rating.value = 5;
+      endedCounselor.value = null;
+    }
     
     // 发送消息
     const sendMessage = () => {
       if (!newMessage.value.trim()) return
-      
-      // 添加用户消息
       const now = new Date()
       const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`
-      
       messages.value.push({
         sender: 'user',
         text: newMessage.value,
         time: timeStr
       })
-      
-      // 清空输入
       const sentMessage = newMessage.value
       newMessage.value = ''
-      
-      // 显示"咨询师正在输入"
       isTyping.value = true
-      
-      // 模拟咨询师回复
       setTimeout(() => {
         isTyping.value = false
-        
         const responses = [
           "我理解您的感受，请继续分享更多细节。",
           "这个情况听起来确实很困扰，让我们一起分析一下原因。",
@@ -341,21 +423,12 @@ export default {
           "谢谢您的分享。在这种情况下，我建议您可以尝试以下几种方法...",
           "您描述的情况很常见，许多人都有类似的经历。我们可以一起探索解决方案。"
         ]
-        
         const randomResponse = responses[Math.floor(Math.random() * responses.length)]
-        
         messages.value.push({
           sender: 'counselor',
           text: randomResponse,
           time: `${now.getHours()}:${(now.getMinutes() + 1).toString().padStart(2, '0')}`
         })
-        
-        /* 
-        后端需要实现：
-        1. POST /api/chats/{counselorId}/messages
-        2. 发送消息内容
-        3. WebSocket接收咨询师回复
-        */
       }, 2000)
     }
     
@@ -368,34 +441,18 @@ export default {
     const handleFileUpload = (event) => {
       const file = event.target.files[0]
       if (!file) return
-      
-      // 模拟上传成功
       alert('图片上传功能需要后端支持，这里仅做界面展示')
-      
-      /* 
-      后端需要实现：
-      1. POST /api/chats/{counselorId}/attachments
-      2. 文件上传处理
-      3. 返回文件URL
-      */
-      
-      // 清空选择的文件
       event.target.value = ''
     }
     
     // 消息格式化，支持换行和链接
     const formatMessage = (text) => {
       if (!text) return ''
-      
-      // 将换行符转换为<br>
       const withLineBreaks = text.replace(/\n/g, '<br>')
-      
-      // 将URL转换为可点击链接
       const withLinks = withLineBreaks.replace(
         /(https?:\/\/[^\s]+)/g, 
         '<a href="$1" target="_blank">$1</a>'
       )
-      
       return withLinks
     }
 
@@ -407,30 +464,19 @@ export default {
 
     // 页面导航
     const goTo = (path) => {
-      switch (path) {
-        case 'home':
-          router.push('/user/home')
-          break
-        case 'tutorial':
-          router.push('/user/tutorial')
-          break
-        case 'appointment':
-          router.push('/user/appointment')
-          break
-        case 'settings':
-          router.push('/user/settings')
-          break
-        case 'history':
-          router.push('/user/history')
-          break
-        case 'review':
-          router.push('/user/review')
-          break
-        case 'currentChat':
-          router.push('/user/currentChat')
-          break
-        default:
-          console.error('Invalid path')
+      const paths = {
+        home: '/user/home',
+        tutorial: '/user/tutorial',
+        appointment: '/user/appointment',
+        settings: '/user/settings',
+        history: '/user/history',
+        currentChat: '/user/currentChat'
+      }
+      const targetPath = paths[path]
+      if (targetPath) {
+        router.push(targetPath)
+      } else {
+        console.error('Invalid path')
       }
     }
 
@@ -447,6 +493,12 @@ export default {
       selectChat,
       leaveChat,
       endConsultation,
+      showRatingModal,
+      rating,
+      reviewComment,
+      endedCounselor,
+      submitRating,
+      closeRatingModal,
       sendMessage,
       triggerFileUpload,
       handleFileUpload,
@@ -459,7 +511,6 @@ export default {
 </script>
 
 <style scoped>
-/* 基础样式保持与原有一致 */
 .container {
   display: flex;
   height: 100vh;
@@ -531,7 +582,6 @@ export default {
   background-color: #0056b3;
 }
 
-/* 聊天列表页面样式 */
 .card {
   background-color: #ffffff;
   padding: 20px;
@@ -661,7 +711,6 @@ export default {
   font-size: 0.7rem;
 }
 
-/* 聊天界面样式 */
 .chat-container {
   display: flex;
   flex-direction: column;
@@ -903,5 +952,108 @@ export default {
 .send-btn:disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  text-align: center;
+  color: #333;
+}
+
+.modal-content p {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.star-rating {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.star {
+  font-size: 2rem;
+  color: #ddd;
+  cursor: pointer;
+  transition: color 0.2s;
+  margin: 0 5px;
+}
+
+.star.active {
+  color: #ffc107;
+}
+
+.rating-comment {
+  margin-bottom: 20px;
+}
+
+.rating-comment textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: Arial, sans-serif;
+}
+
+.rating-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.submit-rating-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.submit-rating-btn:hover {
+  background-color: #0056b3;
+}
+
+.close-rating-btn {
+  background-color: #ccc;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-left: 10px;
+}
+
+.close-rating-btn:hover {
+  background-color: #aaa;
 }
 </style>

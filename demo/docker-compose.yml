@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: AskDoc4Heart-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root  # MySQL root 用户密码
+#      MYSQL_DATABASE: mydb       # 默认数据库名
+#      MYSQL_USER: user           # 自定义用户
+#      MYSQL_PASSWORD: pass       # 用户密码
+    ports:
+      - "3310:3306"  # 映射端口
+    volumes:
+#      - mysql_data:/var/lib/mysql  # 数据持久化存储
+      - ./docker/mysql-data:/var/lib/mysql  # 数据持久化存储（挂载到本地文件夹）
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d  # 初始化脚本文件夹
+

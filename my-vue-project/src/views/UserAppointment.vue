@@ -7,7 +7,6 @@
       <div class="sidebar-item active" @click="goTo('appointment')">预约</div>
       <div class="sidebar-item" @click="goTo('settings')">设置</div>
       <div class="sidebar-item" @click="goTo('history')">历史会话</div>
-      <div class="sidebar-item" @click="goTo('review')">评价</div>
       <div class="sidebar-item" @click="goTo('currentChat')">当前对话</div>
     </div>
 
@@ -68,14 +67,18 @@
               <option value="busy">繁忙</option>
             </select>
           </div>
+          <!-- 在筛选器下方添加预约限制提示 -->
+          <div class="appointment-limit-info" v-if="!canMakeAppointment">
+            <p>您当前已有 {{ currentAppointmentsCount }} 个预约，最多允许同时预约 2 个咨询师</p>
+          </div>
           
           <div class="filter-item">
             <label>证书等级:</label>
             <select v-model="certificationFilter" @change="applyFilters">
               <option value="all">全部</option>
-              <option value="初级">初级</option>
-              <option value="中级">中级</option>
-              <option value="高级">高级</option>
+              <option value="三级">三级</option>
+              <option value="二级">二级</option>
+              <option value="一级">一级</option>
             </select>
           </div>
         </div>
@@ -96,7 +99,7 @@
                 </span>
                 <button 
                   class="appointment-btn" 
-                  :disabled="counselor.status === '繁忙'"
+                  :disabled="counselor.status === '繁忙' || !canMakeAppointment"
                   @click="bookAppointment(counselor)"
                 >
                   预约
@@ -215,58 +218,58 @@ export default {
       {
         id: 1,
         name: '李明',
-        certification: '高级',
+        certification: '一级',
         status: '空闲',
         description: '专注于焦虑症治疗，拥有10年临床经验',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM2NjYiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM2NjYiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 2,
         name: '张华',
-        certification: '中级',
+        certification: '二级',
         status: '繁忙',
         description: '婚姻家庭咨询专家，擅长沟通技巧辅导',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM4ODgiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM4ODgiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 3,
         name: '王芳',
-        certification: '高级',
+        certification: '一级',
         status: '空闲',
         description: '抑郁症和情绪管理专家，心理学博士',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5OTkiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5OTkiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 4,
         name: '赵刚',
-        certification: '初级',
+        certification: '三级',
         status: '空闲',
         description: '青少年心理辅导专家，关注成长问题',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM3NzciLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM3NzciLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 5,
         name: '陈静',
-        certification: '中级',
+        certification: '二级',
         status: '繁忙',
         description: '压力管理和职场心理健康顾问',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiNhYWEiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiNhYWEiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 6,
         name: '林强',
-        certification: '高级',
+        certification: '一级',
         status: '空闲',
         description: '创伤后应激障碍(PTSD)治疗专家',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM4ODgiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM4ODgiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       },
       {
         id: 7,
         name: '郑美',
-        certification: '初级',
+        certification: '三级',
         status: '空闲',
         description: '人际关系和社交焦虑问题咨询师',
-        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMjUiIGZpbGw9IiM5OTkiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjExMCIgcj0iNTAiIGZpbGw9IiM5OTkiLz48L3N2Zz4='
+        avatar: 'data:image/svg+xml;base64,'
       }
     ])
     
@@ -356,18 +359,46 @@ export default {
       currentPage.value = 1
     }
     
-    // 预约处理
+    // 计算用户当前有效预约数量
+    const currentAppointmentsCount = computed(() => {
+      return pendingAppointments.value.length + activeAppointments.value.length + upcomingAppointments.value.length;
+    });
+
+    // 检查用户是否可以预约
+    const canMakeAppointment = computed(() => {
+      return currentAppointmentsCount.value < 2;
+    });
+
+    // 预约咨询师
     const bookAppointment = (counselor) => {
-      // 这里应该打开一个预约表单或弹窗
-      // 实际项目中会提交到后端API
-      alert(`您正在预约${counselor.name}咨询师，一旦确认会显示在您的预约列表中`)
+      if (!canMakeAppointment.value) {
+        alert('您当前已有两个预约，无法创建更多预约。请先完成或取消现有预约。');
+        return;
+      }
       
-      /* 
-      后端需要实现：
-      1. POST /api/appointments
-      2. 需要传递的数据: counselorId, userId, dateTime, type
-      3. 返回预约ID和状态
-      */
+      // 提示用户预约成功
+      alert(`您正在预约${counselor.name}咨询师，一旦确认会显示在您的预约列表中`);
+      
+      // 后端需要实现：
+      // 1. POST /api/appointments
+      // 2. 需要传递的数据: counselorId, userId, dateTime, type
+      // 3. 返回预约ID和状态
+      // 示例代码：
+      const appointmentData = {
+        counselorId: counselor.id,
+        userId: store.getters.userId, // 假设用户ID存储在Vuex中
+        dateTime: new Date().toISOString(), // 示例预约时间，实际应由用户选择
+        type: '示例咨询类型' // 示例咨询类型，实际应由用户选择
+      };
+      // axios.post('/api/appointments', appointmentData)
+      //   .then(response => {
+      //     // 处理响应
+      //     console.log(response.data);
+      //   })
+      //   .catch(error => {
+      //     // 处理错误
+      //     console.error(error);
+      //   });
     }
     
     // 显示待确认预约
@@ -395,11 +426,19 @@ export default {
         // 实际项目中应该调用API
         alert(`已取消预约 #${appointmentId}`)
         
-        /* 
-        后端需要实现：
-        1. DELETE 或 PUT /api/appointments/{id}/cancel
-        2. 更新预约状态为cancelled
-        */
+        // 后端需要实现：
+        // 1. DELETE 或 PUT /api/appointments/{id}/cancel
+        // 2. 更新预约状态为cancelled
+        // 示例代码：
+        // axios.delete(`/api/appointments/${appointmentId}/cancel`)
+        //   .then(response => {
+        //     // 处理响应
+        //     console.log(response.data);
+        //   })
+        //   .catch(error => {
+        //     // 处理错误
+        //     console.error(error);
+        //   });
       }
     }
     
@@ -425,30 +464,19 @@ export default {
 
     // 页面导航
     const goTo = (path) => {
-      switch (path) {
-        case 'home':
-          router.push('/user/home')
-          break
-        case 'tutorial':
-          router.push('/user/tutorial')
-          break
-        case 'appointment':
-          router.push('/user/appointment')
-          break
-        case 'settings':
-          router.push('/user/settings')
-          break
-        case 'history':
-          router.push('/user/history')
-          break
-        case 'review':
-          router.push('/user/review')
-          break
-        case 'currentChat':
-          router.push('/user/currentChat')
-          break
-        default:
-          console.error('Invalid path')
+      const paths = {
+        home: '/user/home',
+        tutorial: '/user/tutorial',
+        appointment: '/user/appointment',
+        settings: '/user/settings',
+        history: '/user/history',
+        currentChat: '/user/currentChat'
+      }
+      const targetPath = paths[path]
+      if (targetPath) {
+        router.push(targetPath)
+      } else {
+        console.error('Invalid path')
       }
     }
     
@@ -476,6 +504,8 @@ export default {
       goToPage,
       applyFilters,
       bookAppointment,
+      canMakeAppointment,
+      currentAppointmentsCount,
       showPendingAppointments,
       showUpcomingAppointments,
       closeModal,
@@ -867,6 +897,15 @@ export default {
   justify-content: space-between;
   align-items: center;
 }
+
+.appointment-limit-info {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+} 
 
 .appointment-info h3 {
   margin-top: 0;

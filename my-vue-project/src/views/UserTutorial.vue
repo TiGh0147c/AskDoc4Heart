@@ -3,10 +3,11 @@
       <!-- 侧边栏 -->
       <div class="sidebar">
         <div class="sidebar-item" @click="goTo('home')">返回主页</div>
-        <div class="sidebar-item active" @click="goTo('settings')">设置</div>
-        <div class="sidebar-item" @click="goTo('requests')">用户申请</div>
-        <div class="sidebar-item" @click="goTo('chat')">咨询窗口</div>
-        <div class="sidebar-item" @click="goTo('schedule')">排班表</div>
+        <div class="sidebar-item active" @click="goTo('tutorial')">教程</div>
+        <div class="sidebar-item" @click="goTo('appointment')">预约</div>
+        <div class="sidebar-item" @click="goTo('settings')">设置</div>
+        <div class="sidebar-item" @click="goTo('history')">历史会话</div>
+        <div class="sidebar-item" @click="goTo('currentChat')">当前对话</div>
       </div>
   
       <!-- 主内容区域 -->
@@ -17,8 +18,8 @@
         </div>
   
         <div class="card">
-          <h1>咨询师设置</h1>
-          <p>这是咨询师的设置页面。您可以在这里修改个人信息或系统设置。</p>
+          <h1>教程</h1>
+          <p>这是用户的教程页面。您可以在这里查看使用指南。</p>
         </div>
       </div>
     </div>
@@ -30,7 +31,7 @@
   import { useRouter } from 'vue-router'
   
   export default {
-    name: 'CounselorSettings',
+    name: 'UserTutorial',
     setup() {
       const store = useStore()
       const router = useRouter()
@@ -43,25 +44,20 @@
       }
   
       const goTo = (path) => {
-        switch (path) {
-          case 'home':
-            router.push('/counselor/home')
-            break
-          case 'settings':
-            router.push('/counselor/settings')
-            break
-          case 'requests':
-            router.push('/counselor/requests')
-            break
-          case 'chat':
-            router.push('/counselor/chat')
-            break
-          case 'schedule':
-            router.push('/counselor/schedule')
-          break
-          default:
-            console.error('Invalid path')
-        }
+        const paths = {
+        home: '/user/home',
+        tutorial: '/user/tutorial',
+        appointment: '/user/appointment',
+        settings: '/user/settings',
+        history: '/user/history',
+        currentChat: '/user/currentChat'
+      }
+      const targetPath = paths[path]
+      if (targetPath) {
+        router.push(targetPath)
+      } else {
+        console.error('Invalid path')
+      }
       }
   
       return {

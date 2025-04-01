@@ -3,12 +3,12 @@
       <!-- 侧边栏 -->
       <div class="sidebar">
         <div class="sidebar-item" @click="goTo('home')">返回主页</div>
-        <div class="sidebar-item" @click="goTo('tutorial')">教程</div>
-        <div class="sidebar-item" @click="goTo('appointment')">预约</div>
-        <div class="sidebar-item" @click="goTo('settings')">设置</div>
-        <div class="sidebar-item active" @click="goTo('history')">历史会话</div>
-        <div class="sidebar-item" @click="goTo('review')">评价</div>
-        <div class="sidebar-item" @click="goTo('currentChat')">当前对话</div>
+        <div class="sidebar-item active" @click="goTo('settings')">设置</div>
+        <div class="sidebar-item" @click="goTo('requests')">用户申请</div>
+        <div class="sidebar-item" @click="goTo('chat')">咨询窗口</div>
+        <div class="sidebar-item" @click="goTo('schedule')">排班表</div>
+        <div class="sidebar-item" @click="goTo('history')">历史会话</div>
+        <div class="sidebar-item" @click="goTo('evaluation')">用户评估</div>
       </div>
   
       <!-- 主内容区域 -->
@@ -19,8 +19,8 @@
         </div>
   
         <div class="card">
-          <h1>历史会话</h1>
-          <p>这是用户的历史会话页面。您可以在这里查看过去的咨询记录。</p>
+          <h1>咨询师设置</h1>
+          <p>这是咨询师的设置页面。您可以在这里修改个人信息或系统设置。</p>
         </div>
       </div>
     </div>
@@ -32,7 +32,7 @@
   import { useRouter } from 'vue-router'
   
   export default {
-    name: 'UserHistory',
+    name: 'CounselorSettings',
     setup() {
       const store = useStore()
       const router = useRouter()
@@ -47,26 +47,26 @@
       const goTo = (path) => {
         switch (path) {
           case 'home':
-            router.push('/user/home')
-            break
-          case 'tutorial':
-            router.push('/user/tutorial')
-            break
-          case 'appointment':
-            router.push('/user/appointment')
+            router.push('/counselor/home')
             break
           case 'settings':
-            router.push('/user/settings')
+            router.push('/counselor/settings')
             break
+          case 'requests':
+            router.push('/counselor/requests')
+            break
+          case 'chat':
+            router.push('/counselor/chat')
+            break
+          case 'schedule':
+            router.push('/counselor/schedule')
+          break
           case 'history':
-            router.push('/user/history')
-            break
-          case 'review':
-            router.push('/user/review')
-            break
-          case 'currentChat':
-            router.push('/user/currentChat')
-            break
+          router.push('/counselor/history')
+          break
+          case 'evaluation':
+          router.push('/counselor/evaluation')
+          break
           default:
             console.error('Invalid path')
         }

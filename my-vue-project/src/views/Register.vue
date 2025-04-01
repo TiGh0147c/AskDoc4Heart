@@ -68,6 +68,20 @@
           />
         </div>
         
+        <!-- 性别字段（仅用户显示） -->
+        <div class="input-group" v-if="selectedRole === 'user'">
+          <label for="reg-gender">性别</label>
+          <select 
+            id="reg-gender" 
+            v-model="registerForm.gender" 
+            @change="handleGenderChange"
+          >
+            <option value="male">男</option>
+            <option value="female">女</option>
+
+          </select>
+        </div>
+        
         <!-- 邮箱字段（仅咨询师显示） -->
         <div class="input-group" v-if="selectedRole === 'counselor'">
           <label for="reg-email">邮箱</label>
@@ -174,6 +188,7 @@ export default {
       name: '', // 姓名（仅咨询师使用）
       email: '', // 邮箱（仅咨询师使用）
       phone: '',
+      gender:'male',
       password: '',
       confirmPassword: '',
       qualification: 'none', // 资格证（仅咨询师使用）
@@ -190,6 +205,9 @@ export default {
       { label: '管理员', value: 'admin' }
     ]
     
+    const handleGenderChange = () => {
+      //没啥用
+    }
     const handleQualificationChange = () => {
       // 清空证明材料文件
       registerForm.proofFile = null
@@ -246,6 +264,7 @@ export default {
           name: selectedRole.value === 'counselor' ? registerForm.name : null,
           email: selectedRole.value === 'counselor' ? registerForm.email : null,
           phone: registerForm.phone,
+          gender: selectedRole.value === 'user' ? registerError.gender :null,
           password: registerForm.password,
           qualification: selectedRole.value === 'counselor' ? registerForm.qualification : null,
           isSupervisor: selectedRole.value === 'counselor' ? registerForm.isSupervisor : null,
@@ -276,6 +295,7 @@ export default {
       registerError,
       roles,
       handleRegister,
+      handleGenderChange,
       handleQualificationChange,
       handleProofUpload
     }

@@ -7,7 +7,7 @@ import UserTutorial from '../views/UserTutorial.vue'  // 用户教程页面
 import UserAppointment from '../views/UserAppointment.vue'  // 用户预约页面
 import UserSettings from '../views/UserSettings.vue'  // 用户设置页面
 import UserHistory from '../views/UserHistory.vue'  // 用户历史会话页面
-import UserReview from '../views/UserReview.vue'  // 用户评价页面
+
 import UserCurrentChat from '../views/UserCurrentChat.vue'
 //咨询师
 import CounselorHome from '../views/CounselorHome.vue'
@@ -15,6 +15,8 @@ import CounselorSettings from '../views/CounselorSettings.vue'
 import CounselorRequests from '../views/CounselorRequests.vue'  // 添加用户申请页面
 import CounselorChat from '../views/CounselorChat.vue'  // 添加咨询窗口页面
 import CounselorSchedule from '../views/CounselorSchedule.vue'  // 添加排班表页面
+import CounselorHistory from '../views/CounselorHistory.vue'  // 添加咨询窗口页面
+import CounselorEvaluation from '../views/CounselorEvaluation.vue'  // 添加排班表页面
 //管理员
 import AdminHome from '../views/AdminHome.vue'
 import AdminManage from '../views/AdminManage.vue'  // 管理注册页面
@@ -74,12 +76,6 @@ const routes = [
     meta: { requiresAuth: true, role: 'user' }
   },
   {
-    path: '/user/review',
-    name: 'UserReview',
-    component: UserReview,
-    meta: { requiresAuth: true, role: 'user' }
-  },
-  {
     path: '/user/currentChat',
     name: 'UserCurrentChat',
     component: UserCurrentChat,
@@ -114,6 +110,18 @@ const routes = [
     path: '/counselor/schedule',
     name: 'CounselorSchedule',
     component: CounselorSchedule,
+    meta: { requiresAuth: true, role: 'counselor' }  // 排班表页面
+  },
+  {
+    path: '/counselor/history',
+    name: 'CounselorHistory',
+    component: CounselorHistory,
+    meta: { requiresAuth: true, role: 'counselor' }  // 排班表页面
+  },
+  {
+    path: '/counselor/evaluation',
+    name: 'CounselorEvaluation',
+    component: CounselorEvaluation,
     meta: { requiresAuth: true, role: 'counselor' }  // 排班表页面
   },
   //管理员部分
