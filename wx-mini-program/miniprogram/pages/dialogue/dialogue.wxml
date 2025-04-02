@@ -34,14 +34,47 @@
         <star-rating rating="{{currentRating}}" bindratingchange="onRatingChange"></star-rating>
       </view>
       <view class="modal-buttons">
-        <button bindtap="submitRating">提交</button>
         <button bindtap="hideRatingModal">取消</button>
+        <button bindtap="submitRating">提交</button>
       </view>
     </view>
   </view>
 
-  <view class="input-area">
-    <input type="text" placeholder="请输入消息..." bindinput="bindMessageInput" value="{{messageContent}}" />
-    <button bindtap="sendMessage">发送</button>
+  <view class="input-container">
+    <view class="menu-container" hidden="{{!isMenuVisible && !isEmojiListVisible}}" animation="{{animationData}}">
+    <!-- 下拉菜单 -->
+      <view class="menu-grid" hidden="{{isEmojiListVisible}}">
+        <view class="menu-item" wx:for="{{menuItems}}" wx:key="index" data-action="{{item.action}}" bindtap="handleMenuItemTap">
+          <image src="{{item.icon}}" mode="aspectFit" class="menu-icon"></image>
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+
+      <!-- 表情列表 -->
+      <view class="emoji-container" hidden="{{!isEmojiListVisible}}">
+        <view class="back-button" bindtap="goBackToMenu">
+          <text decode="true">&lt; 返回</text>
+        </view>
+        <view class="emoji-grid">
+          <view 
+            class="emoji-item" 
+            wx:for="{{emojis}}" 
+            wx:key="index" 
+            data-emoji="{{item}}" 
+            bindtap="selectEmoji"
+          >
+            {{item}}
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="input-area" style="bottom: {{inputAreaBottom}}px;" animation="{{animationData}}" >
+      <input type="text" placeholder="请输入消息..." bindinput="bindMessageInput" value="{{messageContent}}" />
+      <button bindtap="toggleMenuOrGoBack">{{'+'}}</button>
+      <button bindtap="sendMessage"> 
+        <image src="/images/icons/发送.png" mode="aspectFit"></image>
+      </button>
+    </view>
   </view>
 </view>

@@ -95,7 +95,7 @@
 .modal-title {
   padding: 20px;
   text-align: center;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: bold;
   height: 20px;
   color: #333;
@@ -106,7 +106,7 @@
   justify-content: center;
   align-items: center; /* 水平居中 */
   padding: 0 20px;
-  font-size: 18px;
+  font-size: 20px;
   height: 100px;
   color: rgb(49, 53, 61) ;
 }
@@ -147,6 +147,13 @@
   z-index: 1000;
 }
 
+.input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgb(68, 88, 120);
+}
+
 .input-area {
   display: flex;
   position: fixed;
@@ -169,11 +176,95 @@
 }
 
 .input-area button {
-  background-color: rgb(238, 239, 247);
-  width: 120rpx; 
+  width: 65rpx; 
   height: 65rpx; 
-  padding: 5px;
-  font-size: 15px; 
+  padding: 5rpx;
   box-sizing: border-box;
   margin-bottom: 33rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 5px;
+  margin-right: 5px;
+  background-color: rgb(238, 239, 247) ;
+  color: rgb(68, 88, 120);
+  font-size: 40rpx;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.menu-container {
+  width: 100%;
+  max-height: 300px;
+  min-height: 150px;
+  overflow-y: auto;
+  background-color: white;
+  position: fixed;
+  bottom: -150px; /* Adjust based on input area height */
+  left: 0;
+  z-index: 99;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  background-color: rgb(68, 88, 120);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 10px;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.menu-item {
+  display: flex;
+  width: 65px;
+  height: 65px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 5px;
+  border-radius: 10px;
+  background-color: rgb(238, 239, 247);
+  color: rgb(68, 88, 120);
+}
+
+.menu-icon {
+  border-bottom: 10px;
+  width: 40px;
+  height: 40px;
+}
+
+.back-button {
+  padding: 10px;
+  font-size: 16px;
+  color: rgb(238, 239, 247) ;
+  cursor: pointer;
+}
+
+.emoji-grid {
+  display: grid;
+  height: 170px;
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  gap: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.emoji-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+}
+
+/* Animation styles */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.3s ease-out;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(100%);
 }

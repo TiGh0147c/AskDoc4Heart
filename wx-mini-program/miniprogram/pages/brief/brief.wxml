@@ -11,7 +11,7 @@
       </view>
       <view class="section">
         <label>问题简述：</label>
-        <textarea placeholder="请输入问题简述" name="problemDescription" class="problem-description"></textarea>
+        <textarea placeholder="请简述您的困扰" name="problemDescription" class="problem-description"></textarea>
       </view>
       <button formType="submit">提交</button>
     </form>

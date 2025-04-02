@@ -12,6 +12,16 @@ Page({
     isConfirmModalVisible: false,
     isRatingModalVisible: false,
     currentRating: 10,
+    isMenuVisible: false, // 控制下拉菜单的显示状态
+    isEmojiListVisible: false, // 控制表情列表的显示状态
+    inputAreaBottom: 0, // 默认 bottom 值
+    menuItems: [
+      { label: "拍照", action: "takePhoto", icon: "/images/icons/拍摄.png" },
+      { label: "照片", action: "choosePhoto", icon: "/images/icons/图片.png" },
+      { label: "表情", action: "showEmojis", icon: "/images/icons/表情.png" },
+    ],
+    emojis: ['😊', '😂', '😍', '😎', '😢', '😭', '🤔', '🥰', '❤️', '😱', '🥺', '👍', '👎', '⭐', '😊', '😂', '😍', '😎', '😢', '😭', '🤔', '🥰', '❤️', '😱', '🥺', '👍', '👎', '⭐'], // 表情列表
+    animationData: {},
   },
 
   onLoad(options) {
@@ -25,6 +35,10 @@ Page({
     app.setGlobalData('counseling', 1); 
     this.setData({openid: openid});
     this.addMessage(description);
+    this.animation = wx.createAnimation({
+      duration: 300,
+      timingFunction: 'ease-out',
+    });
 
     // 动态计算scroll-view的高度，例如减去顶部导航栏和底部输入框的高度
     const that = this;
@@ -172,6 +186,100 @@ Page({
     this.setData({
       messageContent: '' // 清空输入框内容
     });
+  },
+
+  toggleMenuOrGoBack: function () {
+    if (this.data.isEmojiListVisible) {
+      this.goBackToMenu();
+    } else if (this.data.isMenuVisible) {
+      this.hideMenu();
+    } else {
+      this.showMenu();
+    }
+  },
+
+  showMenu: function () {
+    this.setData({ isMenuVisible: true, inputAreaBottom: -10 });
+    this.animateUp();
+  },
+
+  hideMenu: function () {
+    this.animateDown();
+    setTimeout(() => {
+      this.setData({ 
+        isMenuVisible: false,
+        isEmojiListVisible: false,
+        inputAreaBottom: 0, // 重置 input-area 的 bottom 值
+      }); 
+    }, 300);
+  },
+
+  handleMenuItemTap: function (e) {
+    const action = e.currentTarget.dataset.action;
+    if (action === 'showEmojis') {
+      this.showEmojis();
+    } else if (action === 'takePhoto'){
+      // 调用拍照功能
+      wx.chooseMedia({
+        count: 1, // 允许拍一张照片
+        mediaType: ['image'], // 指定媒体类型为图片
+        sourceType: ['camera'], // 指定来源为相机
+        success: (res) => {
+          const tempFilePaths = res.tempFiles[0].tempFilePath; // 获取拍摄的照片路径
+          console.log('拍摄的照片路径:', tempFilePaths);
+          wx.showToast({ title: "拍照成功", icon: "success" });
+          // 在这里可以将照片路径保存到页面数据或上传到服务器
+        },
+        fail: () => {
+          wx.showToast({ title: "拍照失败", icon: "none" });
+        }
+      });
+    }else if (action === 'choosePhoto'){
+      // 调用选择图片功能
+      wx.chooseMedia({
+        count: 1, // 允许选择一张图片
+        mediaType: ['image'], // 指定媒体类型为图片
+        sourceType: ['album'], // 指定来源为相册
+        success: (res) => {
+          const tempFilePaths = res.tempFiles[0].tempFilePath; // 获取选择的图片路径
+          console.log('选择的图片路径:', tempFilePaths);
+          wx.showToast({ title: "图片选择成功", icon: "success" });
+          // 在这里可以将图片路径保存到页面数据或上传到服务器
+        },
+        fail: () => {
+          wx.showToast({ title: "图片选择失败", icon: "none" });
+        }
+      });
+    }
+  },
+
+  showEmojis: function () {
+    this.setData({ 
+      isMenuVisible: false, 
+      isEmojiListVisible: true,
+      inputAreaBottom: 50, // 调整 input-area 的 bottom 值
+    });
+  },
+
+  goBackToMenu: function () {
+    this.setData({ isMenuVisible: true, isEmojiListVisible: false,inputAreaBottom: -10, // 重置 input-area 的 bottom 值
+     });
+  },
+
+  selectEmoji: function (e) {
+    const emoji = e.currentTarget.dataset.emoji;
+    this.setData({ messageContent: this.data.messageContent + emoji });
+    this.hideMenu();
+  },
+
+  animateUp: function () {
+    this.animation.translateY(-150).step();
+    this.setData({ animationData: this.animation.export() });
+  },
+
+  animateDown: function (callback) {
+    this.animation.translateY(0).step();
+    this.setData({ animationData: this.animation.export() }, callback);
   },
 
   scrollToBottom: function() {
