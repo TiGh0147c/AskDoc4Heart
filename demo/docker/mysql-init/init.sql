@@ -1,761 +1,543 @@
--- MySQL dump 10.13  Distrib 8.3.0, for Win64 (x86_64)
---
--- Host: 127.0.0.1    Database: user
--- ------------------------------------------------------
--- Server version	8.0.41
+/*
+ Navicat Premium Data Transfer
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+ Source Server         : AD4H
+ Source Server Type    : MySQL
+ Source Server Version : 80041
+ Source Host           : localhost:3310
+ Source Schema         : mydb
 
---
--- Table structure for table `Appointment`
---
+ Target Server Type    : MySQL
+ Target Server Version : 80041
+ File Encoding         : 65001
 
+ Date: 02/04/2025 08:55:33
+*/
+DROP DATABASE IF EXISTS `mydb`;
+CREATE DATABASE IF NOT EXISTS `mydb` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `mydb`;
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for Appointment
+-- ----------------------------
 DROP TABLE IF EXISTS `Appointment`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Appointment` (
+CREATE TABLE `Appointment`  (
   `appointment_id` int NOT NULL AUTO_INCREMENT,
   `appointment_time` datetime NOT NULL,
-  `appointment_status` enum('pending','confirmed','completed','cancelled') DEFAULT 'pending',
-  `notes` text,
+  `appointment_status` enum('pending','confirmed','completed','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'pending',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
   `user_Id` int NOT NULL,
   `counselor_Id` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`appointment_id`),
-  KEY `user_Id` (`user_Id`),
-  KEY `counselor_Id` (`counselor_Id`),
-  CONSTRAINT `Appointment_ibfk_1` FOREIGN KEY (`user_Id`) REFERENCES `User` (`user_Id`) ON DELETE CASCADE,
-  CONSTRAINT `Appointment_ibfk_2` FOREIGN KEY (`counselor_Id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`appointment_id`) USING BTREE,
+  INDEX `user_Id`(`user_Id` ASC) USING BTREE,
+  INDEX `counselor_Id`(`counselor_Id` ASC) USING BTREE,
+  CONSTRAINT `appointment_ibfk_1` FOREIGN KEY (`user_Id`) REFERENCES `User` (`user_Id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `appointment_ibfk_2` FOREIGN KEY (`counselor_Id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Appointment`
---
+-- ----------------------------
+-- Records of Appointment
+-- ----------------------------
 
-LOCK TABLES `Appointment` WRITE;
-/*!40000 ALTER TABLE `Appointment` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Appointment` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Attendance_Record`
---
-
+-- ----------------------------
+-- Table structure for Attendance_Record
+-- ----------------------------
 DROP TABLE IF EXISTS `Attendance_Record`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Attendance_Record` (
+CREATE TABLE `Attendance_Record`  (
   `attendance_id` int NOT NULL AUTO_INCREMENT,
-  `clock_in_time` datetime DEFAULT NULL,
-  `clock_out_time` datetime DEFAULT NULL,
-  `attendance_status` enum('present','late','absent','on_leave') DEFAULT 'absent',
+  `clock_in_time` datetime NULL DEFAULT NULL,
+  `clock_out_time` datetime NULL DEFAULT NULL,
+  `attendance_status` enum('present','late','absent','on_leave') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'absent',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`attendance_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`attendance_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Attendance_Record`
---
+-- ----------------------------
+-- Records of Attendance_Record
+-- ----------------------------
 
-LOCK TABLES `Attendance_Record` WRITE;
-/*!40000 ALTER TABLE `Attendance_Record` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Attendance_Record` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Binding_Record`
---
-
+-- ----------------------------
+-- Table structure for Binding_Record
+-- ----------------------------
 DROP TABLE IF EXISTS `Binding_Record`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Binding_Record` (
+CREATE TABLE `Binding_Record`  (
   `binding_id` int NOT NULL AUTO_INCREMENT,
   `binding_date` date NOT NULL,
-  `binding_status` enum('active','inactive','terminated') DEFAULT 'active',
+  `binding_status` enum('active','inactive','terminated') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'active',
   `supervisor_id` int NOT NULL,
   `counselor_id` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`binding_id`),
-  UNIQUE KEY `supervisor_id` (`supervisor_id`,`counselor_id`),
-  KEY `counselor_id` (`counselor_id`),
-  CONSTRAINT `Binding_Record_ibfk_1` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE CASCADE,
-  CONSTRAINT `Binding_Record_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`binding_id`) USING BTREE,
+  UNIQUE INDEX `supervisor_id`(`supervisor_id` ASC, `counselor_id` ASC) USING BTREE,
+  INDEX `counselor_id`(`counselor_id` ASC) USING BTREE,
+  CONSTRAINT `binding_record_ibfk_1` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `binding_record_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Binding_Record`
---
+-- ----------------------------
+-- Records of Binding_Record
+-- ----------------------------
 
-LOCK TABLES `Binding_Record` WRITE;
-/*!40000 ALTER TABLE `Binding_Record` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Binding_Record` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Consultation_Evaluation`
---
-
+-- ----------------------------
+-- Table structure for Consultation_Evaluation
+-- ----------------------------
 DROP TABLE IF EXISTS `Consultation_Evaluation`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Consultation_Evaluation` (
+CREATE TABLE `Consultation_Evaluation`  (
   `evaluation_Id` int NOT NULL AUTO_INCREMENT,
-  `user_visible_part` text,
-  `user_invisible_part` text,
+  `user_visible_part` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `user_invisible_part` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
   `evaluation_time` datetime NOT NULL,
-  `rating` int DEFAULT NULL,
+  `rating` int NULL DEFAULT NULL,
   `session_id` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`evaluation_Id`),
-  KEY `session_id` (`session_id`),
-  CONSTRAINT `Consultation_Evaluation_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `Consultation_Session` (`session_id`) ON DELETE CASCADE,
-  CONSTRAINT `Consultation_Evaluation_chk_1` CHECK ((`rating` between 1 and 5))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`evaluation_Id`) USING BTREE,
+  INDEX `session_id`(`session_id` ASC) USING BTREE,
+  CONSTRAINT `consultation_evaluation_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `Consultation_Session` (`session_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `consultation_evaluation_chk_1` CHECK (`rating` between 1 and 5)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Consultation_Evaluation`
---
+-- ----------------------------
+-- Records of Consultation_Evaluation
+-- ----------------------------
 
-LOCK TABLES `Consultation_Evaluation` WRITE;
-/*!40000 ALTER TABLE `Consultation_Evaluation` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Consultation_Evaluation` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Consultation_History`
---
-
+-- ----------------------------
+-- Table structure for Consultation_History
+-- ----------------------------
 DROP TABLE IF EXISTS `Consultation_History`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Consultation_History` (
+CREATE TABLE `Consultation_History`  (
   `history_id` int NOT NULL AUTO_INCREMENT,
   `session_start_time` datetime NOT NULL,
   `session_end_time` datetime NOT NULL,
-  `rating` int DEFAULT NULL,
-  `feedback_content` text,
-  `help_record` text,
+  `rating` int NULL DEFAULT NULL,
+  `feedback_content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `help_record` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
   `session_id` int NOT NULL,
-  `evaluation_id` int DEFAULT NULL,
+  `evaluation_id` int NULL DEFAULT NULL,
   `user_id` int NOT NULL,
   `counselor_id` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`history_id`),
-  KEY `session_id` (`session_id`),
-  KEY `user_id` (`user_id`),
-  KEY `counselor_id` (`counselor_id`),
-  CONSTRAINT `Consultation_History_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `Consultation_Session` (`session_id`) ON DELETE CASCADE,
-  CONSTRAINT `Consultation_History_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_Id`) ON DELETE CASCADE,
-  CONSTRAINT `Consultation_History_ibfk_3` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE,
-  CONSTRAINT `Consultation_History_chk_1` CHECK ((`rating` between 1 and 5))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`history_id`) USING BTREE,
+  INDEX `session_id`(`session_id` ASC) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  INDEX `counselor_id`(`counselor_id` ASC) USING BTREE,
+  CONSTRAINT `consultation_history_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `Consultation_Session` (`session_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `consultation_history_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_Id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `consultation_history_ibfk_3` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `consultation_history_chk_1` CHECK (`rating` between 1 and 5)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Consultation_History`
---
+-- ----------------------------
+-- Records of Consultation_History
+-- ----------------------------
 
-LOCK TABLES `Consultation_History` WRITE;
-/*!40000 ALTER TABLE `Consultation_History` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Consultation_History` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Consultation_Session`
---
-
+-- ----------------------------
+-- Table structure for Consultation_Session
+-- ----------------------------
 DROP TABLE IF EXISTS `Consultation_Session`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Consultation_Session` (
+CREATE TABLE `Consultation_Session`  (
   `session_id` int NOT NULL AUTO_INCREMENT,
-  `session_start_time` datetime DEFAULT NULL,
-  `session_end_time` datetime DEFAULT NULL,
-  `session_status` enum('scheduled','in_progress','completed','cancelled') DEFAULT 'scheduled',
-  `last_message_sent_time` datetime DEFAULT NULL,
+  `session_start_time` datetime NULL DEFAULT NULL,
+  `session_end_time` datetime NULL DEFAULT NULL,
+  `session_status` enum('scheduled','in_progress','completed','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'scheduled',
+  `last_message_sent_time` datetime NULL DEFAULT NULL,
   `counselor_id` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`session_id`),
-  KEY `counselor_id` (`counselor_id`),
-  CONSTRAINT `Consultation_Session_ibfk_1` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`session_id`) USING BTREE,
+  INDEX `counselor_id`(`counselor_id` ASC) USING BTREE,
+  CONSTRAINT `consultation_session_ibfk_1` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Consultation_Session`
---
+-- ----------------------------
+-- Records of Consultation_Session
+-- ----------------------------
 
-LOCK TABLES `Consultation_Session` WRITE;
-/*!40000 ALTER TABLE `Consultation_Session` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Consultation_Session` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Counselor`
---
-
+-- ----------------------------
+-- Table structure for Counselor
+-- ----------------------------
 DROP TABLE IF EXISTS `Counselor`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Counselor` (
+CREATE TABLE `Counselor`  (
   `counselor_Id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `phone_number` varchar(20) DEFAULT NULL,
-  `password` varchar(255) NOT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `counselor_certificate` text,
-  `is_supervisor` tinyint(1) DEFAULT '0',
-  `status` enum('active','inactive','on_leave') DEFAULT 'active',
-  `expertise_area` varchar(100) DEFAULT NULL,
-  `on_duty` tinyint(1) DEFAULT '0',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `phone_number` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `counselor_certificate` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `is_supervisor` tinyint(1) NULL DEFAULT 0,
+  `status` enum('active','inactive','on_leave') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'active',
+  `expertise_area` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `on_duty` tinyint(1) NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`counselor_Id`),
-  UNIQUE KEY `phone_number` (`phone_number`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`counselor_Id`) USING BTREE,
+  UNIQUE INDEX `phone_number`(`phone_number` ASC) USING BTREE,
+  UNIQUE INDEX `email`(`email` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Counselor`
---
+-- ----------------------------
+-- Records of Counselor
+-- ----------------------------
+INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '13800138001', 'hashed_password_1', 'counselor1@example.com', NULL, 0, 'active', '焦虑症', 0, '2025-03-31 05:05:20', '2025-03-31 05:05:20');
+INSERT INTO `Counselor` VALUES (2, '李督导', '13800138002', 'hashed_password_2', 'supervisor1@example.com', NULL, 1, 'active', '抑郁症', 0, '2025-03-31 05:05:20', '2025-03-31 05:05:20');
 
-LOCK TABLES `Counselor` WRITE;
-/*!40000 ALTER TABLE `Counselor` DISABLE KEYS */;
-INSERT INTO `Counselor` VALUES (1,'张心理咨询师','13800138001','hashed_password_1','counselor1@example.com',NULL,0,'active','焦虑症',0,'2025-03-31 04:57:55','2025-03-31 04:57:55'),(2,'李督导','13800138002','hashed_password_2','supervisor1@example.com',NULL,1,'active','抑郁症',0,'2025-03-31 04:57:55','2025-03-31 04:57:55');
-/*!40000 ALTER TABLE `Counselor` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Counselor_Attendance`
---
-
+-- ----------------------------
+-- Table structure for Counselor_Attendance
+-- ----------------------------
 DROP TABLE IF EXISTS `Counselor_Attendance`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Counselor_Attendance` (
+CREATE TABLE `Counselor_Attendance`  (
   `attendance_id` int NOT NULL,
   `counselor_id` int NOT NULL,
-  PRIMARY KEY (`attendance_id`,`counselor_id`),
-  KEY `counselor_id` (`counselor_id`),
-  CONSTRAINT `Counselor_Attendance_ibfk_1` FOREIGN KEY (`attendance_id`) REFERENCES `Attendance_Record` (`attendance_id`) ON DELETE CASCADE,
-  CONSTRAINT `Counselor_Attendance_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`attendance_id`, `counselor_id`) USING BTREE,
+  INDEX `counselor_id`(`counselor_id` ASC) USING BTREE,
+  CONSTRAINT `counselor_attendance_ibfk_1` FOREIGN KEY (`attendance_id`) REFERENCES `Attendance_Record` (`attendance_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `counselor_attendance_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Counselor_Attendance`
---
+-- ----------------------------
+-- Records of Counselor_Attendance
+-- ----------------------------
 
-LOCK TABLES `Counselor_Attendance` WRITE;
-/*!40000 ALTER TABLE `Counselor_Attendance` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Counselor_Attendance` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Counselor_Help`
---
-
+-- ----------------------------
+-- Table structure for Counselor_Help
+-- ----------------------------
 DROP TABLE IF EXISTS `Counselor_Help`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Counselor_Help` (
+CREATE TABLE `Counselor_Help`  (
   `counselor_Id` int NOT NULL,
   `help_id` int NOT NULL,
-  PRIMARY KEY (`counselor_Id`,`help_id`),
-  KEY `help_id` (`help_id`),
-  CONSTRAINT `Counselor_Help_ibfk_1` FOREIGN KEY (`counselor_Id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE,
-  CONSTRAINT `Counselor_Help_ibfk_2` FOREIGN KEY (`help_id`) REFERENCES `Help_Session` (`help_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`counselor_Id`, `help_id`) USING BTREE,
+  INDEX `help_id`(`help_id` ASC) USING BTREE,
+  CONSTRAINT `counselor_help_ibfk_1` FOREIGN KEY (`counselor_Id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `counselor_help_ibfk_2` FOREIGN KEY (`help_id`) REFERENCES `Help_Session` (`help_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Counselor_Help`
---
+-- ----------------------------
+-- Records of Counselor_Help
+-- ----------------------------
 
-LOCK TABLES `Counselor_Help` WRITE;
-/*!40000 ALTER TABLE `Counselor_Help` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Counselor_Help` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Counselor_Queue_Record`
---
-
+-- ----------------------------
+-- Table structure for Counselor_Queue_Record
+-- ----------------------------
 DROP TABLE IF EXISTS `Counselor_Queue_Record`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Counselor_Queue_Record` (
+CREATE TABLE `Counselor_Queue_Record`  (
   `queue_id` int NOT NULL,
   `counselor_id` int NOT NULL,
   `assigned_time` datetime NOT NULL,
-  PRIMARY KEY (`queue_id`,`counselor_id`),
-  KEY `counselor_id` (`counselor_id`),
-  CONSTRAINT `Counselor_Queue_Record_ibfk_1` FOREIGN KEY (`queue_id`) REFERENCES `Queue` (`queue_id`) ON DELETE CASCADE,
-  CONSTRAINT `Counselor_Queue_Record_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`queue_id`, `counselor_id`) USING BTREE,
+  INDEX `counselor_id`(`counselor_id` ASC) USING BTREE,
+  CONSTRAINT `counselor_queue_record_ibfk_1` FOREIGN KEY (`queue_id`) REFERENCES `Queue` (`queue_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `counselor_queue_record_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Counselor_Queue_Record`
---
+-- ----------------------------
+-- Records of Counselor_Queue_Record
+-- ----------------------------
 
-LOCK TABLES `Counselor_Queue_Record` WRITE;
-/*!40000 ALTER TABLE `Counselor_Queue_Record` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Counselor_Queue_Record` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Counselor_Schedule`
---
-
+-- ----------------------------
+-- Table structure for Counselor_Schedule
+-- ----------------------------
 DROP TABLE IF EXISTS `Counselor_Schedule`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Counselor_Schedule` (
+CREATE TABLE `Counselor_Schedule`  (
   `schedule_id` int NOT NULL,
   `counselor_id` int NOT NULL,
-  PRIMARY KEY (`schedule_id`,`counselor_id`),
-  KEY `counselor_id` (`counselor_id`),
-  CONSTRAINT `Counselor_Schedule_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `Schedule` (`schedule_id`) ON DELETE CASCADE,
-  CONSTRAINT `Counselor_Schedule_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`schedule_id`, `counselor_id`) USING BTREE,
+  INDEX `counselor_id`(`counselor_id` ASC) USING BTREE,
+  CONSTRAINT `counselor_schedule_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `Schedule` (`schedule_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `counselor_schedule_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `Counselor_Schedule`
---
+-- ----------------------------
+-- Records of Counselor_Schedule
+-- ----------------------------
 
-LOCK TABLES `Counselor_Schedule` WRITE;
-/*!40000 ALTER TABLE `Counselor_Schedule` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Counselor_Schedule` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Export_Record`
---
-
-DROP TABLE IF EXISTS `Export_Record`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Export_Record` (
-  `exported_id` int NOT NULL AUTO_INCREMENT,
-  `export_role` enum('admin','counselor','supervisor') NOT NULL,
-  `export_type` varchar(50) NOT NULL,
-  `export_format` enum('csv','excel','pdf') NOT NULL,
-  `export_time` datetime NOT NULL,
-  `user_id` int DEFAULT NULL,
-  `counselor_id` int DEFAULT NULL,
-  `file_path` varchar(255) NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`exported_id`),
-  KEY `user_id` (`user_id`),
-  KEY `counselor_id` (`counselor_id`),
-  CONSTRAINT `Export_Record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_Id`) ON DELETE SET NULL,
-  CONSTRAINT `Export_Record_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Export_Record`
---
-
-LOCK TABLES `Export_Record` WRITE;
-/*!40000 ALTER TABLE `Export_Record` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Export_Record` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Help_Message`
---
-
-DROP TABLE IF EXISTS `Help_Message`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Help_Message` (
-  `help_message_id` int NOT NULL AUTO_INCREMENT,
-  `message_type` enum('text','image','file') NOT NULL,
-  `message_sent_time` datetime NOT NULL,
-  `message_content` text NOT NULL,
-  `help_id` int NOT NULL,
-  `counselor_id` int DEFAULT NULL,
-  `is_from_supervisor` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`help_message_id`),
-  KEY `help_id` (`help_id`),
-  KEY `counselor_id` (`counselor_id`),
-  CONSTRAINT `Help_Message_ibfk_1` FOREIGN KEY (`help_id`) REFERENCES `Help_Session` (`help_id`) ON DELETE CASCADE,
-  CONSTRAINT `Help_Message_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Help_Message`
---
-
-LOCK TABLES `Help_Message` WRITE;
-/*!40000 ALTER TABLE `Help_Message` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Help_Message` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Help_Session`
---
-
-DROP TABLE IF EXISTS `Help_Session`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Help_Session` (
-  `help_id` int NOT NULL AUTO_INCREMENT,
-  `help_start_time` datetime DEFAULT NULL,
-  `help_end_time` datetime DEFAULT NULL,
-  `help_status` enum('requested','in_progress','completed','cancelled') DEFAULT 'requested',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`help_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Help_Session`
---
-
-LOCK TABLES `Help_Session` WRITE;
-/*!40000 ALTER TABLE `Help_Session` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Help_Session` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Leave_Application`
---
-
-DROP TABLE IF EXISTS `Leave_Application`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Leave_Application` (
-  `leave_id` int NOT NULL AUTO_INCREMENT,
-  `leave_reason` text NOT NULL,
-  `leave_status` enum('pending','approved','rejected') DEFAULT 'pending',
-  `application_time` datetime NOT NULL,
-  `supervisor_id` int DEFAULT NULL,
-  `counselor_Id` int NOT NULL,
-  `schedule_Id` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`leave_id`),
-  KEY `supervisor_id` (`supervisor_id`),
-  KEY `counselor_Id` (`counselor_Id`),
-  KEY `schedule_Id` (`schedule_Id`),
-  CONSTRAINT `Leave_Application_ibfk_1` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE SET NULL,
-  CONSTRAINT `Leave_Application_ibfk_2` FOREIGN KEY (`counselor_Id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE,
-  CONSTRAINT `Leave_Application_ibfk_3` FOREIGN KEY (`schedule_Id`) REFERENCES `Schedule` (`schedule_id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Leave_Application`
---
-
-LOCK TABLES `Leave_Application` WRITE;
-/*!40000 ALTER TABLE `Leave_Application` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Leave_Application` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Queue`
---
-
-DROP TABLE IF EXISTS `Queue`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Queue` (
-  `queue_id` int NOT NULL AUTO_INCREMENT,
-  `queue_number` int NOT NULL,
-  `join_queue_time` datetime NOT NULL,
-  `queue_status` enum('waiting','in_service','completed','cancelled') DEFAULT 'waiting',
-  `user_id` int NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`queue_id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `Queue_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Queue`
---
-
-LOCK TABLES `Queue` WRITE;
-/*!40000 ALTER TABLE `Queue` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Queue` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Schedule`
---
-
-DROP TABLE IF EXISTS `Schedule`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Schedule` (
-  `schedule_id` int NOT NULL AUTO_INCREMENT,
-  `date` date NOT NULL,
-  `time` time NOT NULL,
-  `status` enum('available','booked','unavailable') DEFAULT 'available',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`schedule_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Schedule`
---
-
-LOCK TABLES `Schedule` WRITE;
-/*!40000 ALTER TABLE `Schedule` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Schedule` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Session_Message`
---
-
-DROP TABLE IF EXISTS `Session_Message`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Session_Message` (
-  `message_id` int NOT NULL AUTO_INCREMENT,
-  `message_type` enum('text','image','file','system') NOT NULL,
-  `message_sent_time` datetime NOT NULL,
-  `message_content` text NOT NULL,
-  `session_id` int NOT NULL,
-  `user_id` int DEFAULT NULL,
-  `is_from_counselor` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`message_id`),
-  KEY `session_id` (`session_id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `Session_Message_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `Consultation_Session` (`session_id`) ON DELETE CASCADE,
-  CONSTRAINT `Session_Message_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_Id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Session_Message`
---
-
-LOCK TABLES `Session_Message` WRITE;
-/*!40000 ALTER TABLE `Session_Message` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Session_Message` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Supervisor`
---
-
-DROP TABLE IF EXISTS `Supervisor`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Supervisor` (
-  `supervisor_id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `phone_number` varchar(20) DEFAULT NULL,
-  `password` varchar(255) NOT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `counselor_certificate` text,
-  `is_supervisor` tinyint(1) DEFAULT '1',
-  `status` enum('active','inactive','on_leave') DEFAULT 'active',
-  `expertise_area` varchar(100) DEFAULT NULL,
-  `on_duty` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`supervisor_id`),
-  UNIQUE KEY `phone_number` (`phone_number`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Supervisor`
---
-
-LOCK TABLES `Supervisor` WRITE;
-/*!40000 ALTER TABLE `Supervisor` DISABLE KEYS */;
-INSERT INTO `Supervisor` VALUES (1,'王督导','13800138003','hashed_password_3','supervisor2@example.com',NULL,1,'active','家庭关系',0,'2025-03-31 04:57:55','2025-03-31 04:57:55');
-/*!40000 ALTER TABLE `Supervisor` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Supervisor_Attendance`
---
-
-DROP TABLE IF EXISTS `Supervisor_Attendance`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Supervisor_Attendance` (
-  `attendance_id` int NOT NULL,
-  `supervisor_id` int NOT NULL,
-  PRIMARY KEY (`attendance_id`,`supervisor_id`),
-  KEY `supervisor_id` (`supervisor_id`),
-  CONSTRAINT `Supervisor_Attendance_ibfk_1` FOREIGN KEY (`attendance_id`) REFERENCES `Attendance_Record` (`attendance_id`) ON DELETE CASCADE,
-  CONSTRAINT `Supervisor_Attendance_ibfk_2` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Supervisor_Attendance`
---
-
-LOCK TABLES `Supervisor_Attendance` WRITE;
-/*!40000 ALTER TABLE `Supervisor_Attendance` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Supervisor_Attendance` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Supervisor_Help`
---
-
-DROP TABLE IF EXISTS `Supervisor_Help`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Supervisor_Help` (
-  `supervisor_id` int NOT NULL,
-  `help_id` int NOT NULL,
-  PRIMARY KEY (`supervisor_id`,`help_id`),
-  KEY `help_id` (`help_id`),
-  CONSTRAINT `Supervisor_Help_ibfk_1` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE CASCADE,
-  CONSTRAINT `Supervisor_Help_ibfk_2` FOREIGN KEY (`help_id`) REFERENCES `Help_Session` (`help_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Supervisor_Help`
---
-
-LOCK TABLES `Supervisor_Help` WRITE;
-/*!40000 ALTER TABLE `Supervisor_Help` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Supervisor_Help` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Supervisor_Schedule`
---
-
-DROP TABLE IF EXISTS `Supervisor_Schedule`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Supervisor_Schedule` (
-  `schedule_id` int NOT NULL,
-  `supervisor_id` int NOT NULL,
-  PRIMARY KEY (`schedule_id`,`supervisor_id`),
-  KEY `supervisor_id` (`supervisor_id`),
-  CONSTRAINT `Supervisor_Schedule_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `Schedule` (`schedule_id`) ON DELETE CASCADE,
-  CONSTRAINT `Supervisor_Schedule_ibfk_2` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Supervisor_Schedule`
---
-
-LOCK TABLES `Supervisor_Schedule` WRITE;
-/*!40000 ALTER TABLE `Supervisor_Schedule` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Supervisor_Schedule` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `User`
---
-
-DROP TABLE IF EXISTS `User`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `User` (
-  `user_Id` int NOT NULL AUTO_INCREMENT,
-  `open_id` varchar(100) DEFAULT NULL,
-  `nickname` varchar(50) DEFAULT NULL,
-  `avatar` varchar(255) DEFAULT NULL,
-  `gender` enum('male','female','other','unknown') DEFAULT NULL,
-  `birthday` date DEFAULT NULL,
-  `occupation` varchar(50) DEFAULT NULL,
-  `phone_number` varchar(20) DEFAULT NULL,
-  `status_Info` varchar(100) DEFAULT NULL,
-  `counselor_Id` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`user_Id`),
-  UNIQUE KEY `open_id` (`open_id`),
-  UNIQUE KEY `phone_number` (`phone_number`),
-  KEY `counselor_Id` (`counselor_Id`),
-  CONSTRAINT `User_ibfk_1` FOREIGN KEY (`counselor_Id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `User`
---
-
-LOCK TABLES `User` WRITE;
-/*!40000 ALTER TABLE `User` DISABLE KEYS */;
-/*!40000 ALTER TABLE `User` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `duty_Schedule`
---
-
+-- ----------------------------
+-- Table structure for duty_Schedule
+-- ----------------------------
 DROP TABLE IF EXISTS `duty_Schedule`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `duty_Schedule` (
+CREATE TABLE `duty_Schedule`  (
   `duty_Id` int NOT NULL AUTO_INCREMENT,
   `staff_id` int NOT NULL,
   `date` date NOT NULL,
   `time` time NOT NULL,
-  `identity` enum('counselor','supervisor') NOT NULL,
-  `status` enum('scheduled','completed','cancelled') DEFAULT 'scheduled',
+  `identity` enum('counselor','supervisor') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `status` enum('scheduled','completed','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'scheduled',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`duty_Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`duty_Id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
---
--- Dumping data for table `duty_Schedule`
---
+-- ----------------------------
+-- Records of duty_Schedule
+-- ----------------------------
 
-LOCK TABLES `duty_Schedule` WRITE;
-/*!40000 ALTER TABLE `duty_Schedule` DISABLE KEYS */;
-/*!40000 ALTER TABLE `duty_Schedule` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+-- ----------------------------
+-- Table structure for Export_Record
+-- ----------------------------
+DROP TABLE IF EXISTS `Export_Record`;
+CREATE TABLE `Export_Record`  (
+  `exported_id` int NOT NULL AUTO_INCREMENT,
+  `export_role` enum('admin','counselor','supervisor') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `export_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `export_format` enum('csv','excel','pdf') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `export_time` datetime NOT NULL,
+  `user_id` int NULL DEFAULT NULL,
+  `counselor_id` int NULL DEFAULT NULL,
+  `file_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`exported_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  INDEX `counselor_id`(`counselor_id` ASC) USING BTREE,
+  CONSTRAINT `export_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_Id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `export_record_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+-- ----------------------------
+-- Records of Export_Record
+-- ----------------------------
 
--- Dump completed on 2025-03-31 13:09:30
+-- ----------------------------
+-- Table structure for Help_Message
+-- ----------------------------
+DROP TABLE IF EXISTS `Help_Message`;
+CREATE TABLE `Help_Message`  (
+  `help_message_id` int NOT NULL AUTO_INCREMENT,
+  `message_type` enum('text','image','file') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `message_sent_time` datetime NOT NULL,
+  `message_content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `help_id` int NOT NULL,
+  `counselor_id` int NULL DEFAULT NULL,
+  `is_from_supervisor` tinyint(1) NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`help_message_id`) USING BTREE,
+  INDEX `help_id`(`help_id` ASC) USING BTREE,
+  INDEX `counselor_id`(`counselor_id` ASC) USING BTREE,
+  CONSTRAINT `help_message_ibfk_1` FOREIGN KEY (`help_id`) REFERENCES `Help_Session` (`help_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `help_message_ibfk_2` FOREIGN KEY (`counselor_id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Help_Message
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for Help_Session
+-- ----------------------------
+DROP TABLE IF EXISTS `Help_Session`;
+CREATE TABLE `Help_Session`  (
+  `help_id` int NOT NULL AUTO_INCREMENT,
+  `help_start_time` datetime NULL DEFAULT NULL,
+  `help_end_time` datetime NULL DEFAULT NULL,
+  `help_status` enum('requested','in_progress','completed','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'requested',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`help_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Help_Session
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for Leave_Application
+-- ----------------------------
+DROP TABLE IF EXISTS `Leave_Application`;
+CREATE TABLE `Leave_Application`  (
+  `leave_id` int NOT NULL AUTO_INCREMENT,
+  `leave_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `leave_status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'pending',
+  `application_time` datetime NOT NULL,
+  `supervisor_id` int NULL DEFAULT NULL,
+  `counselor_Id` int NOT NULL,
+  `schedule_Id` int NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`leave_id`) USING BTREE,
+  INDEX `supervisor_id`(`supervisor_id` ASC) USING BTREE,
+  INDEX `counselor_Id`(`counselor_Id` ASC) USING BTREE,
+  INDEX `schedule_Id`(`schedule_Id` ASC) USING BTREE,
+  CONSTRAINT `leave_application_ibfk_1` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `leave_application_ibfk_2` FOREIGN KEY (`counselor_Id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `leave_application_ibfk_3` FOREIGN KEY (`schedule_Id`) REFERENCES `Schedule` (`schedule_id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Leave_Application
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for Queue
+-- ----------------------------
+DROP TABLE IF EXISTS `Queue`;
+CREATE TABLE `Queue`  (
+  `queue_id` int NOT NULL AUTO_INCREMENT,
+  `queue_number` int NOT NULL,
+  `join_queue_time` datetime NOT NULL,
+  `queue_status` enum('waiting','in_service','completed','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'waiting',
+  `user_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`queue_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `queue_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_Id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Queue
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for Schedule
+-- ----------------------------
+DROP TABLE IF EXISTS `Schedule`;
+CREATE TABLE `Schedule`  (
+  `schedule_id` int NOT NULL AUTO_INCREMENT,
+  `date` date NOT NULL,
+  `time` time NOT NULL,
+  `status` enum('available','booked','unavailable') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'available',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`schedule_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Schedule
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for Session_Message
+-- ----------------------------
+DROP TABLE IF EXISTS `Session_Message`;
+CREATE TABLE `Session_Message`  (
+  `message_id` int NOT NULL AUTO_INCREMENT,
+  `message_type` enum('text','image','file','system') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `message_sent_time` datetime NOT NULL,
+  `message_content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `session_id` int NOT NULL,
+  `user_id` int NULL DEFAULT NULL,
+  `is_from_counselor` tinyint(1) NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`message_id`) USING BTREE,
+  INDEX `session_id`(`session_id` ASC) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `session_message_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `Consultation_Session` (`session_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `session_message_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_Id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Session_Message
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for Supervisor
+-- ----------------------------
+DROP TABLE IF EXISTS `Supervisor`;
+CREATE TABLE `Supervisor`  (
+  `supervisor_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `phone_number` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `counselor_certificate` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `is_supervisor` tinyint(1) NULL DEFAULT 1,
+  `status` enum('active','inactive','on_leave') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'active',
+  `expertise_area` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `on_duty` tinyint(1) NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`supervisor_id`) USING BTREE,
+  UNIQUE INDEX `phone_number`(`phone_number` ASC) USING BTREE,
+  UNIQUE INDEX `email`(`email` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Supervisor
+-- ----------------------------
+INSERT INTO `Supervisor` VALUES (1, '王督导', '13800138003', 'hashed_password_3', 'supervisor2@example.com', NULL, 1, 'active', '家庭关系', 0, '2025-03-31 05:05:20', '2025-03-31 05:05:20');
+
+-- ----------------------------
+-- Table structure for Supervisor_Attendance
+-- ----------------------------
+DROP TABLE IF EXISTS `Supervisor_Attendance`;
+CREATE TABLE `Supervisor_Attendance`  (
+  `attendance_id` int NOT NULL,
+  `supervisor_id` int NOT NULL,
+  PRIMARY KEY (`attendance_id`, `supervisor_id`) USING BTREE,
+  INDEX `supervisor_id`(`supervisor_id` ASC) USING BTREE,
+  CONSTRAINT `supervisor_attendance_ibfk_1` FOREIGN KEY (`attendance_id`) REFERENCES `Attendance_Record` (`attendance_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `supervisor_attendance_ibfk_2` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Supervisor_Attendance
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for Supervisor_Help
+-- ----------------------------
+DROP TABLE IF EXISTS `Supervisor_Help`;
+CREATE TABLE `Supervisor_Help`  (
+  `supervisor_id` int NOT NULL,
+  `help_id` int NOT NULL,
+  PRIMARY KEY (`supervisor_id`, `help_id`) USING BTREE,
+  INDEX `help_id`(`help_id` ASC) USING BTREE,
+  CONSTRAINT `supervisor_help_ibfk_1` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `supervisor_help_ibfk_2` FOREIGN KEY (`help_id`) REFERENCES `Help_Session` (`help_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Supervisor_Help
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for Supervisor_Schedule
+-- ----------------------------
+DROP TABLE IF EXISTS `Supervisor_Schedule`;
+CREATE TABLE `Supervisor_Schedule`  (
+  `schedule_id` int NOT NULL,
+  `supervisor_id` int NOT NULL,
+  PRIMARY KEY (`schedule_id`, `supervisor_id`) USING BTREE,
+  INDEX `supervisor_id`(`supervisor_id` ASC) USING BTREE,
+  CONSTRAINT `supervisor_schedule_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `Schedule` (`schedule_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `supervisor_schedule_ibfk_2` FOREIGN KEY (`supervisor_id`) REFERENCES `Supervisor` (`supervisor_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of Supervisor_Schedule
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for User
+-- ----------------------------
+DROP TABLE IF EXISTS `User`;
+CREATE TABLE `User`  (
+  `user_Id` int NOT NULL AUTO_INCREMENT,
+  `open_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `gender` enum('male','female','other','unknown') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `birthday` date NULL DEFAULT NULL,
+  `occupation` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `phone_number` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `status_Info` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `counselor_Id` int NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_Id`) USING BTREE,
+  UNIQUE INDEX `open_id`(`open_id` ASC) USING BTREE,
+  UNIQUE INDEX `phone_number`(`phone_number` ASC) USING BTREE,
+  INDEX `counselor_Id`(`counselor_Id` ASC) USING BTREE,
+  CONSTRAINT `user_ibfk_1` FOREIGN KEY (`counselor_Id`) REFERENCES `Counselor` (`counselor_Id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of User
+-- ----------------------------
+
+SET FOREIGN_KEY_CHECKS = 1;
+
