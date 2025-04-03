@@ -354,22 +354,29 @@ INSERT INTO Supervisor VALUES (1, '王督导', '13800138003','swfvv' ,'hashed_pa
 DROP TABLE IF EXISTS User;
 CREATE TABLE User  (
    user_id int PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+   union_id varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    open_id varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    nickname varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    avatar varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-   pending_nickname varchar(50),
-   pending_avatar varchar(50),
-   nickname_review_status ENUM('pending','approved','rejected') DEFAULT 'pending',
-   avatar_review_status ENUM('pending','approved','rejected') DEFAULT 'pending',
    gender enum('male','female','other','unknown') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    birthday date NULL DEFAULT NULL,
    email varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    password varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
    occupation varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-   phone_number varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-   status_Info varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-   counselor_Id int NULL DEFAULT NULL
+   phone_number varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+
+
+DROP TABLE IF EXISTS User_Modification_Audit;
+CREATE TABLE User_Modification_Audit (
+    audit_id int PRIMARY KEY AUTO_INCREMENT COMMENT '修改ID',
+    user_id int NOT NULL COMMENT '用户ID',
+    modify_field enum('nickname','avatar') NOT NULL COMMENT '修改项',
+    new_value varchar(255) NOT NULL COMMENT '新内容',
+    audit_status enum('pending','approved','rejected') NOT NULL DEFAULT 'pending' COMMENT '审核状态',
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of User
