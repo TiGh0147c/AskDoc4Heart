@@ -6,8 +6,43 @@
 <mapper namespace="com.example.demo.binding.mapper.BindingMapper">
 
     <insert id="insertBindingRecord" useGeneratedKeys="true" keyProperty="bindingId">
-        INSERT INTO Binding_Record (binding_date, binding_status, supervisor_id, counselor_id, created_at, updated_at)
-        VALUES (#{bindingDate}, #{bindingStatus}, #{supervisorId}, #{counselorId}, NOW(), NOW())
+        INSERT INTO Binding_Record (binding_status, supervisor_id, counselor_id, created_at)
+        VALUES (#{bindingStatus}, #{supervisorId}, #{counselorId}, NOW())
     </insert>
+
+    <select id="findLatestBindingByCounselorId" resultType="com.example.demo.binding.entity.BindingRecord">
+        SELECT binding_id bindingId, created_at createdAt, binding_status bindingStatus,
+               supervisor_id supervisorId, counselor_id counselorId
+        FROM Binding_Record
+        WHERE counselor_id = #{counselorId}
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="findSupervisorById" resultType="com.example.demo.binding.entity.Supervisor">
+        SELECT supervisor_id supervisorId, name, phone_number phoneNumber,
+               avatar, password, email, counselor_certificate counselorCertificate,
+               is_supervisor isSupervisor, status, expertise_area expertiseArea, on_duty onDuty
+        FROM Supervisor
+        WHERE supervisor_id = #{supervisorId}
+    </select>
+
+    <select id="findCounselorsBySupervisorId" resultType="com.example.demo.binding.entity.Counselor">
+        SELECT c.counselor_id counselorId, c.name, c.avatar, c.phone_number phoneNumber,
+               c.password, c.email, c.counselor_certificate counselorCertificate,
+               c.is_supervisor isSupervisor, c.status, c.expertise_area expertiseArea, c.on_duty onDuty
+        FROM Counselor c
+                 JOIN (
+            SELECT br.counselor_id
+            FROM Binding_Record br
+                     JOIN (
+                -- 获取每个咨询师的最新绑定记录
+                SELECT counselor_id, MAX(created_at) AS latest_binding
+                FROM Binding_Record
+                GROUP BY counselor_id
+            ) latest ON br.counselor_id = latest.counselor_id AND br.created_at = latest.latest_binding
+            WHERE br.binding_status = 'bound' AND br.supervisor_id = #{supervisorId}
+        ) latest_bound ON c.counselor_id = latest_bound.counselor_id;
+    </select>
 
 </mapper>
