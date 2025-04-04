@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CounselorDTO {
-    private int counselorId;
+    private Integer counselorId;
     private String name;
     private String phoneNumber;
     private String statusMessage;  // 状态消息字段

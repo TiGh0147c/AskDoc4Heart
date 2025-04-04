@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class SupervisorDTO {
-    private int supervisorId;
+    private Integer supervisorId;
     private String name;
     private String phoneNumber;
     private String statusMessage;  // 状态消息字段

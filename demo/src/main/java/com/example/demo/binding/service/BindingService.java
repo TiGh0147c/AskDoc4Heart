@@ -1,6 +1,7 @@
 package com.example.demo.binding.service;
 
 import com.example.demo.binding.dto.CounselorDTO;
+import com.example.demo.binding.dto.CounselorSupervisorBindingDTO;
 import com.example.demo.binding.dto.SupervisorDTO;
 import com.example.demo.binding.entity.BindingRecord;
 import com.example.demo.binding.entity.Counselor;
@@ -17,8 +18,12 @@ public interface BindingService {
     int addBindingRecord(BindingRecord record);
 
     // 根据咨询师ID获取绑定的督导
-    SupervisorDTO getSupervisorByCounselorId(int counselorId);
+    SupervisorDTO getSupervisorByCounselorId(Integer counselorId);
 
     // 根据督导ID获取绑定的咨询师
-    public List<CounselorDTO> getCounselorsBySupervisorId(int supervisorId);
+    List<CounselorDTO> getCounselorsBySupervisorId(Integer supervisorId);
+
+    // 获取所有咨询师和他们绑定的督导
+    List<CounselorSupervisorBindingDTO> getAllBindings();
+
 }
