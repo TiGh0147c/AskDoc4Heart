@@ -4,27 +4,17 @@ const app = getApp(); // 获取全局应用实例
 Page({
 
   data: {
-    counselors: [{
-      _id: "7456afe067c8eeeb007246c80553c0f5",
-      type: "ai",
-      name: "苏轼",
-      intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
-      tag: ["东坡肉", "出去玩", "被贬"],
-      isActive: false
-    }, {
-      _id: "2134556yhgbfd32122345yh564t321r",
-      type: "counselor",
-      name: "张三",
-      intro: "这是咨询师，真的是咨询师。",
-      tag: ["犯法", "文盲", "被捕"],
-      isActive: false
-    }],
+    counselors: [],
     description: '',
     showDetails: {}, // 控制每个咨询师详情是否显示的状态对象
     loading: true, // 添加一个加载状态变量
     bgColor: 'rgb(68, 88, 120)', // 初始背景颜色
     color: 'rgb(238, 239, 247)',  // 初始文字颜色
     buttonMargins: {}, // 按钮的 margin-bottom 样式
+    showModal: false, // 控制模态框显示
+    modalData: {}, // 模态框需要显示的数据，初始值为空对象
+    intervalId1: null,
+    intervalId2: null, // 定时器 ID，用于后续清除定时器
   },
 
   onLoad: function (options) {
@@ -32,53 +22,79 @@ Page({
     console.log('问题简述:', decodeURIComponent(options.description));
     this.setData({
       description: decodeURIComponent(options.description),
-      loading: false // 启用云函数时删掉
     });
-    /* 
-    wx.cloud.callFunction({
-      name: 'checkduty',
-      success: res => {
-        // 初始化常驻咨询师 
-        const everyday = [{
-          _id: "7456afe067c8eeeb007246c80553c0f5",
-          type: "ai",
-          name: "苏轼",
-          intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
-          tag: ["东坡肉", "出去玩", "被贬"]
-        }];
-        // 将传回的双层数组转为单层 
-        const counselorsData = Array.isArray(res.result.data[0]) ? res.result.data[0] : res.result.data;
-        this.setData({
-          counselors: everyday || counselorsData || [],
-          loading: false
-        });
-      },
-      fail: err => {
-        console.error(err);
-        this.setData({
-          loading: false // 即使加载失败也将loading设为false
-        });
-      }
+    this.refresh();
+    // 启动定时器，每 10 秒获取一次数据
+    const intervalId1 = setInterval(() => {
+      this.refresh();
+    }, 10000); // 每 10 秒执行一次
+    // 保存定时器 ID，以便后续清除
+    this.setData({ intervalId1 });
+  },
+
+  onLaunch: function () {
+    this.refresh();
+  },
+
+  refresh(){
+    this.setData({
+      loading: true
     });
-    */
+    /* 模拟传入数据 */
+    const everyday = [{
+      _id: "7456afe067c8eeeb007246c80553c0f5",
+      name: "苏轼",
+      intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
+      tag: ["东坡肉", "出去玩", "被贬"],
+      status: "空闲",
+      type: "ai"
+    }];
+    const everydayData = Array.isArray(everyday[0]) ? everyday[0] : everyday;
+    const data = [{
+      _id: "2134556yhgbfd32122345yh564t321r",
+      name: "张三",
+      intro: "这是咨询师，真的是咨询师。",
+      tag: ["犯法", "文盲", "被捕"],
+      status: "繁忙"
+    },{
+      _id: "21345523rsbfd32122345yh564t321r",
+      name: "李四",
+      intro: "显而易见这里是简介。",
+      tag: ["想不出来", "就先", "这样吧"],
+      status: "空闲"
+    }];
+    const dutyData = Array.isArray(data[0]) ? data[0] : data;
+    const processedEverydayData = everydayData.map(item => ({ ...item, isActive: false }));
+    const processedDutyData = dutyData.map(item => ({ ...item, type: "counselor", isActive: false }));
+    const counselors = [...processedDutyData, ...processedEverydayData];
+    //console.log(counselors);
+    this.setData({
+      counselors: counselors,
+      loading: false
+    });
   },
   
   toggleDetails(e) {
     const id = e.currentTarget.dataset.id;
   
-    // 更新所有顾问的 isActive 状态，并关闭其他详情栏
+    // 更新所有咨询师的 isActive 状态，并关闭其他详情栏
     const updatedCounselors = this.data.counselors.map(counselor => {
       if (counselor._id === id) {
-        return { ...counselor, isActive: !counselor.isActive }; // 切换当前顾问的激活状态
-      } else {
-        return { ...counselor, isActive: false }; // 其他顾问重置为未激活
+        return { ...counselor, isActive: !counselor.isActive }; // 切换当前咨询师的激活状态
+      } else if (counselor.isActive === true) {
+        // 其他详情隐藏，重置 margin-bottom
+        const buttonMargins = { ...this.data.buttonMargins };
+        buttonMargins[counselor._id] = 0;
+        this.setData({ buttonMargins });
+        return { ...counselor, isActive: false }; // 其他咨询师重置为未激活
       }
+      return counselor;
     });
 
     // 关闭所有详情栏
     const showDetails = {};
     if (!this.data.showDetails[id]) {
-      showDetails[id] = true; // 打开当前顾问的详情栏
+      showDetails[id] = true; // 打开当前咨询师的详情栏
     }
 
     this.setData({
@@ -110,11 +126,66 @@ Page({
     }).exec();
   },
 
+  addToQueue(e) {
+    const { id, name } = e.currentTarget.dataset; // 获取咨询师的 ID
+    // 模拟请求数据（实际项目中替换为真实 API 请求）
+    const data = {
+      id: id,
+      queueCount: Math.floor(Math.random() * 10), // 随机生成排队人数
+      waitingTime: Math.floor(Math.random() * 20), // 随机生成等待时间
+    }
+    this.setData({
+      modalData: data,
+      showModal: true,
+    });
+    // 打开模态框
+    const modal = this.selectComponent("#modal"); 
+    modal.show();
+
+    // 启动定时器，每 10 秒获取一次数据
+    const intervalId2 = setInterval(() => {
+      const newData = this.fetchData(id);
+      this.setData({
+        modalData: newData,
+      });
+    }, 10000); // 每 10 秒执行一次
+
+    // 保存定时器 ID，以便后续清除
+    this.setData({ intervalId2 });
+  },
+
+  // 模拟获取数据的方法（实际项目中替换为真实 API 请求）
+  fetchData(id) {
+    return {
+      id: id,
+      queueCount: Math.floor(Math.random() * 10), // 随机生成排队人数
+      waitingTime: Math.floor(Math.random() * 20), // 随机生成等待时间（分钟）
+    };
+  },
+
+  // 关闭模态框
+  handleClose() {
+    this.setData({ showModal: false });
+    if (this.data.intervalId2) {
+      clearInterval(this.data.intervalId2); // 清除定时器
+      this.setData({
+        intervalId2: null, // 清空定时器 ID
+        showModal: false, // 隐藏模态框
+      });
+    }
+  },
+
   navigateToDialogue(e) {
     const dataset = e.currentTarget.dataset;
     const counselorId = dataset.id;
     const counselorName = dataset.name;
     const description = this.data.description;
+    if (this.data.intervalId1) {
+      clearInterval(this.data.intervalId1); // 清除定时器
+      this.setData({
+        intervalId1: null, // 清空定时器 ID
+      });
+    }
     if(dataset.type == "ai"){
       console.log('选择了ai咨询师');
       wx.reLaunch({

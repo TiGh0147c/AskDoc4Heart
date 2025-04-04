@@ -20,8 +20,9 @@ page {
 }
 
 .title{
-  margin-top: 23px;
-  font-size: 28px;
+  margin-top: 40px;
+  margin-bottom: 0px;
+  font-size: 23px;
   color: rgb(238, 239, 247);
   font-family: 'Heiti SC', 'SimHei', sans-serif;
 }
@@ -36,7 +37,7 @@ page {
   overflow: hidden; /* 确保内部元素不会超出边界 */
   padding: 0px; /* 内边距 */
   margin-top: 40rpx;
-  background-color: rgb(49, 53, 61); /* 背景颜色 */
+  background-color: rgb(28, 29, 33); /* 背景颜色 */
 }
 
 .reminder{

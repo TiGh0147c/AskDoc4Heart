@@ -1,0 +1,26 @@
+<!--components/modal-waiting/modal-waiting.wxml-->
+<view class="modal-container" wx:if="{{showModal}}">
+  <view class="modal-content" animation="{{animationData}}" catchtap="stopPropagation">
+    <view class="modal-header">
+      排队中...
+    </view>
+    <!-- 分割线 -->
+    <view class="divider"></view>
+    <view class="modal-body">
+      <image src="/images/等待.jpg" mode="widthFix"></image>
+      <view class="queue-container">
+        <view class="queue-info">
+          <text>
+          您前面还有
+          {{modalData.queueCount}} 人
+
+          预计等待时间
+          {{modalData.waitingTime}} 分钟
+          </text>
+          <button class="close-btn" style=" width: 220rpx" bindtap="handleClose">退出排队</button>
+        </view>
+        
+      </view>
+    </view>
+  </view>
+</view>

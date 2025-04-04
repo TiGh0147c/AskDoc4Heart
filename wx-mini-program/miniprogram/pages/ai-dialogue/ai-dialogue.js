@@ -7,6 +7,7 @@ Page({
     openid: '',
     scrollViewHeight: 650, // 示例高度，请根据实际情况调整
     messages: [],
+    messageContent: "", // 初始化为空字符串
     messageTableName: '',
     isButtonVisible: true,
     isConfirmModalVisible: false,
