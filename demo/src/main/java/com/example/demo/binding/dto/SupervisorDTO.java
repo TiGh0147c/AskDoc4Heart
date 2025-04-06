@@ -4,6 +4,9 @@ import com.example.demo.binding.entity.Supervisor;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * 督导
+ */
 @Data
 @AllArgsConstructor
 public class SupervisorDTO {

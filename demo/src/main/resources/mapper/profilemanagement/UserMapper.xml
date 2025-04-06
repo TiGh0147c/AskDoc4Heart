@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.profilemanagement.mapper.UserMapper">
+
+    <!--根据用户ID查询用户信息-->
+    <select id="getUserById" resultType="com.example.demo.profilemanagement.entity.User">
+        SELECT user_id      userId,
+               union_id     unionId,
+               open_id      openId,
+               nickname,
+               avatar,
+               gender,
+               birthday,
+               email,
+               password,
+               occupation,
+               phone_number phoneNumber
+        FROM User
+        WHERE user_id = #{userId}
+    </select>
+
+    <!--更新用户信息-->
+    <update id="updateUserProfile" parameterType="com.example.demo.profilemanagement.entity.User">
+        UPDATE User
+        SET nickname    = #{nickname},
+            avatar      = #{avatar},
+            gender      = #{gender},
+            birthday    = #{birthday},
+            email       = #{email},
+            password    = #{password},
+            occupation  = #{occupation},
+            phone_number = #{phoneNumber}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!--插入用户修改审核记录-->
+    <insert id="insertUserModificationAudit" parameterType="com.example.demo.profilemanagement.entity.UserModificationAudit">
+        INSERT INTO user_modification_audit (user_id, modify_field, new_value, audit_status)
+        VALUES (#{userId}, #{modifyField}, #{newValue}, 'pending')
+    </insert>
+
+    <!--更新用户昵称-->
+    <update id="updateNickname">
+        UPDATE User
+        SET nickname = #{nickname}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!--更新用户头像-->
+    <update id="updateAvatar">
+        UPDATE User
+        SET avatar = #{avatar}
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>

@@ -5,11 +5,13 @@
 
 <mapper namespace="com.example.demo.binding.mapper.BindingMapper">
 
+    <!--添加绑定记录-->
     <insert id="insertBindingRecord" useGeneratedKeys="true" keyProperty="bindingId">
         INSERT INTO Binding_Record (binding_status, supervisor_id, counselor_id, created_at)
         VALUES (#{bindingStatus}, #{supervisorId}, #{counselorId}, NOW())
     </insert>
 
+    <!--根据咨询师ID查询最新的绑定记录-->
     <select id="getLatestBindingByCounselorId" resultType="com.example.demo.binding.entity.BindingRecord">
         SELECT binding_id     bindingId,
                created_at     createdAt,
@@ -22,6 +24,7 @@
         LIMIT 1
     </select>
 
+    <!--根据咨询师ID查询绑定的督导-->
     <select id="getSupervisorByCounselorId" resultType="com.example.demo.binding.entity.Supervisor">
         SELECT supervisor_id         supervisorId,
                name,
@@ -42,6 +45,7 @@
                                LIMIT 1)
     </select>
 
+    <!--根据督导ID查询督导信息-->
     <select id="getSupervisorById" resultType="com.example.demo.binding.entity.Supervisor">
         SELECT supervisor_id         supervisorId,
                name,
@@ -58,6 +62,7 @@
         WHERE supervisor_id = #{supervisorId}
     </select>
 
+    <!--根据督导ID查询所有绑定的咨询师-->
     <select id="getCounselorsBySupervisorId" resultType="com.example.demo.binding.entity.Counselor">
         SELECT c.counselor_id          counselorId,
                c.name,
@@ -81,6 +86,7 @@
                                              WHERE counselor_id = br.counselor_id));
     </select>
 
+    <!--根据咨询师ID和督导ID查询最新的绑定记录-->
     <select id="getLatestBindingByCounselorAndSupervisor" resultType="com.example.demo.binding.entity.BindingRecord">
         SELECT binding_id     bindingId,
                created_at     createdAt,
@@ -94,6 +100,7 @@
         LIMIT 1
     </select>
 
+    <!--根据咨询师ID查询咨询师信息-->
     <select id="getCounselorById" resultType="com.example.demo.binding.entity.Counselor">
         SELECT counselor_id          counselorId,
                name,
@@ -110,6 +117,7 @@
         WHERE counselor_id = #{counselorId}
     </select>
 
+    <!--获取所有咨询师-->
     <select id="getAllCounselors" resultType="com.example.demo.binding.entity.Counselor">
         SELECT counselor_id          counselorId,
                name,

@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 咨询师和督导的绑定关系
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

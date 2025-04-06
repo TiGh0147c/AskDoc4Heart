@@ -4,6 +4,9 @@ import com.example.demo.binding.entity.Counselor;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * 咨询师
+ */
 @Data
 @AllArgsConstructor
 public class CounselorDTO {
