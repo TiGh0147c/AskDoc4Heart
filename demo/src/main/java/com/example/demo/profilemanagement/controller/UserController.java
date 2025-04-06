@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@RestController
+@RestController("userProfileController")
 @RequestMapping("/api/profile-management/user")
 public class UserController {
 
