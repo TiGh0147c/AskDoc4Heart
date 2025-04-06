@@ -28,8 +28,8 @@ public class AdministratorController {
 
 
     @GetMapping("/profile")
-    public ResponseEntity<Administrator> getAdministratorProfile(@RequestParam Integer adminId) {
-        Administrator administrator = administratorService.getAdministratorById(adminId);
+    public ResponseEntity<Administrator> getAdministratorProfile(@RequestParam Integer administratorId) {
+        Administrator administrator = administratorService.getAdministratorById(administratorId);
         if (administrator == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
