@@ -15,14 +15,14 @@ exports.main = async (event, context) => {
       })
       .field({
         nickname: true, 
-        avatarUrl: true,// 只返回头像和nickname字段
-        _id: false // 不返回_id字段
+        avatarUrl: true,
+        _id: true
       })
       .get()
       .then(res => {
         if (res.data.length > 0) {
           // 成功找到用户，返回nickname
-          return { success: true, nickname: res.data[0].nickname,avatarUrl: res.data[0].avatarUrl }
+          return { success: true,userid: res.data[0]._id, nickname: res.data[0].nickname,avatarUrl: res.data[0].avatarUrl }
         } else {
           // 没有找到匹配的用户
           return { success: false, message: '未找到对应用户' }
