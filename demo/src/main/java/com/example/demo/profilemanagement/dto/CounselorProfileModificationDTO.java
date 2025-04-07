@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 /**
- * 咨询师资料修改，手机号，姓名没包含，因为不可修改
+ * 咨询师资料修改，手机号，姓名没包含，因为不可修改，是否是督导也未包含，暂时不允许咨询师或督导自己修改
  */
 @Data
 @AllArgsConstructor
@@ -34,8 +34,11 @@ public class CounselorProfileModificationDTO {
     @Email(message = "邮箱格式不正确")
     private String email;
 
+    @Pattern(regexp = "male|female|other|unknown", message = "性别非法")
+    private String gender;
+
     private String counselorCertificate;
-    private Boolean isSupervisor;
+//    private Boolean isSupervisor;
 
     @Pattern(regexp = "^(available|unavailable)$", message = "状态必须是 available 或 unavailable")
     private String status;
