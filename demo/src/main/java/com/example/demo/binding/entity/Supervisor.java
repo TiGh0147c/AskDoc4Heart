@@ -17,6 +17,7 @@ public class Supervisor {
     private String avatar;
     private String password;
     private String email;
+    private String gender;
     private String counselorCertificate;
     private Boolean isSupervisor = true;
     private String status = "available";

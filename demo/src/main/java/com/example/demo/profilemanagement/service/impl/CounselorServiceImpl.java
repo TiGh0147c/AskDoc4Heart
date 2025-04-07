@@ -52,13 +52,17 @@ public class CounselorServiceImpl implements CounselorService {
             counselor.setEmail(dto.getEmail());
         }
 
+        if (dto.getGender() != null) {
+            counselor.setGender(dto.getGender());
+        }
+
         if (dto.getCounselorCertificate() != null) {
             counselor.setCounselorCertificate(dto.getCounselorCertificate());
         }
 
-        if (dto.getIsSupervisor() != null) {
-            counselor.setIsSupervisor(dto.getIsSupervisor());
-        }
+//        if (dto.getIsSupervisor() != null) {
+//            counselor.setIsSupervisor(dto.getIsSupervisor());
+//        }
 
         if (dto.getStatus() != null) {
             counselor.setStatus(dto.getStatus());

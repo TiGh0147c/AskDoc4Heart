@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
-
+/*
     @ExceptionHandler({Exception.class})
     public ResponseMessage exceptionHandler(Exception e, HttpServletRequest request, HttpServletResponse response) {
         return new ResponseMessage(500,"error",null);
     }
-
+*/
     @ExceptionHandler(ServiceException.class)
     @ResponseBody
     public ResponseMessage exceptionHandler(ServiceException e, HttpServletRequest request, HttpServletResponse response) {
