@@ -4,17 +4,21 @@ const app = getApp(); // 获取全局应用实例
 Page({
 
   data: {
-    openid: '',
+    userid: '',
     userName: '', // 当前昵称
-    avatarUrl: '' // 头像URL
+    email: '123456789@qq.com', // 邮箱
+    newUserName: '', // 新昵称
+    newEmail: '', // 新邮箱
+    avatarUrl: '', // 头像URL
+    avatarFile: null // 上传的头像文件路径
   },
 
   onLoad: function() {
     // 从全局变量获取用户名
-    const openid = app.getGlobalData('openid'); 
+    const userid = app.getGlobalData('userid'); 
     const userName = app.getGlobalData('userName');
     this.setData({
-      openid: openid,
+      userid: userid,
       userName: userName
     });
   },
@@ -33,7 +37,8 @@ Page({
             avatarUrl: res.tempFiles[0].tempFilePath
           });
           app.setGlobalData('avatarUrl', that.avatarUrl); 
-          that.uploadImage();
+          that.setData({ newUserName: this.data.userName, newEmail: this.data.email });
+          that.sendRequest();
         } else {
           console.error('没有选择任何图片');
         }
@@ -50,52 +55,27 @@ Page({
     })
   },
 
-  uploadImage: function() {
-    if (!this.data.avatarUrl) return;
-
-    wx.cloud.uploadFile({
-      cloudPath: 'avatar/' + this.data.openid + '.png', // 使用 openid 作为文件名的一部分
-      filePath: this.data.avatarUrl, // 这里应为选择图片后得到的临时路径
-      success: res => {
-        const fileID = res.fileID;
-        // 调用云函数更新数据库中的用户信息
-        wx.cloud.callFunction({
-          name: 'updateAvatar', // 确保这是您云函数的名字
-          data: {
-            fileID: fileID,
-            openid: this.data.openid
-          },
-          success: res => {
-            const result = res.result;
-            if (result.success) {
-              wx.showToast({
-                title: '上传成功',
-              });
-              app.setGlobalData('avatarUrl', fileID);
-            } else {
-              console.error('更新用户头像失败', result.message);
-            }
-          },
-          fail: err => {
-            console.error('调用云函数失败', err);
-          }
-        });
-      },
-      fail: err => {
-        console.error('上传文件失败', err);
-      }
-    })
-  },
-
-  onNicknameInput: function(e) {
+  // 监听昵称输入
+  onNicknameInput(e) {
     this.setData({
       newNickname: e.detail.value
     });
   },
 
-  showModal: function() {
+  // 监听邮箱输入
+  onEmailInput(e) {
     this.setData({
-      isModalVisible: true
+      newEmail: e.detail.value
+    });
+  },
+
+  showModal: function(e) {
+    const mode = e.currentTarget.dataset.mode; // 获取按钮传递的 mode 参数
+    this.setData({
+      isModalVisible: true,
+      mode: mode,
+      newNickname: mode === 'nickname' ? '' : this.data.newNickname, // 清空新昵称输入框
+      newEmail: mode === 'email' ? '' : this.data.newEmail // 清空新邮箱输入框
     });
   },
 
@@ -106,48 +86,101 @@ Page({
     });
   },
 
-  altername: function() {
-    const newNickname = this.data.newNickname.trim();
-    if (!newNickname) {
-      wx.showToast({
-        title: '昵称不能为空',
-        icon: 'none'
-      });
-      return;
-    }
+  alter: function() {
+    const { mode, newNickname, newEmail } = this.data;
 
-    // 调用云函数进行昵称更新
-    wx.cloud.callFunction({
-      name: 'updateNickname',
-      data: {
-        openid: this.data.openid,
-        newNickname: newNickname
-      },
-      success: res => {
-        if(res.result.success){
+    if (mode === 'nickname') {
+      // 修改昵称逻辑
+      if (!newNickname.trim()) {
+        wx.showToast({
+          title: '昵称不能为空',
+          icon: 'none'
+        });
+        return;
+      }
+      this.setData({ newUserName: newNickname, newEmail: this.data.email });
+      this.sendRequest();
+    } else if (mode === 'email') {
+      // 修改邮箱逻辑
+      if (!newEmail.trim()) {
+        wx.showToast({
+          title: '邮箱不能为空',
+          icon: 'none'
+        });
+        return;
+      }
+      this.setData({ newUserName: this.data.userName, newEmail: newEmail });
+      this.sendRequest();
+    }
+  },
+
+  // 获取用户输入的值
+  getUserInput() {
+    const formData = {
+      userId: this.data.userid,
+      nickname: this.data.newUserName || '',
+      email: this.data.newEmail || ''
+    };
+
+    return formData;
+  },
+
+  // 模拟发送请求
+  sendRequest() {
+    const url = 'https://your-api-endpoint.com/api/profile-management/user/modification';
+    const formData = this.getUserInput();
+    console.log("发送了修改请求：", formData);
+    this.hideModal();
+    /*
+    // 检查是否有头像文件
+    if (this.data.avatarFile) {
+      // 使用 wx.uploadFile 上传文件和其他表单数据
+      wx.uploadFile({
+        url: url,
+        filePath: this.data.avatarFile, // 头像文件路径
+        name: 'avatarFile', // 文件字段名
+        formData: formData, // 其他表单数据
+        success(res) {
+          console.log('请求成功:', res.data);
           wx.showToast({
             title: '修改成功',
+            icon: 'success'
           });
-          app.setGlobalData('userName', newNickname); 
-          this.setData({
-            userName: newNickname,
-            newNickname: '',
-            isModalVisible: false // 关闭弹窗
-          });
-        }else{
+          this.hideModal();
+        },
+        fail(err) {
+          console.error('请求失败:', err);
           wx.showToast({
-            title: res.result.message || '修改失败，请稍后再试',
+            title: '修改失败',
             icon: 'none'
           });
         }
-      },
-      fail: err => {
-        console.error('[云函数] [updateNickname] 调用失败：', err);
-        wx.showToast({
-          title: '网络错误，请稍后再试',
-          icon: 'none'
-        });
-      }
-    });
+      });
+    } else {
+      // 如果没有头像文件，直接使用 wx.request 发送表单数据
+      wx.request({
+        url: url,
+        method: 'POST',
+        header: {
+          'Content-Type': 'application/json'
+        },
+        data: formData,
+        success(res) {
+          console.log('请求成功:', res.data);
+          wx.showToast({
+            title: '修改成功',
+            icon: 'success'
+          });
+          this.hideModal();
+        },
+        fail(err) {
+          console.error('请求失败:', err);
+          wx.showToast({
+            title: '修改失败',
+            icon: 'none'
+          });
+        }
+      });
+    }*/
   }
 })

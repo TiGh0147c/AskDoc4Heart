@@ -6,15 +6,13 @@
     </view>
     <!-- 显示加载中的提示 -->
     <view wx:if="{{loading}}" class="reminder">正在加载...</view>
-    <!-- 如果没有数据时显示新预约按钮 -->
-    <button wx:elif="{{!loading && (!appointment || appointment.length == 0)}}" class="new-appointment-btn" style="width:80%" bindtap="createNewAppointment">+ 新预约</button>
     <!-- 显示预约记录 -->
-    <block wx:for="{{appointment}}" wx:key="Appointment_id">
+    <block wx:for="{{appointment}}" wx:key="appointment_id">
       <view class="appointment-item">
-        <view class="details"><text>{{item.Name}}</text></view>
-        <view class="details"><text>{{item.Notes}}</text></view>
-        <view class="details"><text>{{item.Appointment_Time}}</text></view>
-        <button class="cancel-btn" style="width:80px" bindtap="showCancelModal" data-id="{{item.Appointment_Id}}">取消</button>
+        <view class="details"><text>{{item.name}}</text></view>
+        <view class="details"><text>{{item.notes}}</text></view>
+        <view class="details"><text>{{item.appointment_time}}</text></view>
+        <button class="cancel-btn" style="width:80px" bindtap="showCancelModal" data-id="{{item.appointment_id}}">取消</button>
       </view>
     </block>
     <!-- 新预约按钮 -->
@@ -42,8 +40,11 @@
         </view>
         <view class="form-item">
           <label>预约咨询师：</label>
-          <picker range="{{consultants}}" value="{{selectedConsultantIndex}}" bindchange="bindConsultantChange">
-            <view>{{consultants[selectedConsultantIndex]}}</view>
+          <picker 
+            range="{{consultantNames}}" 
+            value="{{selectedConsultantIndex}}" 
+            bindchange="bindConsultantChange">
+            <view>{{selectedConsultantName|| '请选择咨询师'}}</view>
           </picker>
         </view>
         <view class="form-item">

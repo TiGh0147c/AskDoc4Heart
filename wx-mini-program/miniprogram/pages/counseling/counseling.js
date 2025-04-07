@@ -4,6 +4,8 @@ const app = getApp(); // 获取全局应用实例
 Page({
 
   data: {
+    userid: '',
+    queue_id: '',
     counselors: [],
     description: '',
     showDetails: {}, // 控制每个咨询师详情是否显示的状态对象
@@ -18,6 +20,8 @@ Page({
   },
 
   onLoad: function (options) {
+    const userid = app.getGlobalData('userid');
+    this.setData({userid: userid});
     console.log('问题类型:', decodeURIComponent(options.problemType));
     console.log('问题简述:', decodeURIComponent(options.description));
     this.setData({
@@ -40,7 +44,7 @@ Page({
     this.setData({
       loading: true
     });
-    /* 模拟传入数据 */
+    /* 模拟获取咨询师数据 */
     const everyday = [{
       _id: "7456afe067c8eeeb007246c80553c0f5",
       name: "苏轼",
@@ -128,12 +132,22 @@ Page({
 
   addToQueue(e) {
     const { id, name } = e.currentTarget.dataset; // 获取咨询师的 ID
-    // 模拟请求数据（实际项目中替换为真实 API 请求）
-    const data = {
-      id: id,
-      queueCount: Math.floor(Math.random() * 10), // 随机生成排队人数
-      waitingTime: Math.floor(Math.random() * 20), // 随机生成等待时间
+    const time = new Date();
+    //模拟传入排队数据并获取队伍序号
+    const queuedata = {
+      user_id: this.data.userid,
+      counselor_id: id,
+      join_queue_time: time
     }
+    console.log("传入排队数据：", queuedata)
+
+    const queueid = Math.floor(Math.random() * 10);
+    this.setData({
+      queue_id: queueid
+    })
+    console.log("队伍序号为：",this.data.queue_id)
+
+    const data = this.fetchData(queueid);
     this.setData({
       modalData: data,
       showModal: true,
@@ -144,7 +158,7 @@ Page({
 
     // 启动定时器，每 10 秒获取一次数据
     const intervalId2 = setInterval(() => {
-      const newData = this.fetchData(id);
+      const newData = this.fetchData(queueid);
       this.setData({
         modalData: newData,
       });
@@ -154,17 +168,24 @@ Page({
     this.setData({ intervalId2 });
   },
 
-  // 模拟获取数据的方法（实际项目中替换为真实 API 请求）
-  fetchData(id) {
+  // 模拟请求队伍状态数据
+  fetchData(queueid) {
+    const queueCount = Math.floor(Math.random() * 10);
     return {
-      id: id,
-      queueCount: Math.floor(Math.random() * 10), // 随机生成排队人数
-      waitingTime: Math.floor(Math.random() * 20), // 随机生成等待时间（分钟）
+      queueCount: queueCount, // 随机生成排队人数
+      waitingTime: Math.floor(Math.random() * 5 * queueCount), // 随机生成等待时间（分钟）
     };
   },
 
   // 关闭模态框
   handleClose() {
+    const time = new Date();
+    //模拟修改排队数据
+    const queuedata = {
+      queue_id: this.data.queue_id,
+      exit_queue_time: time
+    }
+    console.log("退出了排队：", queuedata)
     this.setData({ showModal: false });
     if (this.data.intervalId2) {
       clearInterval(this.data.intervalId2); // 清除定时器
@@ -173,6 +194,27 @@ Page({
         showModal: false, // 隐藏模态框
       });
     }
+  },
+
+  // 清空计时器
+  clearTimers() {
+    const { intervalId1, intervalId2 } = this.data;
+
+    if (intervalId1) {
+      clearInterval(intervalId1); // 清除第一个计时器
+      console.log('计时器 1 已清除');
+    }
+
+    if (intervalId2) {
+      clearInterval(intervalId2); // 清除第二个计时器
+      console.log('计时器 2 已清除');
+    }
+
+    // 清空计时器 ID
+    this.setData({
+      intervalId1: null,
+      intervalId2: null,
+    });
   },
 
   navigateToDialogue(e) {
@@ -196,6 +238,18 @@ Page({
         url: `/pages/dialogue/dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
       });
     }
+  },
+
+  // 页面卸载时触发
+  onUnload() {
+    this.clearTimers(); // 清空计时器
+    console.log('页面已卸载，计时器已清除');
+  },
+
+  // 页面隐藏时触发
+  onHide() {
+    this.clearTimers(); // 清空计时器
+    console.log('页面已隐藏，计时器已清除');
   }
 
 })

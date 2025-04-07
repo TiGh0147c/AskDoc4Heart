@@ -1,7 +1,10 @@
 // pages/appointment/appointment.js
+const app = getApp(); // 获取全局应用实例
+
 Page({
 
   data: {
+    userid: '',
     appointment: [],
     maxAppointments: 3, // 最大可预约数
     loading: true, // 添加一个加载状态变量
@@ -11,21 +14,42 @@ Page({
     selectedDate: '',
     timeOptions: ['morning', 'afternoon'],
     selectedTime: '',
-    consultants: [],
-    selectedConsultantIndex: 0,
+    consultants: [], // 当前时间段的咨询师列表
+    consultantNames: [], // 当前时间段的咨询师名字列表
+    selectedConsultantIndex: 0, // 默认选中的咨询师索引
+    selectedConsultantName: '', // 当前选中的咨询师名字
     problemTypes: ['情感障碍', '其他问题'],
     selectedProblemTypeIndex: 0,
-    schedule: { // 排班表数据
-      "2025-04-04": {"morning": ["小陈", "小林"], "afternoon": ["李明", "王芳"]},
-      "2025-04-07": {"morning": ["李明", "王芳"], "afternoon": ["小陈", "小林"]},
-      "2025-04-08": {"morning": ["李明", "王芳"], "afternoon": ["小陈", "小林"]},
-      "2025-04-09": {"morning": ["小陈", "小林"], "afternoon": ["李明", "王芳"]},
-      "2025-04-10": {"morning": ["小陈", "小林"], "afternoon": ["李明", "王芳"]}
-    },
+    schedule: [],
     canSubmit: false, // 标识是否可以提交预约
   },
 
   onLoad: function () {
+    const userid = app.getGlobalData('userid');
+    this.setData({userid: userid});
+    /* 模拟获取值班表数据 */
+    const today = new Date();
+    console.log("传入日期", today);
+    const scheduledata = [
+      {date: "2025-04-07", time: "morning", name: "李明", id: "003"},
+      {date: "2025-04-07", time: "morning", name: "王芳", id: "004"},
+      {date: "2025-04-07", time: "afternoon", name: "小陈", id: "001"},
+      {date: "2025-04-07", time: "afternoon", name: "小林", id: "002"},
+      {date: "2025-04-08", time: "morning", name: "李明", id: "003"},
+      {date: "2025-04-08", time: "morning", name: "王芳", id: "004"},
+      {date: "2025-04-08", time: "afternoon", name: "小陈", id: "001"},
+      {date: "2025-04-08", time: "afternoon", name: "小林", id: "002"},
+      {date: "2025-04-10", time: "morning", name: "小陈", id: "001"},
+      {date: "2025-04-10", time: "morning", name: "小林", id: "002"},
+      {date: "2025-04-10", time: "afternoon", name: "李明", id: "003"},
+      {date: "2025-04-11", time: "afternoon", name: "王芳", id: "004"},
+      {date: "2025-04-11", time: "morning", name: "小陈", id: "001"},
+      {date: "2025-04-11", time: "morning", name: "小林", id: "002"},
+      {date: "2025-04-11", time: "afternoon", name: "李明", id: "003"},
+      {date: "2025-04-11", time: "afternoon", name: "王芳", id: "004"}
+    ];
+    console.log("获取值班数据：", scheduledata);
+    this.setData({schedule: scheduledata});
     this.calculateDates();
     this.refresh();
   },
@@ -34,20 +58,24 @@ Page({
     this.setData({
       loading: true
     })
-    /* 获取数据(模拟) */
-    const data1 = [{
-      Appointment_Id:"0001",
-      Name:"小陈",
-      Notes:"焦虑症咨询",
-      Appointment_Time:"2025-04-20 上午"
+    /* 模拟获取预约数据 */
+    const inputdata = {
+      user_id: this.data.userid
+    }
+    console.log("传入用户id", inputdata);
+    const data = [{
+      appointment_id:"0001",
+      name:"小陈",
+      notes:"焦虑症咨询",
+      appointment_time:"2025-04-20 上午"
     },{
-      Appointment_Id:"0002",
-      Name:"小林",
-      Notes:"焦虑症咨询",
-      Appointment_Time:"2025-04-22 上午"
+      appointment_id:"0002",
+      name:"小林",
+      notes:"焦虑症咨询",
+      appointment_time:"2025-04-22 上午"
     }];
-    const data2 = [];
-    const appointmentData = Array.isArray(data1[0]) ? data1[0] : data1;
+    console.log("获取预约数据:", data);
+    const appointmentData = Array.isArray(data[0]) ? data[0] : data;
     this.setData({
       appointment: appointmentData || [],
       loading: false
@@ -114,16 +142,37 @@ Page({
   updateConsultants() {
     const { selectedDate, selectedTime, schedule } = this.data;
 
-    if (selectedDate && selectedTime && schedule[selectedDate] && schedule[selectedDate][selectedTime]) {
+    if (!selectedDate || !selectedTime) {
       this.setData({
-        consultants: schedule[selectedDate][selectedTime],
+        consultants: [],
+        consultantNames: ['无'],
         selectedConsultantIndex: 0,
+        selectedConsultantName: '无',
+        canSubmit: false, // 禁止提交预约
+      });
+      return;
+    }
+
+    // 筛选出符合条件的咨询师
+    const filteredConsultants = schedule
+      .filter(item => item.date === selectedDate && item.time === selectedTime);
+
+    if (filteredConsultants.length > 0) {
+      const consultantNames = filteredConsultants.map(item => item.name); // 提取咨询师名字
+
+      this.setData({
+        consultants: filteredConsultants,
+        consultantNames: consultantNames,
+        selectedConsultantIndex: 0,
+        selectedConsultantName: consultantNames[0], // 默认选中第一个咨询师的名字
         canSubmit: true, // 可以提交预约
       });
     } else {
       this.setData({
-        consultants: ['无'],
+        consultants: [],
+        consultantNames: ['无'],
         selectedConsultantIndex: 0,
+        selectedConsultantName: '无',
         canSubmit: false, // 禁止提交预约
       });
     }
@@ -131,7 +180,13 @@ Page({
 
   // 处理咨询师选择
   bindConsultantChange(e) {
-    this.setData({ selectedConsultantIndex: e.detail.value });
+    const selectedIndex = e.detail.value; // 获取用户选择的索引
+    const selectedConsultantName = this.data.consultantNames[selectedIndex]; // 获取对应的咨询师名字
+
+    this.setData({
+      selectedConsultantIndex: selectedIndex,
+      selectedConsultantName: selectedConsultantName
+    });
   },
 
   // 处理问题类型选择
@@ -149,14 +204,17 @@ Page({
       return;
     }
 
-    const { selectedDate, selectedTime, consultants, selectedConsultantIndex, problemTypes, selectedProblemTypeIndex } = this.data;
+    const { selectedDate, selectedTime, consultants, selectedConsultantIndex, problemTypes, selectedProblemTypeIndex, userid } = this.data;
+
+    //模拟传入预约数据
     const appointmentData = {
-      date: selectedDate,
-      time: selectedTime,
-      consultant: consultants[selectedConsultantIndex],
+      appointment_date: selectedDate,
+      appointment_time: selectedTime,
+      user_id: userid,
+      consultant: consultants[selectedConsultantIndex].name,
+      consultantId: consultants[selectedConsultantIndex].id,
       problemType: problemTypes[selectedProblemTypeIndex],
     };
-
     console.log('提交的预约数据:', appointmentData);
 
     wx.showToast({
@@ -164,6 +222,7 @@ Page({
       icon: 'success',
     });
 
+    this.refresh();
     this.hideModal();
   },
 
@@ -187,8 +246,11 @@ Page({
 
   // 取消预约
   cancelAppointment(appointmentId) {
-    // 调用 API 或更新本地数据
-    console.log("取消了预约",appointmentId);
+    // 模拟修改预约数据
+    const data = {
+      appointment_id: appointmentId
+    }
+    console.log("取消了预约:",data);
     this.refresh();
   },
 
