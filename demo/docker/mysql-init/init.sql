@@ -26,10 +26,12 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS Appointment;
 CREATE TABLE Appointment (
     appointment_id INT PRIMARY KEY AUTO_INCREMENT,
-    appointment_time DATETIME NOT NULL,
+    appointment_date DATE NOT NULL,
+    appointment_time ENUM('morning', 'afternoon') NOT NULL COMMENT '预约时段(上午/下午)',
     appointment_status ENUM('completed', 'expired', 'cancelled', 'scheduled') NOT NULL,
     user_id INT NOT NULL,
     counselor_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id)
 );
@@ -256,6 +258,16 @@ CREATE TABLE `Counselor_Schedule`  (
 -- ----------------------------
 -- Records of Counselor_Schedule
 -- ----------------------------
+-- 举例子排班记录
+INSERT INTO Schedule (date, time_slot) VALUES ('2025-04-10', 'morning');
+SET @schedule_id = LAST_INSERT_ID();
+INSERT INTO Counselor_Schedule (schedule_id, counselor_id) VALUES (@schedule_id, 1), (@schedule_id, 2);
+INSERT INTO Supervisor_Schedule (schedule_id, supervisor_id) VALUES (@schedule_id, 1);
+-- 举例子排班记录
+INSERT INTO Schedule (date, time_slot) VALUES ('2025-04-10', 'afternoon');
+SET @schedule_id = LAST_INSERT_ID();
+INSERT INTO Counselor_Schedule (schedule_id, counselor_id) VALUES (@schedule_id, 1), (@schedule_id, 2);
+INSERT INTO Supervisor_Schedule (schedule_id, supervisor_id) VALUES (@schedule_id, 1);
 
 -- ----------------------------
 -- Table structure for Leave_Application
@@ -284,7 +296,7 @@ DROP TABLE IF EXISTS Queue;
 CREATE TABLE Queue (
     queue_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '排队ID',
     queue_number INT NOT NULL COMMENT '队列序号',
-    user_number VARCHAR(20) COMMENT '用户排队编号(可选)',
+    user_number INT COMMENT '用户排队编号(可选)',
     join_queue_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '加入队列时间',
     exit_queue_time DATETIME COMMENT '离开队列时间',
     queue_status ENUM('waiting', 'completed', 'cancelled') NOT NULL DEFAULT 'waiting' COMMENT '排队状态(等待中/已完成/已取消)',
@@ -310,6 +322,7 @@ CREATE TABLE Counselor  (
    phone_number varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    password varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
    email varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+   gender enum('male','female','other','unknown') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    counselor_certificate text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
    is_supervisor tinyint(1) NULL DEFAULT 0,
    status enum('available', 'unavailable') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'available',
@@ -320,8 +333,8 @@ CREATE TABLE Counselor  (
 -- ----------------------------
 -- Records of Counselor
 -- ----------------------------
-INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '2ecaew','13800138001', 'hashed_password_1', 'counselor1@example.com', NULL, 0, 'available', '焦虑症', 0);
-INSERT INTO `Counselor` VALUES (2, '李督导','2fwefv','13800138002','hashed_password_2', 'supervisor1@example.com', NULL, 1, 'available', '抑郁症', 0);
+INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '2ecaew','13800138001', 'hashed_password_1', 'counselor1@example.com', 'female',NULL, 0, 'available', '焦虑症', 0);
+INSERT INTO `Counselor` VALUES (2, '李咨询师','2fwefv','13800138002','hashed_password_2', 'supervisor1@example.com', 'male',NULL, 1, 'available', '抑郁症', 0);
 
 
 
@@ -336,6 +349,7 @@ CREATE TABLE Supervisor  (
    avatar varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    password varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
    email varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+   gender enum('male','female','other','unknown') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    counselor_certificate text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
    is_supervisor tinyint(1) NULL DEFAULT 1,
    status enum('available', 'unavailable') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'available',
@@ -346,7 +360,7 @@ CREATE TABLE Supervisor  (
 -- ----------------------------
 -- Records of Supervisor
 -- ----------------------------
-INSERT INTO Supervisor VALUES (1, '王督导', '13800138003','swfvv' ,'hashed_password_3', 'supervisor2@example.com', NULL, 1, 'available', '家庭关系', 0);
+INSERT INTO Supervisor VALUES (1, '王督导', '13800138003','swfvv' ,'hashed_password_3', 'supervisor2@example.com', 'male',NULL, 1, 'available', '家庭关系', 0);
 
 -- ----------------------------
 -- Table structure for User
@@ -382,6 +396,8 @@ CREATE TABLE User_Modification_Audit (
 -- Records of User
 -- ----------------------------
 
+INSERT INTO User (union_id, open_id, nickname, avatar, gender, birthday, email, password, occupation, phone_number)
+VALUES ('exampleUnionId', 'exampleOpenId', 'John Doe', 'http://example.com/avatar.jpg', 'male', '1990-01-01', 'john.doe@example.com', 'securePassword123', 'Engineer', '1234567890');
 
 
 DROP TABLE IF EXISTS Administrator;
@@ -396,6 +412,8 @@ CREATE TABLE Administrator (
     status ENUM('active', 'disabled') DEFAULT 'active' COMMENT '状态(启用/禁用)',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+
 
 SET FOREIGN_KEY_CHECKS = 1;
 
