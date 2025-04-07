@@ -9,9 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 
 
-@EnableScheduling
 
-@MapperScan({"com.example.demo.Appointment.mapper", "com.example.demo.Queue.mapper"})
 public class DemoApplication {
 
 	public static void main(String[] args) {
