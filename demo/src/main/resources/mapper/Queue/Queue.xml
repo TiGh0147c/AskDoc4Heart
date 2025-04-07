@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.Queue.mapper.QueueMapper">
+    <resultMap id="BaseResultMap" type="com.example.demo.Queue.entity.Queue">
+        <id column="queue_id" property="queueId"/>
+        <result column="queue_number" property="queueNumber"/>
+        <result column="user_number" property="userNumber"/>
+        <result column="join_queue_time" property="joinQueueTime"/>
+        <result column="exit_queue_time" property="exitQueueTime"/>
+        <result column="queue_status" property="queueStatus"/>
+        <result column="user_id" property="userId"/>
+        <result column="counselor_id" property="counselorId"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="queueId">
+        INSERT INTO Queue(queue_number, user_number, user_id, counselor_id, queue_status, join_queue_time)
+        VALUES(#{queueNumber}, #{userNumber}, #{userId}, #{counselorId}, #{queueStatus}, #{joinQueueTime})
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM Queue WHERE queue_id = #{queueId}
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT * FROM Queue WHERE user_id = #{userId} ORDER BY join_queue_time DESC
+    </select>
+
+    <select id="selectCurrentQueue" resultMap="BaseResultMap">
+        SELECT * FROM Queue
+        WHERE counselor_id = #{counselorId} AND queue_status = 'waiting'
+        ORDER BY queue_number ASC
+    </select>
+
+    <select id="selectActiveQueues" resultMap="BaseResultMap">
+        SELECT * FROM Queue WHERE queue_status = 'waiting'
+    </select>
+
+    <update id="updateById">
+        UPDATE Queue SET
+        queue_status = #{queueStatus},
+        exit_queue_time = #{exitQueueTime}
+        WHERE queue_id = #{queueId}
+    </update>
+    <select id="countAheadUsers" resultType="int">
+        SELECT COUNT(*) FROM Queue
+        WHERE counselor_id = #{counselorId}
+        AND queue_number &lt; #{currentNumber}
+        AND queue_status = 'waiting'  <!-- 只计算waiting状态的用户 -->
+        AND join_queue_time &lt; #{joinTime}
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*) FROM Queue
+        WHERE counselor_id = #{counselorId}
+        AND queue_status = #{status}
+    </select>
+    <select id="selectNextPatient" resultMap="BaseResultMap">
+        SELECT * FROM Queue
+        WHERE counselor_id = #{counselorId} AND queue_status = 'waiting'
+        ORDER BY queue_number ASC LIMIT 1
+    </select>
+
+    <select id="selectLastQueueNumberForUpdate" resultType="Integer">
+        SELECT MAX(queue_number) FROM Queue
+        WHERE counselor_id = #{counselorId} FOR UPDATE
+    </select>
+</mapper>

@@ -299,7 +299,7 @@ CREATE TABLE Queue (
     user_number INT COMMENT '用户排队编号(可选)',
     join_queue_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '加入队列时间',
     exit_queue_time DATETIME COMMENT '离开队列时间',
-    queue_status ENUM('waiting', 'completed', 'cancelled') NOT NULL DEFAULT 'waiting' COMMENT '排队状态(等待中/已完成/已取消)',
+    queue_status ENUM('waiting', 'completed', 'cancelled','in_progress') NOT NULL DEFAULT 'waiting' COMMENT '排队状态(等待中/已完成/已取消/进行中)',
     user_id INT NOT NULL COMMENT '用户ID',
     counselor_id INT NOT NULL COMMENT '咨询师ID',
     FOREIGN KEY (user_id) REFERENCES User(user_id),
