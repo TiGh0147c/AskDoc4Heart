@@ -164,6 +164,7 @@
   padding: 0rpx 20rpx; /* 内边距 */
   height: 80px; /* 设置高度 */
   align-items: center; /* 确保内容垂直居中 */
+  z-index: 11;
 }
 
 .input-area input {

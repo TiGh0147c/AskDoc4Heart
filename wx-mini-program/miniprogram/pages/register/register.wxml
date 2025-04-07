@@ -8,8 +8,10 @@
         <input name="nickname" placeholder="请输入您的昵称" />
       </view>
       <view class="section">
-        <label>出生年份</label>
-        <input name="birthYear" placeholder="请输入出生年份" />
+        <label>出生日期</label>
+        <picker mode="date" name="birthday" bindchange="onDateChange">
+          <view>{{birthday || '请选择日期'}}</view>
+        </picker>
       </view>
       <view class="section"> 
         <label>性别</label>
@@ -17,6 +19,18 @@
           <label><radio value="男" checked="{{gender == '男'}}"/>男</label>
           <label><radio value="女" checked="{{gender == '女'}}"/>女</label>
         </radio-group>
+      </view>
+      <view class="section">
+        <label>职业</label>
+        <picker mode="selector" range="{{jobOptions}}" bindchange="onJobChange">
+          <view class="picker">
+            {{occupation || '请选择职业'}}
+          </view>
+        </picker>
+      </view>
+      <view class="section">
+        <label>邮箱</label>
+        <input name="email" placeholder="请输入邮箱" />
       </view>
       <view class="section">
         <label>手机号</label>
@@ -30,7 +44,7 @@
         <label>确认密码</label>
         <input name="password2" type="text" password="{{true}}"  placeholder="请再次输入密码" />
       </view>
-      <button formType="submit" type="primary">提交</button>
+      <button formType="submit">提交</button>
     </form>
   </view>
 </view>

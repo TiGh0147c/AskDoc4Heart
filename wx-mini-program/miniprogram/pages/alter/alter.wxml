@@ -4,21 +4,27 @@
     <view class="head"> 
       <text>修改个人信息</text>
     </view>
-    <button bindtap="showModal">修改昵称</button>
+    <button bindtap="showModal" data-mode="nickname">修改昵称</button>
+    <button bindtap="showModal" data-mode="email">修改邮箱</button>
     <button bindtap="chooseImage">修改头像</button>
     <view class="modal" wx:if="{{isModalVisible}}">
       <view class="modal-content">
         <view class="form-group">
-          <label>当前昵称：</label>
-          <text>{{userName}}</text>
+          <label>{{mode === 'nickname' ? '当前昵称：' : '当前邮箱：'}}</label>
+          <text>{{mode === 'nickname' ? userName : email}}</text>
         </view>
         <view class="form-group">
-          <label>新昵称：</label>
-          <input type="text" placeholder="请输入新昵称" value="{{newNickname}}" bindinput="onNicknameInput"/>
+          <label>{{mode === 'nickname' ? '新昵称：' : '新邮箱：'}}</label>
+          <input 
+            type="text" 
+            placeholder="请输入新{{mode === 'nickname' ? '昵称' : '邮箱'}}" 
+            value="{{mode === 'nickname' ? newNickname : newEmail}}" 
+            bindinput="{{mode === 'nickname' ? 'onNicknameInput' : 'onEmailInput'}}"
+          />
         </view>
         <view class="modal-buttons">
           <button bindtap="hideModal">取消</button>
-          <button bindtap="altername">保存</button>
+          <button bindtap="alter">保存</button>
         </view>
       </view>
     </view>

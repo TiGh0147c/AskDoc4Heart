@@ -4,10 +4,13 @@ const app = getApp(); // 获取全局应用实例
 Page({
 
   data: {
-    openid: '',
+    userid: '',
+    counselorid: '',
     scrollViewHeight: 650, // 示例高度，请根据实际情况调整
     messages: [],
+    messageContent: "", // 初始化为空字符串
     messageTableName: '',
+    session_id: '',
     isButtonVisible: true,
     isConfirmModalVisible: false,
     isRatingModalVisible: false,
@@ -28,12 +31,29 @@ Page({
     const counselorId = options.counselorId;
     const counselorName = options.counselorName;
     const description = options.description;
-    const openid = app.getGlobalData('openid');
+    const userid = app.getGlobalData('userid');
     console.log('Counselor ID:', counselorId);
     console.log('Counselor name:', counselorName);
     //console.log('问题简述:', description);
     app.setGlobalData('counseling', 1); 
-    this.setData({openid: openid});
+    this.setData({userid: userid});
+    this.setData({counselorid: counselorId});
+
+    /* 模拟创建咨询会话 */
+    const now = new Date();
+    const data = {
+      user_id: this.data.userid,
+      counselor_id: this.data.counselorid,
+      Session_Start_Time: now,
+      Last_Message_Sent_Time: now,
+      Session_Status: "in_progress"
+    }
+    console.log("创建了会话:", data);
+    const getdata={
+      Session_Id: "0001"
+    }
+    this.setData({session_id: getdata.Session_Id});
+    console.log("获取会话id", getdata);
     this.addMessage(description);
     this.animation = wx.createAnimation({
       duration: 300,
@@ -52,15 +72,25 @@ Page({
       }
     });
 
-    //this.createChatRecord(counselorId, counselorName);
   },
 
   addMessage(message) {
-    const timestamp = new Date().getTime(); // 获取当前时间戳
+    // 模拟插入消息数据
+    const time = new Date(); // 获取当前时间
+    const data = {
+      message_content: message,
+      session_id: this.data.session_id,
+      sender_role: 'user',
+      sender_id: this.data.userid, 
+      message_type: 'user-message', 
+      message_sent_time: time
+    };
+    console.log("发送了消息：", data);
+
     const Message = {
-      content: message,
-      tag: 0, 
-      timestamp: timestamp
+      content: data.message_content,
+      message_type: data.message_type, 
+      timestamp: data.message_sent_time
     };
 
     // 更新messages数组并将新消息添加进去
@@ -71,21 +101,31 @@ Page({
       this.scrollToBottom();
     });
 
+    // 获取ai回复
     wx.cloud.callFunction({
       name: 'SuShi',
       data: {
-        userId: this.data.openid,
+        userId: this.data.userid,
         message: message
       },
       success: (res) => {
-        console.log(res.result.data.data.choices[0].messages[0].content);
+        // 模拟插入ai消息数据
         const aimessage = res.result.data.data.choices[0].messages[0].content;
-        // 根据返回结果更新UI
-        const aitimestamp = new Date().getTime(); // 获取当前时间戳
+        const time = new Date(); // 获取当前时间
+        const data = {
+          message_content: aimessage,
+          session_id: this.data.session_id,
+          sender_role: 'counselor',
+          sender_id: this.data.counselorid, 
+          message_type: 'counselor-message', 
+          message_sent_time: time
+        };
+        console.log("接收到ai的消息：", data);
+
         const aiMessage = {
-          content: aimessage,
-          tag: 1, 
-          timestamp: aitimestamp
+          content: data.message_content,
+          message_type: data.message_type, 
+          timestamp: data.message_sent_time
         };
 
         // 更新messages数组并将新消息添加进去
@@ -109,79 +149,9 @@ Page({
     });
   },
 
-  // 目前还没实现，先放着
-  createChatRecord: function(counselorId, counselorName) {
-    const openid = app.getGlobalData('openid'); 
-    if(!openid){
-      wx.cloud.callFunction({
-        name: 'getid',
-        complete: res => {
-          if (res.result.openid) {
-            // 将OpenID存入全局变量
-            app.setGlobalData('openid', res.result.openid); 
-          } else {
-            console.log('未能获取到用户OpenID');
-          }
-        }
-      });
-    }
-
-    wx.cloud.callFunction({
-      name: 'createChatRecord',
-      data: {
-        openid: openid,
-        counselorId: counselorId,
-        counselorName: counselorName
-      },
-      success: res => {
-        if (res.result.success) {
-          const messageTableName = res.result.messageTableName;
-          this.setData({ messageTableName: messageTableName }, () => {
-            this.listenForNewMessages();
-          });
-        } else {
-          console.error('Failed to create chat record:', res.result.errMsg);
-        }
-      },
-      fail: err => {
-        console.error('Call cloud function failed:', err);
-      }
-    });
-    
-  },
-
-  listenForNewMessages: function() {
-    const db = wx.cloud.database();
-    // 使用watch监听指定消息表的变化
-    const watcher = db.collection(this.data.messageTableName).where({}).watch({
-      onChange: snapshot => {
-        // 更新消息列表，确保按时间顺序排序
-        this.setData({
-          messages: snapshot.docs.sort((a, b) => a.timestamp - b.timestamp)
-        });
-      },
-      onError: err => {
-        console.error('监听失败', err);
-        // 处理错误，例如重新连接或提示用户
-      }
-    });
-  
-    // 可以考虑在onUnload生命周期函数中关闭watcher
-    this.setData({ watcher: watcher });
-  },
-
-  onUnload: function() {
-    // 当页面卸载时，记得关闭watcher以释放资源
-    if (this.data.watcher) {
-      this.data.watcher.close();
-    }
-  },
-
   sendMessage: function() {
     const messageContent = this.data.messageContent.trim();
     if (!messageContent) return;
-
-    console.log('发送了', messageContent);
     this.addMessage(messageContent);
     this.setData({
       messageContent: '' // 清空输入框内容
@@ -317,6 +287,14 @@ Page({
   submitRating() {
     console.log(`提交的评分是：${this.data.currentRating}`);
     // 处理评分提交逻辑...
+    
+    /* 模拟结束咨询会话 */
+    const now = new Date();
+    const data = {
+      session_id: this.data.session_id,
+      Session_End_Time: now
+    }
+    console.log("结束了会话:", data);
     this.hideRatingModal();
     app.setGlobalData('counseling', 0); 
     wx.reLaunch({ 

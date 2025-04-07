@@ -6,14 +6,15 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV }) // 使用当前云环境
 // 云函数入口函数
 exports.main = async (event, context) => {
   const db = cloud.database();
-  const { openid, nickname, birthYear, gender, phonenum, password } = event;
+  const { openid, nickname, birthday, occupation, gender, phonenum, password } = event;
 
   try {
     await db.collection('user_account').add({
       data: {
         wid: openid,
         nickname: nickname,
-        birthYear: birthYear,
+        birthday: birthday,
+        occupation: occupation,
         gender: gender,
         phonenum: phonenum,
         password: password,

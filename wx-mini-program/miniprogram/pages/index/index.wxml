@@ -9,7 +9,7 @@
       </navigator>
       <!-- 分隔线 -->
       <view class="wel-divider"></view>
-      <navigator url="/pages/subscribe/subscribe" hover-class="none">
+      <navigator url="/pages/appointment/appointment" hover-class="none">
         <image src="/images/预约.png" mode="aspectFit"></image>
         <text>预约</text>
       </navigator>

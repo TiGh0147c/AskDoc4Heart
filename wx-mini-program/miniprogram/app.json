@@ -13,7 +13,9 @@
     "pages/recorddetail/recorddetail",
     "pages/brief/brief",
     "components/star-rating/star-rating",
-    "pages/ai-dialogue/ai-dialogue"
+    "components/modal-waiting/modal-waiting",
+    "pages/ai-dialogue/ai-dialogue",
+    "pages/appointment/appointment"
   ],
   "window": {
     "backgroundColor": "#F6F6F6",

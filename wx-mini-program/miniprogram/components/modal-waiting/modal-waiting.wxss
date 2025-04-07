@@ -1,0 +1,95 @@
+/* components/modal-waiting/modal-waiting.wxss */
+/* 模态框遮罩层 */
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* 模态框内容 */
+.modal-content {
+  background-color: rgb(28, 29, 33);
+  border: 2px solid rgb(238, 239, 247);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 770rpx;
+  border-radius: 16px;
+  padding: 24px;
+  z-index: 1000;
+  /* 初始状态：隐藏在屏幕底部 */
+  transform: translateY(100%);
+}
+
+/* 标题 */
+.modal-header {
+  font-size: 32px;
+  color: rgb(238, 239, 247);
+  margin-top: 10px;
+  margin-bottom: 18px;
+  margin-left: 20px;
+}
+
+/* 分割线 */
+.divider {
+  height: 2px; /* 分割线高度 */
+  width: 100%;
+  background-color: rgb(238, 239, 247);
+  margin-bottom: -5px;
+}
+
+/* 主体内容 */
+.modal-body {
+  display: flex;
+  align-items: center; /* 垂直居中对齐 */
+  justify-content: space-between; /* 左右对齐 */
+}
+
+image {
+  display: block; /* 确保图片作为块级元素显示 */
+  width: 64%; /* 让图片宽度占据容器宽度 */
+  border-radius: 10px;
+  margin-left: -8px;
+}
+
+.queue-info {
+  text-align: center;
+  color: rgb(238, 239, 247);
+  margin-bottom: 24px;
+  font-size: 18px;
+}
+
+.queue-info {
+  text-align: left; /* 文本左对齐 */
+  margin-top: 24rpx;
+  margin-right: -10rpx;
+}
+
+.queue-info text {
+  display: block;
+  margin-top: 8px;
+  line-height: 2; /* 可选：设置行高 */
+}
+
+.close-btn{
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center; /* 竖直居中 */
+  background-color: rgb(28, 29, 33);
+  border: 2px solid rgb(238, 239, 247);
+  color: rgb(238, 239, 247);
+  margin-top: 60rpx;
+  margin-bottom: 80rpx;
+  border-radius: 10rpx;
+  font-size: 15px;
+}
