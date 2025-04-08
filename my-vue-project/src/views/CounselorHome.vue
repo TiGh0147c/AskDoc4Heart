@@ -94,8 +94,10 @@ export default {
   setup() {
     const store = useStore()
     const router = useRouter()
-
-    const username = computed(() => store.getters.username)
+    
+    // 从localStorage获取用户信息
+    const userData = JSON.parse(localStorage.getItem('user'))
+    const username = ref(userData?.username || '咨询师')
     
     // 打卡相关状态
     const isWorking = ref(false)

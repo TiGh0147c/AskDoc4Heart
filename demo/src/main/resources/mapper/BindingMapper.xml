@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.binding.mapper.BindingMapper">
+
+    <insert id="insertBindingRecord" useGeneratedKeys="true" keyProperty="bindingId">
+        INSERT INTO Binding_Record (binding_status, supervisor_id, counselor_id, created_at)
+        VALUES (#{bindingStatus}, #{supervisorId}, #{counselorId}, NOW())
+    </insert>
+
+    <select id="getLatestBindingByCounselorId" resultType="com.example.demo.binding.entity.BindingRecord">
+        SELECT binding_id     bindingId,
+               created_at     createdAt,
+               binding_status bindingStatus,
+               supervisor_id  supervisorId,
+               counselor_id   counselorId
+        FROM Binding_Record
+        WHERE counselor_id = #{counselorId}
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="getSupervisorByCounselorId" resultType="com.example.demo.binding.entity.Supervisor">
+        SELECT supervisor_id         supervisorId,
+               name,
+               phone_number          phoneNumber,
+               avatar,
+               password,
+               email,
+               counselor_certificate counselorCertificate,
+               is_supervisor         isSupervisor,
+               status,
+               expertise_area        expertiseArea,
+               on_duty               onDuty
+        FROM Supervisor
+        WHERE supervisor_id = (SELECT IF(binding_status = 'bound', br.supervisor_id, NULL)
+                               FROM Binding_Record br
+                               WHERE counselor_id = #{counselorId}
+                               ORDER BY created_at DESC
+                               LIMIT 1)
+    </select>
+
+    <select id="getSupervisorById" resultType="com.example.demo.binding.entity.Supervisor">
+        SELECT supervisor_id         supervisorId,
+               name,
+               phone_number          phoneNumber,
+               avatar,
+               password,
+               email,
+               counselor_certificate counselorCertificate,
+               is_supervisor         isSupervisor,
+               status,
+               expertise_area        expertiseArea,
+               on_duty               onDuty
+        FROM Supervisor
+        WHERE supervisor_id = #{supervisorId}
+    </select>
+
+    <select id="getCounselorsBySupervisorId" resultType="com.example.demo.binding.entity.Counselor">
+        SELECT c.counselor_id          counselorId,
+               c.name,
+               c.avatar,
+               c.phone_number          phoneNumber,
+               c.password,
+               c.email,
+               c.counselor_certificate counselorCertificate,
+               c.is_supervisor         isSupervisor,
+               c.status,
+               c.expertise_area        expertiseArea,
+               c.on_duty               onDuty
+        FROM Counselor c
+        WHERE EXISTS (SELECT 1
+                      FROM Binding_Record br
+                      WHERE br.counselor_id = c.counselor_id
+                        AND br.supervisor_id = #{supervisorId}
+                        AND br.binding_status = 'bound'
+                        AND br.created_at = (SELECT MAX(created_at)
+                                             FROM Binding_Record
+                                             WHERE counselor_id = br.counselor_id));
+    </select>
+
+    <select id="getLatestBindingByCounselorAndSupervisor" resultType="com.example.demo.binding.entity.BindingRecord">
+        SELECT binding_id     bindingId,
+               created_at     createdAt,
+               binding_status bindingStatus,
+               supervisor_id  supervisorId,
+               counselor_id   counselorId
+        FROM Binding_Record
+        WHERE counselor_id = #{counselorId}
+          AND supervisor_id = #{supervisorId}
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="getCounselorById" resultType="com.example.demo.binding.entity.Counselor">
+        SELECT counselor_id          counselorId,
+               name,
+               phone_number          phoneNumber,
+               avatar,
+               password,
+               email,
+               counselor_certificate counselorCertificate,
+               is_supervisor         isSupervisor,
+               status,
+               expertise_area        expertiseArea,
+               on_duty               onDuty
+        FROM Counselor
+        WHERE counselor_id = #{counselorId}
+    </select>
+
+    <select id="getAllCounselors" resultType="com.example.demo.binding.entity.Counselor">
+        SELECT counselor_id          counselorId,
+               name,
+               phone_number          phoneNumber,
+               avatar,
+               password,
+               email,
+               counselor_certificate counselorCertificate,
+               is_supervisor         isSupervisor,
+               status,
+               expertise_area        expertiseArea,
+               on_duty               onDuty
+        FROM Counselor
+        WHERE is_supervisor = false
+    </select>
+
+</mapper>

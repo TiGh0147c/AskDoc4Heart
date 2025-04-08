@@ -102,8 +102,11 @@ export default {
   setup() {
     const store = useStore()
     const router = useRouter()
-    const currentPath = computed(() => router.currentRoute.value.name) // 获取当前路径名称
-    const username = computed(() => store.getters.username)
+    const currentPath = computed(() => router.currentRoute.value.name)
+    
+    // 从localStorage获取用户信息
+    const userData = JSON.parse(localStorage.getItem('user'))
+    const username = ref(userData?.username || '用户')
 
     const logout = () => {
       store.dispatch('logout')
@@ -188,7 +191,7 @@ export default {
       username,
       logout,
       goTo,
-      currentPath, // 返回当前路径名称
+      currentPath,
       pendingAppointments,
       upcomingAppointments,
       goToAppointments,

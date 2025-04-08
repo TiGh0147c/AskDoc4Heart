@@ -174,6 +174,7 @@
 import { ref, reactive } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios' // 添加 axios 导入
 
 export default {
   name: 'Register',
@@ -218,6 +219,7 @@ export default {
     }
     
     const handleRegister = async () => {
+      // 验证逻辑保持不变
       if (selectedRole.value === 'user') {
         // 用户注册验证逻辑
         if (!registerForm.username || !registerForm.password) {
@@ -225,7 +227,7 @@ export default {
           return
         }
       } else if (selectedRole.value === 'counselor') {
-        // 咨询师注册验证逻辑
+        // 咨询师注册验证逻辑保持不变
         if (!registerForm.name || !registerForm.password) {
           registerError.value = '请填写姓名和密码'
           return
@@ -259,33 +261,70 @@ export default {
       
       try {
         registerError.value = ''
-        const result = await store.dispatch('register', {
-          username: selectedRole.value === 'user' ? registerForm.username : null,
-          name: selectedRole.value === 'counselor' ? registerForm.name : null,
-          email: selectedRole.value === 'counselor' ? registerForm.email : null,
-          phone: registerForm.phone,
-          gender: selectedRole.value === 'user' ? registerError.gender :null,
-          password: registerForm.password,
-          qualification: selectedRole.value === 'counselor' ? registerForm.qualification : null,
-          isSupervisor: selectedRole.value === 'counselor' ? registerForm.isSupervisor : null,
-          proofFile: selectedRole.value === 'counselor' ? registerForm.proofFile : null,
-          idCard: selectedRole.value === 'counselor' ? registerForm.idCard : null,
-          role: selectedRole.value
-        })
         
-        if (result.success) {
-          // 根据角色重定向到相应的主页
-          if (selectedRole.value === 'user') {
-            router.push('/user/home')
-          } else if (selectedRole.value === 'counselor') {
-            router.push('/counselor/home')
+        if (selectedRole.value === 'counselor') {
+          // 咨询师注册
+          const counselorData = {
+            name: registerForm.name,
+            password: registerForm.password,
+            phone_number: registerForm.phone,
+            email: registerForm.email,
+            is_supervisor: registerForm.qualification === 'one' ? registerForm.isSupervisor : false,
+            expertise_Area: registerForm.qualification
           }
+          
+          // 处理文件上传
+          if (registerForm.proofFile) {
+            const formData = new FormData()
+            formData.append('file', registerForm.proofFile)
+            await axios.post('http://localhost:8080/api/upload', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            })
+          }
+
+          const response = await axios.post('http://localhost:8080/counselor', counselorData, {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
+          })
+          
+          if (response.data.code === 200) {
+            router.push('/login')
+          } else {
+            registerError.value = response.data.message || '咨询师注册失败'
+          }
+        }
+        // 用户注册
+        const userData = {
+          username: registerForm.username,
+          password: registerForm.password,
+          phonenumber: registerForm.phone,
+          gender: registerForm.gender,
+          birthday: '2024-05-15' // 如果需要生日字段，可以在表单中添加
+          
+        }
+
+        const response = await axios.post('http://localhost:8080/user', userData, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        if (response.data.code === 200) {
+          router.push('/login')
         } else {
-          registerError.value = '注册失败，请稍后再试'
+          registerError.value = response.data.message || '注册失败，请稍后再试'
         }
       } catch (error) {
-        registerError.value = '注册过程中发生错误'
-        console.error(error)
+        console.error('注册错误:', error)
+        if (error.response) {
+          registerError.value = error.response.data?.message || 
+                          `注册失败: ${error.response.status}`
+        } else {
+          registerError.value = '网络错误: ' + error.message
+        }
       }
     }
     

@@ -86,15 +86,63 @@
 
 <script>
 import { ref, reactive, onMounted } from 'vue'
-import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
   name: 'Login',
   setup() {
-    const store = useStore()
     const router = useRouter()
     
+    const handleLogin = async () => {
+      if (!loginForm.identifier || !loginForm.password) {
+        loginError.value = '请填写账号和密码'
+        return
+      }
+      
+      try {
+        loginError.value = ''
+        
+        const apiConfig = {
+          user: { url: '/user', paramName: 'username' },
+          counselor: { url: '/counselor', paramName: 'name' },
+          admin: { url: '/administrator', paramName: 'username' }
+        }
+        
+        const config = apiConfig[selectedRole.value] || apiConfig.user
+        const params = {
+          [config.paramName]: loginForm.identifier,
+          password: loginForm.password
+        }
+
+        const response = await axios.get(`http://localhost:8080${config.url}`, { params })
+
+        if (response.data.code === 200) {
+          // 保存完整的用户信息和登录状态
+          const userData = {
+            ...response.data.data,
+            username: loginForm.identifier,
+            role: selectedRole.value,
+            loginTime: new Date().toISOString()
+          }
+          localStorage.setItem('user', JSON.stringify(userData))
+          localStorage.setItem('isAuthenticated', 'true')
+          localStorage.setItem('userRole', selectedRole.value)
+          
+          router.push(`/${selectedRole.value}/home`)
+        } else {
+          loginError.value = response.data.message || '登录失败'
+        }
+      } catch (error) {
+        console.error('登录错误:', error)
+        if (error.response) {
+          loginError.value = error.response.data?.message || 
+                  `登录失败: ${error.response.status}`
+        } else {
+          loginError.value = '网络错误: ' + error.message
+        }
+      }
+    }
     const selectedRole = ref('user')
     
     const loginForm = reactive({
@@ -139,38 +187,6 @@ export default {
       }
     })
     
-    const handleLogin = async () => {
-      if (!loginForm.identifier || !loginForm.password) {
-        loginError.value = '请填写账号和密码'
-        return
-      }
-      
-      try {
-        loginError.value = ''
-        const result = await store.dispatch('login', {
-          identifier: loginForm.identifier, // 后端需要支持通过用户名或手机号登录
-          password: loginForm.password,
-          role: selectedRole.value
-        })
-        
-        if (result.success) {
-          // 根据角色重定向到相应的主页
-          if (selectedRole.value === 'user') {
-            router.push('/user/home')
-          } else if (selectedRole.value === 'counselor') {
-            router.push('/counselor/home')
-          } else if (selectedRole.value === 'admin') {
-            router.push('/admin/home')
-          }
-        } else {
-          loginError.value = '登录失败，请检查账号和密码'
-        }
-      } catch (error) {
-        loginError.value = '登录过程中发生错误'
-        console.error(error)
-      }
-    }
-
     // 切换到微信登录
     const switchToWechatLogin = async () => {
       isWechatLogin.value = true

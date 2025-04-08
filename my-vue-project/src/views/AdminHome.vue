@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
@@ -36,9 +36,11 @@ export default {
   setup() {
     const store = useStore()
     const router = useRouter()
-
-    const username = computed(() => store.getters.username)
-
+    
+    // 从localStorage获取用户信息
+    const userData = JSON.parse(localStorage.getItem('user'))
+    const username = ref(userData?.username || '管理员')
+    
     const logout = () => {
       store.dispatch('logout')
       router.push('/login')

@@ -131,9 +131,10 @@
   </template>
   
   <script>
-  import { ref, computed } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { useStore } from 'vuex'
   import { useRouter } from 'vue-router'
+  import axios from 'axios'
   
   export default {
     name: 'AdminSupervision',
@@ -141,7 +142,9 @@
       const store = useStore()
       const router = useRouter()
   
-      const username = computed(() => store.getters.username)
+      // 从localStorage获取用户信息
+      const userData = JSON.parse(localStorage.getItem('user'))
+      const username = ref(userData?.username || '管理员')
       
       // 搜索字段
       const supervisorSearchTerm = ref('')
@@ -153,46 +156,92 @@
       const selectedCounselorIds = ref([])
       const selectedAssignedCounselorIds = ref([])
       
-      // 模拟数据 - 督导
-      const supervisors = ref([
-        { 
-          id: 1, 
-          name: '李教授', 
-          specialties: ['抑郁症', '焦虑症'], 
-          counselorCount: 2, 
-          maxCounselors: 5, 
-          assignedCounselors: [1, 3]
-        },
-        { 
-          id: 2, 
-          name: '王博士', 
-          specialties: ['婚姻家庭', '青少年心理'], 
-          counselorCount: 3, 
-          maxCounselors: 6, 
-          assignedCounselors: [5, 6, 7]
-        },
-        { 
-          id: 3, 
-          name: '张主任', 
-          specialties: ['创伤治疗', '危机干预'], 
-          counselorCount: 1, 
-          maxCounselors: 4, 
-          assignedCounselors: [2]
+      // 督导和咨询师数据
+      const supervisors = ref([])
+      const counselors = ref([])
+  
+      // 加载督导和咨询师数据
+      const loadData = async () => {
+        try {
+          // 获取所有绑定关系
+          const bindingsResponse = await axios.get('http://localhost:8080/api/binding/all')
+          
+          // 创建督导和咨询师的映射表
+          const supervisorsMap = new Map()
+          const counselorsMap = new Map()
+          
+          // 处理绑定数据
+          bindingsResponse.data.forEach(binding => {
+            // 处理督导数据
+            if (binding.supervisorId && !supervisorsMap.has(binding.supervisorId)) {
+              supervisorsMap.set(binding.supervisorId, {
+                id: binding.supervisorId,
+                name: binding.supervisorName || '未知督导',
+                specialties: ['咨询'], // 默认专长
+                counselorCount: 0,
+                maxCounselors: 5 // 默认最大容量
+              })
+            }
+            
+            // 处理咨询师数据
+            if (binding.counselorId && !counselorsMap.has(binding.counselorId)) {
+              counselorsMap.set(binding.counselorId, {
+                id: binding.counselorId,
+                name: binding.counselorName || '未知咨询师',
+                specialties: ['咨询'], // 默认专长
+                supervisorId: binding.bindingStatus === 'bound' ? binding.supervisorId : null
+              })
+            }
+            
+            // 如果绑定状态为已绑定，更新督导的咨询师数量
+            if (binding.bindingStatus === 'bound' && supervisorsMap.has(binding.supervisorId)) {
+              const supervisor = supervisorsMap.get(binding.supervisorId)
+              supervisor.counselorCount += 1
+            }
+          })
+          
+          // 获取所有督导
+          const supervisorsResponse = await axios.get('http://localhost:8080/api/counselor/supervisors')
+          if (supervisorsResponse.data && Array.isArray(supervisorsResponse.data)) {
+            supervisorsResponse.data.forEach(supervisor => {
+              if (!supervisorsMap.has(supervisor.counselorId)) {
+                supervisorsMap.set(supervisor.counselorId, {
+                  id: supervisor.counselorId,
+                  name: supervisor.name || '未知督导',
+                  specialties: [supervisor.expertiseArea || '咨询'],
+                  counselorCount: 0,
+                  maxCounselors: 5
+                })
+              }
+            })
+          }
+          
+          // 获取所有咨询师
+          const counselorsResponse = await axios.get('http://localhost:8080/api/counselor/all')
+          if (counselorsResponse.data && Array.isArray(counselorsResponse.data)) {
+            counselorsResponse.data.forEach(counselor => {
+              if (!counselor.isSupervisor && !counselorsMap.has(counselor.counselorId)) {
+                counselorsMap.set(counselor.counselorId, {
+                  id: counselor.counselorId,
+                  name: counselor.name || '未知咨询师',
+                  specialties: [counselor.expertiseArea || '咨询'],
+                  supervisorId: null
+                })
+              }
+            })
+          }
+          
+          // 转换Map为数组
+          supervisors.value = Array.from(supervisorsMap.values())
+          counselors.value = Array.from(counselorsMap.values())
+          
+          console.log('加载的督导数据:', supervisors.value)
+          console.log('加载的咨询师数据:', counselors.value)
+        } catch (error) {
+          console.error('加载数据失败:', error)
         }
-      ])
-      
-      // 模拟数据 - 咨询师
-      const counselors = ref([
-        { id: 1, name: '小王', specialties: ['抑郁症'], supervisorId: 1 },
-        { id: 2, name: '小李', specialties: ['创伤治疗'], supervisorId: 3 },
-        { id: 3, name: '小张', specialties: ['焦虑症'], supervisorId: 1 },
-        { id: 4, name: '小陈', specialties: ['青少年心理'], supervisorId: null },
-        { id: 5, name: '小林', specialties: ['婚姻家庭'], supervisorId: 2 },
-        { id: 6, name: '小何', specialties: ['职场压力'], supervisorId: 2 },
-        { id: 7, name: '小赵', specialties: ['青少年心理'], supervisorId: 2 },
-        { id: 8, name: '小孙', specialties: ['抑郁症'], supervisorId: null }
-      ])
-      
+      }
+  
       // 过滤功能
       const filteredSupervisors = computed(() => {
         if (!supervisorSearchTerm.value) return supervisors.value
@@ -273,76 +322,49 @@
         }
       }
       
-      const assignCounselors = () => {
-        if (!selectedSupervisorId.value || !selectedCounselorIds.value.length) return
-        
-        const supervisor = supervisors.value.find(s => s.id === selectedSupervisorId.value)
-        
-        // 检查是否超过容量
-        if (supervisor.counselorCount + selectedCounselorIds.value.length > supervisor.maxCounselors) {
-          alert(`无法分配，超过督导最大容量 ${supervisor.maxCounselors}`)
-          return
-        }
-        
-        // 更新咨询师督导信息
-        selectedCounselorIds.value.forEach(id => {
-          const counselor = counselors.value.find(c => c.id === id)
-          if (counselor) {
-            // 如果咨询师之前有督导，减少前督导的计数
-            if (counselor.supervisorId) {
-              const prevSupervisor = supervisors.value.find(s => s.id === counselor.supervisorId)
-              if (prevSupervisor) {
-                prevSupervisor.counselorCount--
-                const index = prevSupervisor.assignedCounselors.indexOf(counselor.id)
-                if (index !== -1) {
-                  prevSupervisor.assignedCounselors.splice(index, 1)
-                }
-              }
-            }
-            
-            // 设置新督导
-            counselor.supervisorId = selectedSupervisorId.value
-          }
-        })
-        
-        // 更新督导信息
-        supervisor.counselorCount += selectedCounselorIds.value.length
-        supervisor.assignedCounselors = [
-          ...supervisor.assignedCounselors,
-          ...selectedCounselorIds.value
-        ]
-        
-        // 清空选择
-        selectedCounselorIds.value = []
-        
-        console.log(`已将 ${selectedCounselorIds.value.length} 名咨询师分配给督导 ${supervisor.name}`)
-      }
-      
-      const removeCounselors = () => {
+      // 修改解除绑定方法
+      const removeCounselors = async () => {
         if (!selectedSupervisorId.value || !selectedAssignedCounselorIds.value.length) return
         
-        const supervisor = supervisors.value.find(s => s.id === selectedSupervisorId.value)
-        
-        // 更新咨询师督导信息
-        selectedAssignedCounselorIds.value.forEach(id => {
-          const counselor = counselors.value.find(c => c.id === id)
-          if (counselor) {
-            counselor.supervisorId = null
-          }
-        })
-        
-        // 更新督导信息
-        supervisor.counselorCount -= selectedAssignedCounselorIds.value.length
-        supervisor.assignedCounselors = supervisor.assignedCounselors.filter(
-          id => !selectedAssignedCounselorIds.value.includes(id)
-        )
-        
-        // 清空选择
-        selectedAssignedCounselorIds.value = []
-        
-        console.log(`已移除 ${selectedAssignedCounselorIds.value.length} 名咨询师的督导分配`)
+        try {
+          const requests = selectedAssignedCounselorIds.value.map(counselorId => {
+            const record = {
+              supervisorId: selectedSupervisorId.value,
+              counselorId: counselorId,
+              bindingStatus: 'unbound' // 使用 unbound 状态表示解绑
+            }
+            return axios.post('http://localhost:8080/api/binding/add', record)
+          })
+          
+          await Promise.all(requests)
+          await loadData() // 重新加载数据
+          selectedAssignedCounselorIds.value = []
+        } catch (error) {
+          console.error('解绑失败:', error)
+          // 可以添加错误提示UI
+        }
       }
-  
+      const assignCounselors = async () => {
+        if (!selectedSupervisorId.value || !selectedCounselorIds.value.length) return
+        
+        try {
+          const requests = selectedCounselorIds.value.map(counselorId => {
+            const record = {
+              supervisorId: selectedSupervisorId.value,
+              counselorId: counselorId,
+              bindingStatus: 'bound'
+            }
+            return axios.post('http://localhost:8080/api/binding/add', record)
+          })
+          
+          await Promise.all(requests)
+          await loadData()
+          selectedCounselorIds.value = []
+        } catch (error) {
+          console.error('绑定失败:', error)
+        }
+      }
+      
       const logout = () => {
         store.dispatch('logout')
         router.push('/login')
@@ -372,6 +394,11 @@
             console.error('Invalid path')
         }
       }
+  
+      // 初始化加载数据
+      onMounted(() => {
+        loadData()
+      })
   
       return {
         username,
