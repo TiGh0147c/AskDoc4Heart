@@ -9,13 +9,21 @@ public class Counselor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int counselor_id;
     private String name;
+    private String gender;
     private String password;
     private String phone_number;
     private String email;
     private Boolean is_supervisor;
     private String expertise_Area;
-    
-    // 移除gender字段及其getter/setter方法
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
     public int getCounselor_id() {
         return counselor_id;
     }
@@ -77,6 +85,7 @@ public class Counselor {
         return "Counselor{" +
                 "counselor_id=" + counselor_id +
                 ", name='" + name + '\'' +
+                ", gender='" + gender + '\'' +
                 ", password='" + password + '\'' +
                 ", phone_number='" + phone_number + '\'' +
                 ", email='" + email + '\'' +

@@ -25,6 +25,9 @@ public class User {
     @Column(nullable = true)
     private String birthday;
 
+    @Column(name="open_id")
+    private String openId;
+
     public int getId() {
         return user_id;
     }
@@ -73,6 +76,14 @@ public class User {
         this.birthday = birthday;
     }
 
+    public String getOpenId() {
+        return openId;
+    }
+
+    public void setOpenId(String open_id) {
+        this.openId = open_id;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -82,6 +93,7 @@ public class User {
                 ", phonenumber='" + phonenumber + '\'' +
                 ", gender='" + gender + '\'' +
                 ", birthday='" + birthday + '\'' +
+                ", open_id='" + openId + '\'' +
                 '}';
     }
 }

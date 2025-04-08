@@ -1,8 +1,6 @@
 package com.example.demo.RegisterAndLogin.Entity.dto;
 
 
-import jakarta.persistence.Column;
-
 public class UserDTO {
     private String username;
 
@@ -13,6 +11,8 @@ public class UserDTO {
     private String gender;
 
     private String birthday;
+
+    private String openId;
 
     public String getUsername() {
         return username;
@@ -54,6 +54,14 @@ public class UserDTO {
         this.birthday = birthday;
     }
 
+    public String getOpenId() {
+        return openId;
+    }
+
+    public void setOpenId(String openId) {
+        this.openId = openId;
+    }
+
     @Override
     public String toString() {
         return "UserDTO{" +
@@ -62,6 +70,7 @@ public class UserDTO {
                 ", phonenumber='" + phonenumber + '\'' +
                 ", gender='" + gender + '\'' +
                 ", birthday='" + birthday + '\'' +
+                ", open_id='" + openId + '\'' +
                 '}';
     }
 }

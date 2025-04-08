@@ -2,19 +2,27 @@ package com.example.demo.RegisterAndLogin.Entity.dto;
 
 public class CounselorDTO {
     private String name;
+    private String gender;
     private String password;
     private String phone_number;
     private String email;
     private Boolean is_supervisor;
     private String expertise_Area;
-    
-    // 移除gender相关的getter和setter方法
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
     public String getPassword() {
@@ -61,6 +69,7 @@ public class CounselorDTO {
     public String toString() {
         return "CounselorDTO{" +
                 "name='" + name + '\'' +
+                ", gender='" + gender + '\'' +
                 ", password='" + password + '\'' +
                 ", phone_number='" + phone_number + '\'' +
                 ", email='" + email + '\'' +

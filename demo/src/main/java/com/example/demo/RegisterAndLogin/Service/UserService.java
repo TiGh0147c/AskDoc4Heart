@@ -20,6 +20,9 @@ public class UserService implements IUserService {
     public User register(UserDTO user){
         User newUser = new User();
         BeanUtils.copyProperties(user,newUser);  //userDTO类转为user类
+        if(user.getUsername()==""){
+            throw new ServiceException("用户名不能为空！");
+        }
         Optional<User> exist= userRepository.findByUsername(newUser.getUsername());
         if(exist.isPresent()){
             throw new ServiceException("用户名已存在！");
@@ -37,6 +40,15 @@ public class UserService implements IUserService {
             else{
                 throw new ServiceException("用户名或密码错误！");
             }
+        }
+        throw new ServiceException("用户不存在！");
+    }
+
+    @Override
+    public Optional<User> login(String open_id){
+        Optional<User> user= userRepository.findByOpenId(open_id);
+        if(user.isPresent()){
+            return user;
         }
         throw new ServiceException("用户不存在！");
     }
