@@ -35,7 +35,7 @@ Page({
   },
 
   formSubmit: function(e) {
-    const { gender, nickname, email, phonenum, password, password2 } = e.detail.value;
+    const { gender, nickname, phonenum, password, password2 } = e.detail.value;
     const { birthday, occupation} = this.data;
     let errorMsg = '';
 
@@ -43,11 +43,10 @@ Page({
     if (!birthday) errorMsg += '出生日期未填写  ';
     if (!gender) errorMsg += '性别未填写  ';
     if (!occupation) errorMsg += '职业未填写  ';
-    if (!email) errorMsg += '邮箱未填写  ';
     if (!phonenum) errorMsg += '手机号未填写  ';
     if (!password || !password2) errorMsg += '密码或确认密码未填写  ';
     else if (password !== password) errorMsg += '密码与确认密码不一致  ';
-
+    
     if (errorMsg !== '') {
       wx.showToast({
         title: `${errorMsg}`,
@@ -57,50 +56,58 @@ Page({
     } else {
       // 模拟传入注册数据
       const data = {
-        open_id: this.data.openid,
-        nickname: nickname,
+        openId: this.data.openid,
+        username: nickname,
         birthday: birthday,
         occupation: occupation,
         gender: gender,
-        email: email,
-        phone_number: phonenum,
+        phonenumber: phonenum,
         password: password // 注意：实际应用中应加密传输和存储密码
       };
-      console.log("传入注册数据：", data);
-      // 调用云函数进行注册
-      wx.cloud.callFunction({
-        name: 'registerUser', 
-        data: data,
-        success: res => {
-          if(res.result.success){
-            wx.showToast({
-              title: '注册成功',
-              icon: 'success',
-              duration: 2000,
-              success: () => {
-                setTimeout(() => {
-                  app.setGlobalData('userName', nickname); 
-                  wx.reLaunch({
-                    url: '/pages/login/login'
-                  });
-                }, 2000);
-              }
-            });
-          }else{
-            wx.showToast({
-              title: res.result.message || '注册失败，请稍后再试',
-              icon: 'none'
-            });
-          }
-        },
-        fail: err => {
-          console.error('[云函数] [registerUser] 调用失败：', err);
-          wx.showToast({
-            title: '网络错误，请稍后再试',
-            icon: 'none'
-          });
-        }
-      });
+      this.registerUser(data);
     }
+  },
+
+  registerUser: function(data) {
+    const url = 'http://localhost:8080/user';
+    const formData = data;
+    console.log("传入注册数据：", formData);
+
+    wx.request({
+      url: url,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify(formData),
+      success(res) {
+        const responseData = res.data;
+        // 检查后端返回的状态码
+        if (responseData.code === 200) {
+            console.log('注册成功:', responseData);
+            wx.showToast({
+                title: '注册成功',
+                icon: 'success'
+            });
+            app.setGlobalData('userid', responseData.data.id);
+            app.setGlobalData('userName', responseData.data.username);
+            wx.reLaunch({url: '/pages/index/index'});
+        } else {
+            console.error('注册失败:', responseData.message || '未知错误');
+            wx.showToast({
+                title: `注册失败: ${responseData.message || '未知错误'}`,
+                icon: 'none'
+            });
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+          title: '注册失败',
+          icon: 'none'
+        });
+      }
+    });
   }
+
 });

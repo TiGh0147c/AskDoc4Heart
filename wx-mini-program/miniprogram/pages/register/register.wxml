@@ -29,10 +29,6 @@
         </picker>
       </view>
       <view class="section">
-        <label>邮箱</label>
-        <input name="email" placeholder="请输入邮箱" />
-      </view>
-      <view class="section">
         <label>手机号</label>
         <input name="phonenum" placeholder="请输入手机号" />
       </view>
