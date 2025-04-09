@@ -23,7 +23,7 @@ Page({
   },
 
   Login: function(openid) {
-    const url = 'http://localhost:8080/user/login';
+    const url = 'http://localhost:8081/user/login';
 
     wx.request({
       url: url,
@@ -43,7 +43,6 @@ Page({
           app.setGlobalData('userName', responseData.data.username);
           //app.setGlobalData('email', responseData.email);
           //app.setGlobalData('avatarUrl', responseData.avatarUrl);
-          console.log("用户", responseData.data.username, "已登录 用户id为", responseData.data.id);
           wx.reLaunch({
             url: '/pages/index/index'
           });

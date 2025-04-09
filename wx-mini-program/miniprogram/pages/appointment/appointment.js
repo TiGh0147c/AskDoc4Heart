@@ -13,7 +13,7 @@ Page({
     startDate: '',
     endDate: '',
     selectedDate: '',
-    timeOptions: ['上午', '下午'],
+    timeOptions: ['morning', 'afternoon'],
     selectedTime: '',
     consultants: [], // 当前时间段的咨询师列表
     consultantNames: [], // 当前时间段的咨询师名字列表
@@ -36,22 +36,22 @@ Page({
     const today = new Date();
     console.log("传入日期", today);
     const scheduledata = [
-      {date: "2025-04-07", time: "上午", name: "李明", id: 3},
-      {date: "2025-04-07", time: "上午", name: "王芳", id: 4},
-      {date: "2025-04-07", time: "下午", name: "小陈", id: 1},
-      {date: "2025-04-07", time: "下午", name: "小林", id: 2},
-      {date: "2025-04-08", time: "上午", name: "李明", id: 3},
-      {date: "2025-04-08", time: "上午", name: "王芳", id: 4},
-      {date: "2025-04-08", time: "下午", name: "小陈", id: 1},
-      {date: "2025-04-08", time: "下午", name: "小林", id: 2},
-      {date: "2025-04-10", time: "上午", name: "小陈", id: 1},
-      {date: "2025-04-10", time: "上午", name: "小林", id: 2},
-      {date: "2025-04-10", time: "下午", name: "李明", id: 3},
-      {date: "2025-04-11", time: "下午", name: "王芳", id: 4},
-      {date: "2025-04-11", time: "上午", name: "小陈", id: 1},
-      {date: "2025-04-11", time: "上午", name: "小林", id: 2},
-      {date: "2025-04-11", time: "下午", name: "李明", id: 3},
-      {date: "2025-04-11", time: "下午", name: "王芳", id: 4}
+      {date: "2025-04-07", time: "morning", counselorName: "李明", id: 3},
+      {date: "2025-04-07", time: "morning", counselorName: "王芳", id: 4},
+      {date: "2025-04-07", time: "afternoon", counselorName: "小陈", id: 1},
+      {date: "2025-04-07", time: "afternoon", counselorName: "小林", id: 2},
+      {date: "2025-04-08", time: "morning", counselorName: "李明", id: 3},
+      {date: "2025-04-08", time: "morning", counselorName: "王芳", id: 4},
+      {date: "2025-04-08", time: "afternoon", counselorName: "小陈", id: 1},
+      {date: "2025-04-08", time: "afternoon", counselorName: "小林", id: 2},
+      {date: "2025-04-10", time: "morning", counselorName: "小陈", id: 1},
+      {date: "2025-04-10", time: "morning", counselorName: "小林", id: 2},
+      {date: "2025-04-10", time: "afternoon", counselorName: "李明", id: 3},
+      {date: "2025-04-10", time: "afternoon", counselorName: "王芳", id: 4},
+      {date: "2025-04-11", time: "morning", counselorName: "小陈", id: 1},
+      {date: "2025-04-11", time: "morning", counselorName: "小林", id: 2},
+      {date: "2025-04-11", time: "afternoon", counselorName: "李明", id: 3},
+      {date: "2025-04-11", time: "afternoon", counselorName: "王芳", id: 4}
     ];
     console.log("获取值班数据：", scheduledata);
     this.setData({schedule: scheduledata});
@@ -67,19 +67,18 @@ Page({
     const inputdata = {
       userId: this.data.userid
     }
-    console.log("传入用户id", inputdata);
-    this.getAppointments(inputdata);
+    this.getAppointments(this.data.userid);
     /* 
     const data = [{
-      appointment_id:"0001",
-      name:"小陈",
+      appointmentId:"0001",
+      counselorName:"小陈",
       notes:"焦虑症咨询",
-      appointment_time:"2025-04-20 上午"
+      appointment_time:"2025-04-20 morning"
     },{
-      appointment_id:"0002",
-      name:"小林",
+      appointmentId:"0002",
+      counselorName:"小林",
       notes:"焦虑症咨询",
-      appointment_time:"2025-04-22 上午"
+      appointment_time:"2025-04-22 morning"
     }];
     console.log("获取预约数据:", data);
     const appointmentData = Array.isArray(data[0]) ? data[0] : data;
@@ -166,7 +165,7 @@ Page({
       .filter(item => item.date === selectedDate && item.time === selectedTime);
 
     if (filteredConsultants.length > 0) {
-      const consultantNames = filteredConsultants.map(item => item.name); // 提取咨询师名字
+      const consultantNames = filteredConsultants.map(item => item.counselorName); // 提取咨询师名字
 
       this.setData({
         consultants: filteredConsultants,
@@ -221,18 +220,12 @@ Page({
       userId: userid,
       userName: userName,
       counselorId: consultants[selectedConsultantIndex].id,
-      counselorName: consultants[selectedConsultantIndex].name,
+      counselorName: consultants[selectedConsultantIndex].counselorName,
       appointmentStatus: 'scheduled'
       //problemType: problemTypes[selectedProblemTypeIndex],
     };
     this.createAppointment(appointmentData);
 
-    wx.showToast({
-      title: '预约成功',
-      icon: 'success',
-    });
-
-    this.refresh();
     this.hideModal();
   },
 
@@ -255,27 +248,28 @@ Page({
   },
 
   getAppointments: function(data) {
-    const userId = Number(data.userId); // 确保 userId 是数字类型
-    const url = `http://localhost:8080/api/appointments/user/${userId}`;
-    console.log("url为：", url);
-    const appointments = [];
+    const userId = data;
+    const url = `http://localhost:8081/api/appointments/user/${userId}`;
 
+    const that = this;
     wx.request({
       url: url,
       method: 'GET',
+      data: {
+        userId: userId
+      },
       success(res) {
-          if (res.statusCode === 200) {
-              appointments = res.data;
-              const appointmentData = Array.isArray(appointments[0]) ? appointments[0] : appointments;
-              this.setData({
-                appointment: appointmentData || []
-              });
-          } else {
-              wx.showToast({
-                  title: '获取预约列表失败',
-                  icon: 'none'
-              });
-          }
+        if (res.statusCode === 200) {
+          console.log("获取预约数据成功：", res.data);
+          // 筛选出 appointmentStatus 为 "scheduled" 的数据
+          const appointments = res.data.filter(item => item.appointmentStatus === "scheduled");
+          const appointmentData = Array.isArray(appointments[0]) ? appointments[0] : appointments;
+          that.setData({
+            appointment: appointmentData || []
+          });
+        } else {
+          console.log("获取预约数据失败：",res);
+        }
       },
       fail(err) {
         console.error('请求失败:', err);
@@ -285,77 +279,85 @@ Page({
         });
      }
     });
-    this.setData({
+    that.setData({
       loading: false
     });
   },
 
   // 创建预约
   createAppointment(data) {
-    const url = 'http://localhost:8080/api/appointments/create';
+    const url = 'http://localhost:8081/api/appointments/create';
     const appointmentData = data;
-    console.log("url为：", url);
     console.log("发送了预约信息：", data);
+    const that = this;
 
     wx.request({
-        url: url,
-        method: 'POST',
-        header: {
-            'Content-Type': 'application/json'
-        },
-        data: appointmentData,
-        success(res) {
-            if (res.statusCode === 200) {
-                wx.showToast({
-                    title: '预约创建成功',
-                    icon: 'success'
-                });
-            } else {
-                wx.showToast({
-                    title: res.data || '预约创建失败',
-                    icon: 'none'
-                });
-            }
-        },
-        fail(err) {
-            console.error('请求失败:', err);
-            wx.showToast({
-                title: '网络错误，请稍后再试',
-                icon: 'none'
-            });
+      url: url,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json'
+      },
+      data: appointmentData,
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("预约创建成功：", res.data);
+          wx.showToast({
+            title: '预约创建成功',
+            icon: 'success'
+          });
+          that.refresh();
+        } else {
+          console.log("预约创建失败：", res);
+          wx.showToast({
+          title: res.data || '预约创建失败',
+          icon: 'none'
+          });
         }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+          title: '网络错误，请稍后再试',
+          icon: 'none'
+        });
+      }
     });
   },
 
   // 取消预约
   cancelAppointment(appointmentId) {
-    const url = `http://localhost:8080/api/appointments/cancel/${appointmentId}`;
-    console.log("url为：", url);
+    const url = `http://localhost:8081/api/appointments/cancel/${appointmentId}`;
+    const that = this;
 
     wx.request({
         url: url,
         method: 'POST',
+        data: {
+          appointmentId: appointmentId
+        },
         success(res) {
-            if (res.statusCode === 200) {
-                wx.showToast({
-                    title: '预约已取消',
-                    icon: 'success'
-                });
-                // 刷新预约列表
-                this.refresh();
-            } else {
-                wx.showToast({
-                    title: res.data || '取消预约失败',
-                    icon: 'none'
-                });
-            }
+          if (res.statusCode === 200) {
+            console.log("取消预约成功：",res.data);
+            wx.showToast({
+              title: '预约已取消',
+              icon: 'success'
+            });
+            // 刷新预约列表
+            that.refresh();
+          } else {
+            console.log("取消预约失败：",res);
+            wx.showToast({
+              title: res.data || '取消预约失败',
+              icon: 'none'
+            });
+          }
         },
         fail(err) {
-            console.error('请求失败:', err);
-            wx.showToast({
-                title: '网络错误，请稍后再试',
-                icon: 'none'
-            });
+          console.error('请求失败:', err);
+          wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+          });
         }
     });
   }

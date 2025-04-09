@@ -32,7 +32,7 @@ Page({
   },
 
   getUser: function(userid) {
-    const url = 'http://localhost:8080/api/profile-management/user/profile';
+    const url = 'http://localhost:8081/api/profile-management/user/profile';
     const formData = {
       userId: userid
     };
