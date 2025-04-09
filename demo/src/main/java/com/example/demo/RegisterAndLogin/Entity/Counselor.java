@@ -9,20 +9,14 @@ public class Counselor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int counselor_id;
     private String name;
-    private String gender;
     private String password;
     private String phone_number;
     private String email;
     private Boolean is_supervisor;
     private String expertise_Area;
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
+    private String gender;
+    private String avatar;
+    
 
     public int getCounselor_id() {
         return counselor_id;
@@ -80,17 +74,34 @@ public class Counselor {
         this.expertise_Area = expertise_Area;
     }
 
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
     @Override
     public String toString() {
         return "Counselor{" +
                 "counselor_id=" + counselor_id +
                 ", name='" + name + '\'' +
-                ", gender='" + gender + '\'' +
                 ", password='" + password + '\'' +
                 ", phone_number='" + phone_number + '\'' +
                 ", email='" + email + '\'' +
                 ", is_supervisor=" + is_supervisor +
                 ", expertise_Area='" + expertise_Area + '\'' +
+                ", gender='" + gender + '\'' +
+                ", avatar='" + avatar + '\'' +
                 '}';
     }
 }

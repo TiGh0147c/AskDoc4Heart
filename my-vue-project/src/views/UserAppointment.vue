@@ -191,6 +191,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios' // 添加 axios 导入
 
 export default {
   name: 'UserAppointment',
@@ -198,7 +199,10 @@ export default {
     const store = useStore()
     const router = useRouter()
 
-    const username = computed(() => store.getters.username)
+    // 从localStorage获取用户信息
+    const userData = JSON.parse(localStorage.getItem('user'))
+    const username = computed(() => userData?.username || store.getters.username)
+    const userId = computed(() => userData?.id || null)
     
     // 分页相关状态
     const currentPage = ref(1)
@@ -213,111 +217,196 @@ export default {
     const modalType = ref('')
     const modalTitle = ref('')
     
-    // 模拟咨询师数据
-    const counselors = ref([
-      {
-        id: 1,
-        name: '李明',
-        certification: '一级',
-        status: '空闲',
-        description: '专注于焦虑症治疗，拥有10年临床经验',
-        avatar: 'data:image/svg+xml;base64,'
-      },
-      {
-        id: 2,
-        name: '张华',
-        certification: '二级',
-        status: '繁忙',
-        description: '婚姻家庭咨询专家，擅长沟通技巧辅导',
-        avatar: 'data:image/svg+xml;base64,'
-      },
-      {
-        id: 3,
-        name: '王芳',
-        certification: '一级',
-        status: '空闲',
-        description: '抑郁症和情绪管理专家，心理学博士',
-        avatar: 'data:image/svg+xml;base64,'
-      },
-      {
-        id: 4,
-        name: '赵刚',
-        certification: '三级',
-        status: '空闲',
-        description: '青少年心理辅导专家，关注成长问题',
-        avatar: 'data:image/svg+xml;base64,'
-      },
-      {
-        id: 5,
-        name: '陈静',
-        certification: '二级',
-        status: '繁忙',
-        description: '压力管理和职场心理健康顾问',
-        avatar: 'data:image/svg+xml;base64,'
-      },
-      {
-        id: 6,
-        name: '林强',
-        certification: '一级',
-        status: '空闲',
-        description: '创伤后应激障碍(PTSD)治疗专家',
-        avatar: 'data:image/svg+xml;base64,'
-      },
-      {
-        id: 7,
-        name: '郑美',
-        certification: '三级',
-        status: '空闲',
-        description: '人际关系和社交焦虑问题咨询师',
-        avatar: 'data:image/svg+xml;base64,'
-      }
-    ])
+    // 咨询师数据
+    const counselors = ref([])
     
-    // 模拟预约数据
-    const pendingAppointments = ref([
-      {
-        id: 101,
-        counselorId: 3,
-        counselorName: '王芳',
-        type: '情绪管理咨询',
-        dateTime: '2025-03-15 14:00',
-        status: 'pending'
+    // 预约数据
+    const pendingAppointments = ref([])
+    const activeAppointments = ref([])
+    const upcomingAppointments = ref([])
+
+    // 加载咨询师数据
+    const loadCounselors = async () => {
+      try {
+        // 这里应该调用获取咨询师列表的API
+        // 示例: const response = await axios.get('http://localhost:8080/api/counselors')
+        // 由于没有提供咨询师API，这里仍使用模拟数据
+        counselors.value = [
+          {
+            id: 1,
+            name: '李明',
+            certification: '一级',
+            status: '空闲',
+            description: '专注于焦虑症治疗，拥有10年临床经验',
+            avatar: 'data:image/svg+xml;base64,'
+          },
+          {
+            id: 2,
+            name: '张华',
+            certification: '二级',
+            status: '繁忙',
+            description: '婚姻家庭咨询专家，擅长沟通技巧辅导',
+            avatar: 'data:image/svg+xml;base64,'
+          },
+          {
+            id: 3,
+            name: '王芳',
+            certification: '一级',
+            status: '空闲',
+            description: '抑郁症和情绪管理专家，心理学博士',
+            avatar: 'data:image/svg+xml;base64,'
+          },
+          {
+            id: 4,
+            name: '赵刚',
+            certification: '三级',
+            status: '空闲',
+            description: '青少年心理辅导专家，关注成长问题',
+            avatar: 'data:image/svg+xml;base64,'
+          },
+          {
+            id: 5,
+            name: '陈静',
+            certification: '二级',
+            status: '繁忙',
+            description: '压力管理和职场心理健康顾问',
+            avatar: 'data:image/svg+xml;base64,'
+          },
+          {
+            id: 6,
+            name: '林强',
+            certification: '一级',
+            status: '空闲',
+            description: '创伤后应激障碍(PTSD)治疗专家',
+            avatar: 'data:image/svg+xml;base64,'
+          },
+          {
+            id: 7,
+            name: '郑美',
+            certification: '三级',
+            status: '空闲',
+            description: '人际关系和社交焦虑问题咨询师',
+            avatar: 'data:image/svg+xml;base64,'
+          }
+        ]
+      } catch (error) {
+        console.error('加载咨询师数据失败:', error)
       }
-    ])
-    
-    const activeAppointments = ref([
-      {
-        id: 102,
-        counselorId: 1,
-        counselorName: '李明',
-        type: '焦虑症咨询',
-        dateTime: '2025-03-13 11:00',
-        status: 'active'
+    }
+
+    // 加载用户预约数据
+    const loadAppointments = async () => {
+      if (!userId.value) {
+        console.error('用户ID不存在，无法加载预约数据')
+        return
       }
-    ])
-    
-    const upcomingAppointments = ref([
-      {
-        id: 103,
-        counselorId: 6,
-        counselorName: '林强',
-        type: '创伤治疗',
-        dateTime: '2025-03-14 10:00',
-        status: 'confirmed',
-        timeRemaining: '23小时',
-        canStart: false
-      },
-      {
-        id: 104,
-        counselorId: 4,
-        counselorName: '赵刚',
-        type: '青少年心理咨询',
-        dateTime: '2025-03-13 15:00', // 今天下午
-        status: 'confirmed',
-        timeRemaining: '3小时',
-        canStart: true
+
+      try {
+        // 调用后端API获取用户的预约列表
+        const response = await axios.get(`http://localhost:8080/api/appointments/user/${userId.value}`)
+        
+        if (response.data && Array.isArray(response.data)) {
+          // 根据预约状态分类
+          pendingAppointments.value = response.data
+            .filter(app => app.appointmentStatus === 'scheduled')
+            .map(app => ({
+              id: app.appointmentId,
+              counselorId: app.counselorId,
+              counselorName: app.counselorName || '未知咨询师',
+              type: '心理咨询', // 假设类型，实际应从后端获取
+              dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
+              status: 'pending'
+            }))
+          
+          activeAppointments.value = response.data
+            .filter(app => app.appointmentStatus === 'active')
+            .map(app => ({
+              id: app.appointmentId,
+              counselorId: app.counselorId,
+              counselorName: app.counselorName || '未知咨询师',
+              type: '心理咨询',
+              dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
+              status: 'active'
+            }))
+          
+          upcomingAppointments.value = response.data
+            .filter(app => app.appointmentStatus === 'confirmed')
+            .map(app => {
+              // 计算距离开始时间
+              const appointmentDate = new Date(app.appointmentDate)
+              const now = new Date()
+              const diffTime = appointmentDate - now
+              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+              const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+              
+              const timeRemaining = diffDays > 0 
+                ? `${diffDays}天${diffHours}小时` 
+                : `${diffHours}小时`
+              
+              // 如果距离开始时间小于6小时，允许开始咨询
+              const canStart = diffTime < 6 * 60 * 60 * 1000 && diffTime > 0
+              
+              return {
+                id: app.appointmentId,
+                counselorId: app.counselorId,
+                counselorName: app.counselorName || '未知咨询师',
+                type: '心理咨询',
+                dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
+                status: 'confirmed',
+                timeRemaining,
+                canStart
+              }
+            })
+        }
+      } catch (error) {
+        console.error('加载预约数据失败:', error)
+        // 使用模拟数据作为备用
+        pendingAppointments.value = [
+          {
+            id: 101,
+            counselorId: 3,
+            counselorName: '王芳',
+            type: '情绪管理咨询',
+            dateTime: '2025-03-15 14:00',
+            status: 'pending'
+          }
+        ]
+        
+        activeAppointments.value = [
+          {
+            id: 102,
+            counselorId: 1,
+            counselorName: '李明',
+            type: '焦虑症咨询',
+            dateTime: '2025-03-13 11:00',
+            status: 'active'
+          }
+        ]
+        
+        upcomingAppointments.value = [
+          {
+            id: 103,
+            counselorId: 6,
+            counselorName: '林强',
+            type: '创伤治疗',
+            dateTime: '2025-03-14 10:00',
+            status: 'confirmed',
+            timeRemaining: '23小时',
+            canStart: false
+          },
+          {
+            id: 104,
+            counselorId: 4,
+            counselorName: '赵刚',
+            type: '青少年心理咨询',
+            dateTime: '2025-03-13 15:00',
+            status: 'confirmed',
+            timeRemaining: '3小时',
+            canStart: true
+          }
+        ]
       }
-    ])
+    }
 
     // 应用筛选条件后的咨询师列表
     const filteredCounselors = computed(() => {
@@ -370,35 +459,51 @@ export default {
     });
 
     // 预约咨询师
-    const bookAppointment = (counselor) => {
+    const bookAppointment = async (counselor) => {
       if (!canMakeAppointment.value) {
         alert('您当前已有两个预约，无法创建更多预约。请先完成或取消现有预约。');
         return;
       }
       
-      // 提示用户预约成功
-      alert(`您正在预约${counselor.name}咨询师，一旦确认会显示在您的预约列表中`);
+      if (!userId.value) {
+        alert('用户信息不完整，请重新登录');
+        return;
+      }
       
-      // 后端需要实现：
-      // 1. POST /api/appointments
-      // 2. 需要传递的数据: counselorId, userId, dateTime, type
-      // 3. 返回预约ID和状态
-      // 示例代码：
+      // 创建预约对象
+      const today = new Date();
+      const appointmentDate = new Date(today);
+      appointmentDate.setDate(today.getDate() + 1); // 默认预约明天
+      
       const appointmentData = {
+        userId: userId.value,
         counselorId: counselor.id,
-        userId: store.getters.userId, // 假设用户ID存储在Vuex中
-        dateTime: new Date().toISOString(), // 示例预约时间，实际应由用户选择
-        type: '示例咨询类型' // 示例咨询类型，实际应由用户选择
+        userName: username.value,
+        counselorName: counselor.name,
+        appointmentDate: appointmentDate.toISOString().split('T')[0], // 格式化为YYYY-MM-DD
+        appointmentTime: '下午', // 默认下午，实际应由用户选择
+        appointmentStatus: 'scheduled' // 初始状态为待确认
       };
-      // axios.post('/api/appointments', appointmentData)
-      //   .then(response => {
-      //     // 处理响应
-      //     console.log(response.data);
-      //   })
-      //   .catch(error => {
-      //     // 处理错误
-      //     console.error(error);
-      //   });
+      
+      try {
+        // 调用后端API创建预约
+        const response = await axios.post('http://localhost:8080/api/appointments/create', appointmentData);
+        
+        if (response.data && response.status === 200) {
+          alert(`预约成功！您已预约${counselor.name}咨询师，请等待确认。`);
+          // 重新加载预约数据
+          await loadAppointments();
+        } else {
+          alert('预约失败：' + (response.data || '未知错误'));
+        }
+      } catch (error) {
+        console.error('预约失败:', error);
+        if (error.response && error.response.data) {
+          alert('预约失败：' + error.response.data);
+        } else {
+          alert('预约失败，请稍后再试');
+        }
+      }
     }
     
     // 显示待确认预约
@@ -421,24 +526,29 @@ export default {
     }
     
     // 取消预约
-    const cancelAppointment = (appointmentId) => {
+    const cancelAppointment = async (appointmentId) => {
       if (confirm('确认取消此预约吗？')) {
-        // 实际项目中应该调用API
-        alert(`已取消预约 #${appointmentId}`)
-        
-        // 后端需要实现：
-        // 1. DELETE 或 PUT /api/appointments/{id}/cancel
-        // 2. 更新预约状态为cancelled
-        // 示例代码：
-        // axios.delete(`/api/appointments/${appointmentId}/cancel`)
-        //   .then(response => {
-        //     // 处理响应
-        //     console.log(response.data);
-        //   })
-        //   .catch(error => {
-        //     // 处理错误
-        //     console.error(error);
-        //   });
+        try {
+          // 调用后端API取消预约
+          const response = await axios.post(`http://localhost:8080/api/appointments/cancel/${appointmentId}`);
+          
+          if (response.data && response.status === 200) {
+            alert('预约已成功取消');
+            // 重新加载预约数据
+            await loadAppointments();
+            // 关闭弹窗
+            closeModal();
+          } else {
+            alert('取消预约失败：' + (response.data || '未知错误'));
+          }
+        } catch (error) {
+          console.error('取消预约失败:', error);
+          if (error.response && error.response.data) {
+            alert('取消预约失败：' + error.response.data);
+          } else {
+            alert('取消预约失败，请稍后再试');
+          }
+        }
       }
     }
     
@@ -481,10 +591,9 @@ export default {
     }
     
     // 加载数据
-    onMounted(() => {
-      // 在实际项目中，这里应该调用API加载数据
-      // fetchAppointments()
-      // fetchCounselors()
+    onMounted(async () => {
+      await loadCounselors()
+      await loadAppointments()
     })
 
     return {

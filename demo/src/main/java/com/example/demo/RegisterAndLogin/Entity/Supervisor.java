@@ -1,6 +1,13 @@
-package com.example.demo.RegisterAndLogin.Entity.dto;
+package com.example.demo.RegisterAndLogin.Entity;
 
-public class CounselorDTO {
+import jakarta.persistence.*;
+
+@Entity
+@Table(name="Supervisor")
+public class Supervisor {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int supervisor_id;
     private String name;
     private String password;
     private String phone_number;
@@ -17,7 +24,24 @@ public class CounselorDTO {
     }
 
     private String gender;
-    
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    private String avatar;
+
+    public int getSupervisor_id() {
+        return supervisor_id;
+    }
+
+    public void setSupervisor_id(int supervisor_id) {
+        this.supervisor_id = supervisor_id;
+    }
 
     public String getName() {
         return name;
@@ -69,14 +93,16 @@ public class CounselorDTO {
 
     @Override
     public String toString() {
-        return "CounselorDTO{" +
-                "name='" + name + '\'' +
+        return "Supervisor{" +
+                "supervisor_id=" + supervisor_id +
+                ", name='" + name + '\'' +
                 ", password='" + password + '\'' +
                 ", phone_number='" + phone_number + '\'' +
                 ", email='" + email + '\'' +
                 ", is_supervisor=" + is_supervisor +
                 ", expertise_Area='" + expertise_Area + '\'' +
                 ", gender='" + gender + '\'' +
+                ", avatar='" + avatar + '\'' +
                 '}';
     }
 }

@@ -55,6 +55,41 @@ public class UserController {
         return ResponseEntity.ok("用户信息修改成功");
     }
 
+    // 修改用户信息，使用JSON格式（专门给小程序提供，不包括头像文件）
+    @PostMapping("/modification/json")
+    public ResponseEntity<?> modifyProfileJson(
+            @RequestBody @Valid UserProfileModificationDTO dto,
+            BindingResult result) {
+
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors());
+        }
+
+        int modifyResult = userService.modifyUserProfile(dto, null); // 不传头像
+        if (modifyResult == -1){
+            return ResponseEntity.badRequest().body("用户不存在");
+        }
+
+        return ResponseEntity.ok("用户信息修改成功");
+    }
+
+    // 单独上传用户头像（小程序）
+    @PostMapping("/modification/avatar")
+    public ResponseEntity<?> uploadAvatar(
+            @RequestParam("avatarFile") MultipartFile avatarFile,
+            @RequestParam("userId") Integer userId) {
+
+        if (avatarFile == null || avatarFile.isEmpty()) {
+            return ResponseEntity.badRequest().body("头像文件不能为空");
+        }
+
+        boolean result = userService.updateUserAvatar(userId, avatarFile);
+        if (!result) {
+            return ResponseEntity.badRequest().body("用户不存在或头像上传失败");
+        }
+
+        return ResponseEntity.ok("头像上传成功");
+    }
 
     // 获取用户修改的审核结果
     @GetMapping("/modification-audits")

@@ -89,6 +89,34 @@ public class UserServiceImpl implements UserService {
         return userMapper.updateUserProfile(user);
     }
 
+    // 修改用户头像
+    @Override
+    public boolean updateUserAvatar(Integer userId, MultipartFile avatarFile) {
+        // 检查参数合法性
+        if (userId == null || avatarFile == null || avatarFile.isEmpty()) {
+            return false;
+        }
+
+        // 查找用户是否存在
+        User user = userMapper.getUserById(userId);
+        if (user == null) {
+            return false;
+        }
+
+        // 保存文件并生成路径
+        String avatarFileName = fileStorageService.saveAvatarFile(avatarFile);
+        String avatarPath = "avatar/" + avatarFileName;
+
+        // 写入审核表
+        UserModificationAudit audit = new UserModificationAudit();
+        audit.setUserId(userId);
+        audit.setModifyField("avatar");
+        audit.setNewValue(avatarPath);
+        userMapper.insertUserModificationAudit(audit);
+
+        return true;
+    }
+
     @Override
     public User getUserById(Integer userId) {
         return userMapper.getUserById(userId);

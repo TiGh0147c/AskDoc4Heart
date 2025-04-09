@@ -37,4 +37,9 @@ public interface BindingMapper {
     // 获取所有咨询师
     List<Counselor> getAllCounselors();
 
+    // 获取所有咨询师信息（非督导）
+    List<Counselor> getAllNonSupervisors();
+
+    // 获取所有督导信息
+    List<Supervisor> getAllSupervisors();
 }

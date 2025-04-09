@@ -184,11 +184,11 @@ export default {
       }
     }
     
-    // 保存更改
-    // 修改fetchUserInfo方法
+    // 获取用户信息
     const fetchUserInfo = async () => {
       try {
         loading.value = true
+        // 从localStorage获取userId，如果没有则使用默认值1
         const userId = localStorage.getItem('userId') || 1
         
         const response = await axios.get(
@@ -215,7 +215,7 @@ export default {
       }
     }
     
-    // 修改saveChanges方法
+    // 保存用户信息修改
     const saveChanges = async () => {
       saving.value = true
       errorMessage.value = ''
@@ -248,6 +248,7 @@ export default {
         )
         
         if (response.status === 200) {
+          // 更新用户信息和审核记录
           await fetchUserInfo()
           await fetchAuditRecords()
           editing.value = false
@@ -256,6 +257,7 @@ export default {
         }
       } catch (error) {
         console.error('保存失败:', error)
+        // 显示后端返回的错误信息或默认错误信息
         errorMessage.value = error.response?.data || '保存失败，请稍后重试'
       } finally {
         saving.value = false
@@ -277,7 +279,12 @@ export default {
     const formatField = (field) => {
       const fieldMap = {
         nickname: '昵称',
-        avatar: '头像'
+        avatar: '头像',
+        gender: '性别',
+        birthday: '出生日期',
+        email: '邮箱',
+        occupation: '职业',
+        password: '密码'
       }
       return fieldMap[field] || field
     }
@@ -292,14 +299,21 @@ export default {
       return statusMap[status] || status
     }
     
-    // 获取用户信息
+    // 获取用户审核记录
     const fetchAuditRecords = async () => {
       try {
         const userId = localStorage.getItem('userId') || 1
         
-        const response = await axios.get(`http://localhost:8080/api/profile-management/user/modification-audits`, {
-          params: { userId }
-        })
+        const response = await axios.get(
+          'http://localhost:8080/api/profile-management/user/modification-audits', 
+          {
+            params: { 
+              userId,
+              // 可以添加status参数来筛选特定状态的审核记录
+              // status: 'pending' // 例如只获取待审核的记录
+            }
+          }
+        )
         
         if (response.status === 200) {
           auditRecords.value = response.data
@@ -309,12 +323,14 @@ export default {
       }
     }
     
+    // 退出登录
     const logout = () => {
       // 实际应用中应调用登出API
       localStorage.removeItem('userId')
       router.push('/login')
     }
 
+    // 页面导航
     const goTo = (path) => {
       const paths = {
         home: '/user/home',
@@ -330,6 +346,7 @@ export default {
       }
     }
     
+    // 组件挂载时获取数据
     onMounted(() => {
       fetchUserInfo()
       fetchAuditRecords()
