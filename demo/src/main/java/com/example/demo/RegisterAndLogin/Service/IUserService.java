@@ -8,5 +8,4 @@ import java.util.Optional;
 public interface IUserService {
     User register(UserDTO user);
     Optional<User> login(String username, String password);
-    Optional<User> login(String open_id);
 }
