@@ -25,6 +25,13 @@ public class User {
     @Column(nullable = true)
     private String birthday;
 
+    @Column(name="open_id")
+    private String openId;
+
+    private String email;
+    private String avatar;
+    private String occupation;
+
     public int getId() {
         return user_id;
     }
@@ -73,6 +80,46 @@ public class User {
         this.birthday = birthday;
     }
 
+    public String getOpenId() {
+        return openId;
+    }
+
+    public void setOpenId(String open_id) {
+        this.openId = open_id;
+    }
+
+    public int getUser_id() {
+        return user_id;
+    }
+
+    public void setUser_id(int user_id) {
+        this.user_id = user_id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getOccupation() {
+        return occupation;
+    }
+
+    public void setOccupation(String occupation) {
+        this.occupation = occupation;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -82,6 +129,10 @@ public class User {
                 ", phonenumber='" + phonenumber + '\'' +
                 ", gender='" + gender + '\'' +
                 ", birthday='" + birthday + '\'' +
+                ", openId='" + openId + '\'' +
+                ", email='" + email + '\'' +
+                ", avatar='" + avatar + '\'' +
+                ", occupation='" + occupation + '\'' +
                 '}';
     }
 }

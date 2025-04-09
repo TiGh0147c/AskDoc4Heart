@@ -129,6 +129,14 @@ export default {
           localStorage.setItem('isAuthenticated', 'true')
           localStorage.setItem('userRole', selectedRole.value)
           
+          // 如果是咨询师登录，特别保存counselor_id和name
+          if (selectedRole.value === 'counselor') {
+            localStorage.setItem('counselor_id', response.data.data.counselor_id)
+            localStorage.setItem('counselor_name', response.data.data.name)
+            console.log('已保存咨询师ID:', response.data.data.counselor_id)
+            console.log('已保存咨询师姓名:', response.data.data.name)
+          }
+          
           router.push(`/${selectedRole.value}/home`)
         } else {
           loginError.value = response.data.message || '登录失败'

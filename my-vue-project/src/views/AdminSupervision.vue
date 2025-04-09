@@ -164,71 +164,77 @@
       const loadData = async () => {
         try {
           // 获取所有绑定关系
-          const bindingsResponse = await axios.get('http://localhost:8080/api/binding/all')
+          const bindingsResponse = await axios.get('/api/binding/all')
           
           // 创建督导和咨询师的映射表
           const supervisorsMap = new Map()
           const counselorsMap = new Map()
           
           // 处理绑定数据
-          bindingsResponse.data.forEach(binding => {
-            // 处理督导数据
-            if (binding.supervisorId && !supervisorsMap.has(binding.supervisorId)) {
-              supervisorsMap.set(binding.supervisorId, {
-                id: binding.supervisorId,
-                name: binding.supervisorName || '未知督导',
-                specialties: ['咨询'], // 默认专长
-                counselorCount: 0,
-                maxCounselors: 5 // 默认最大容量
-              })
-            }
-            
-            // 处理咨询师数据
-            if (binding.counselorId && !counselorsMap.has(binding.counselorId)) {
-              counselorsMap.set(binding.counselorId, {
-                id: binding.counselorId,
-                name: binding.counselorName || '未知咨询师',
-                specialties: ['咨询'], // 默认专长
-                supervisorId: binding.bindingStatus === 'bound' ? binding.supervisorId : null
-              })
-            }
-            
-            // 如果绑定状态为已绑定，更新督导的咨询师数量
-            if (binding.bindingStatus === 'bound' && supervisorsMap.has(binding.supervisorId)) {
-              const supervisor = supervisorsMap.get(binding.supervisorId)
-              supervisor.counselorCount += 1
-            }
-          })
-          
-          // 获取所有督导
-          const supervisorsResponse = await axios.get('http://localhost:8080/api/counselor/supervisors')
-          if (supervisorsResponse.data && Array.isArray(supervisorsResponse.data)) {
-            supervisorsResponse.data.forEach(supervisor => {
-              if (!supervisorsMap.has(supervisor.counselorId)) {
-                supervisorsMap.set(supervisor.counselorId, {
-                  id: supervisor.counselorId,
-                  name: supervisor.name || '未知督导',
-                  specialties: [supervisor.expertiseArea || '咨询'],
+          if (bindingsResponse.data && Array.isArray(bindingsResponse.data)) {
+            bindingsResponse.data.forEach(binding => {
+              // 处理督导数据
+              if (binding.supervisorId && !supervisorsMap.has(binding.supervisorId)) {
+                supervisorsMap.set(binding.supervisorId, {
+                  id: binding.supervisorId,
+                  name: binding.supervisorName || '未知督导',
+                  specialties: [binding.supervisorExpertiseArea || '咨询'], // 使用expertiseArea作为专长
                   counselorCount: 0,
-                  maxCounselors: 5
+                  maxCounselors: 5 // 默认最大容量
                 })
+              }
+              
+              // 处理咨询师数据
+              if (binding.counselorId && !counselorsMap.has(binding.counselorId)) {
+                counselorsMap.set(binding.counselorId, {
+                  id: binding.counselorId,
+                  name: binding.counselorName || '未知咨询师',
+                  specialties: [binding.counselorExpertiseArea || '咨询'], // 使用expertiseArea作为专长
+                  supervisorId: binding.bindingStatus === 'bound' ? binding.supervisorId : null
+                })
+              }
+              
+              // 如果绑定状态为已绑定，更新督导的咨询师数量
+              if (binding.bindingStatus === 'bound' && supervisorsMap.has(binding.supervisorId)) {
+                const supervisor = supervisorsMap.get(binding.supervisorId)
+                supervisor.counselorCount += 1
               }
             })
           }
           
+          // 获取所有督导
+          // 如果后端提供了专门的督导接口，可以替换为该接口
+          
           // 获取所有咨询师
-          const counselorsResponse = await axios.get('http://localhost:8080/api/counselor/all')
-          if (counselorsResponse.data && Array.isArray(counselorsResponse.data)) {
-            counselorsResponse.data.forEach(counselor => {
-              if (!counselor.isSupervisor && !counselorsMap.has(counselor.counselorId)) {
-                counselorsMap.set(counselor.counselorId, {
-                  id: counselor.counselorId,
-                  name: counselor.name || '未知咨询师',
-                  specialties: [counselor.expertiseArea || '咨询'],
-                  supervisorId: null
-                })
-              }
-            })
+          try {
+            const counselorsResponse = await axios.get('/api/counselor/all')
+            if (counselorsResponse.data && Array.isArray(counselorsResponse.data)) {
+              counselorsResponse.data.forEach(counselor => {
+                // 如果是督导，添加到督导列表
+                if (counselor.isSupervisor && !supervisorsMap.has(counselor.counselorId)) {
+                  supervisorsMap.set(counselor.counselorId, {
+                    id: counselor.counselorId,
+                    name: counselor.name || '未知督导',
+                    specialties: [counselor.expertiseArea || '咨询'],
+                    counselorCount: 0,
+                    maxCounselors: 5
+                  })
+                }
+                
+                // 如果不是督导或者已经在绑定关系中处理过，添加到咨询师列表
+                if (!counselor.isSupervisor && !counselorsMap.has(counselor.counselorId)) {
+                  counselorsMap.set(counselor.counselorId, {
+                    id: counselor.counselorId,
+                    name: counselor.name || '未知咨询师',
+                    specialties: [counselor.expertiseArea || '咨询'],
+                    supervisorId: null
+                  })
+                }
+              })
+            }
+          } catch (error) {
+            console.error('获取咨询师列表失败:', error)
+            // 即使获取咨询师失败，我们仍然可以继续处理已有的数据
           }
           
           // 转换Map为数组
@@ -333,7 +339,7 @@
               counselorId: counselorId,
               bindingStatus: 'unbound' // 使用 unbound 状态表示解绑
             }
-            return axios.post('http://localhost:8080/api/binding/add', record)
+            return axios.post('/api/binding/add', record)
           })
           
           await Promise.all(requests)
@@ -354,7 +360,7 @@
               counselorId: counselorId,
               bindingStatus: 'bound'
             }
-            return axios.post('http://localhost:8080/api/binding/add', record)
+            return axios.post('/api/binding/add', record)
           })
           
           await Promise.all(requests)
