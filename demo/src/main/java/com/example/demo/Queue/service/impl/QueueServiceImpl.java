@@ -42,7 +42,8 @@ public class QueueServiceImpl implements QueueService {
         if (waitingCount >= MAX_WAITING) {
             throw new IllegalStateException("等待队列已满，最多允许" + MAX_WAITING + "人等待");
         }
-
+        
+        //每天第一个患者加入时，lastNumber 为 null，队列号会重置为 1，实现每日队列的独立性。
         // 获取并锁定当前最大队列号
         Integer lastNumber = queueMapper.selectLastQueueNumberForUpdate(queueDTO.getCounselorId());
         int newNumber = (lastNumber != null) ? lastNumber + 1 : 1;
@@ -153,6 +154,7 @@ public class QueueServiceImpl implements QueueService {
     public int getInProgressCount(Integer counselorId) {
         return queueMapper.countByStatus(counselorId, "in_progress");
     }
+
 
 
     // === 私有方法 ===

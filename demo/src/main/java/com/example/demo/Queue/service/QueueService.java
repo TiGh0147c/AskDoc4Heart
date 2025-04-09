@@ -15,4 +15,6 @@ public interface QueueService {
     boolean cancelQueue(Integer queueId);
     int getWaitingCount(Integer counselorId);
     int getInProgressCount(Integer counselorId);
+
+
 }
