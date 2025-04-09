@@ -321,8 +321,8 @@ CREATE TABLE Counselor  (
 -- ----------------------------
 -- Records of Counselor
 -- ----------------------------
-INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '2ecaew','13800138001', 'hashed_password_1', 'counselor1@example.com', NULL, 0, 'available', '焦虑症', 0);
-INSERT INTO `Counselor` VALUES (2, '李督导','2fwefv','13800138002','hashed_password_2', 'supervisor1@example.com', NULL, 1, 'available', '抑郁症', 0);
+INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '2ecaew','13800138001', 'hashed_password_1', 'counselor1@example.com', male,NULL, 0, 'available', '焦虑症', 0);
+INSERT INTO `Counselor` VALUES (2, '李督导','2fwefv','13800138002','hashed_password_2', 'supervisor1@example.com', female,NULL, 1, 'available', '抑郁症', 0);
 
 
 
@@ -348,7 +348,7 @@ CREATE TABLE Supervisor  (
 -- ----------------------------
 -- Records of Supervisor
 -- ----------------------------
-INSERT INTO Supervisor VALUES (1, '王督导', '13800138003','swfvv' ,'hashed_password_3', 'supervisor2@example.com', NULL, 1, 'available', '家庭关系', 0);
+INSERT INTO Supervisor VALUES (1, '王督导', '13800138003','swfvv' ,'hashed_password_3', 'supervisor2@example.com',male, NULL, 1, 'available', '家庭关系', 0);
 
 -- ----------------------------
 -- Table structure for User
