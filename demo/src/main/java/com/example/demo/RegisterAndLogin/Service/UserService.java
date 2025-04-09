@@ -40,4 +40,13 @@ public class UserService implements IUserService {
         }
         throw new ServiceException("用户不存在！");
     }
+
+    @Override
+    public Optional<User> login(String openId){
+        Optional<User> user= userRepository.findByOpenId(openId);
+        if(user.isPresent()){
+            return user;
+        }
+        throw new ServiceException("用户不存在！");
+    }
 }
