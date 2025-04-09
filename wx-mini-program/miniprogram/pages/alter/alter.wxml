@@ -11,7 +11,7 @@
       <view class="modal-content">
         <view class="form-group">
           <label>{{mode === 'nickname' ? '当前昵称：' : '当前邮箱：'}}</label>
-          <text>{{mode === 'nickname' ? userName : email}}</text>
+          <text>{{mode === 'nickname' ? userName : (email ? email : '无')}}</text>
         </view>
         <view class="form-group">
           <label>{{mode === 'nickname' ? '新昵称：' : '新邮箱：'}}</label>
@@ -24,7 +24,7 @@
         </view>
         <view class="modal-buttons">
           <button bindtap="hideModal">取消</button>
-          <button bindtap="alter">保存</button>
+          <button bindtap="alter">提交</button>
         </view>
       </view>
     </view>

@@ -310,6 +310,7 @@ CREATE TABLE Counselor  (
    phone_number varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    password varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
    email varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+   gender enum('male','female','other','unknown') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    counselor_certificate text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
    is_supervisor tinyint(1) NULL DEFAULT 0,
    status enum('available', 'unavailable') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'available',
@@ -320,8 +321,8 @@ CREATE TABLE Counselor  (
 -- ----------------------------
 -- Records of Counselor
 -- ----------------------------
-INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '2ecaew','13800138001', 'hashed_password_1', 'counselor1@example.com', NULL, 0, 'available', '焦虑症', 0);
-INSERT INTO `Counselor` VALUES (2, '李督导','2fwefv','13800138002','hashed_password_2', 'supervisor1@example.com', NULL, 1, 'available', '抑郁症', 0);
+INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '2ecaew','13800138001', 'hashed_password_1', 'counselor1@example.com', 'male',NULL, 0, 'available', '焦虑症', 0);
+INSERT INTO `Counselor` VALUES (2, '李督导','2fwefv','13800138002','hashed_password_2', 'supervisor1@example.com', 'female',NULL, 1, 'available', '抑郁症', 0);
 
 
 
@@ -332,10 +333,11 @@ DROP TABLE IF EXISTS Supervisor;
 CREATE TABLE Supervisor  (
    supervisor_id int PRIMARY KEY AUTO_INCREMENT COMMENT '督导ID',
    name varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-   phone_number varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    avatar varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+   phone_number varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    password varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
    email varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+   gender enum('male','female','other','unknown') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
    counselor_certificate text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
    is_supervisor tinyint(1) NULL DEFAULT 1,
    status enum('available', 'unavailable') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'available',
@@ -346,7 +348,7 @@ CREATE TABLE Supervisor  (
 -- ----------------------------
 -- Records of Supervisor
 -- ----------------------------
-INSERT INTO Supervisor VALUES (1, '王督导', '13800138003','swfvv' ,'hashed_password_3', 'supervisor2@example.com', NULL, 1, 'available', '家庭关系', 0);
+INSERT INTO Supervisor VALUES (1, '李督导', 'swfvv','13800138003' ,'hashed_password_3', 'supervisor2@example.com','male', NULL, 1, 'available', '家庭关系', 0);
 
 -- ----------------------------
 -- Table structure for User

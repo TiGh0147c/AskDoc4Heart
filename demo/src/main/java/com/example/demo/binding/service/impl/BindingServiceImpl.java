@@ -120,4 +120,25 @@ public class BindingServiceImpl implements BindingService {
         }
         return result;
     }
+
+    // 获取所有咨询师信息（非督导）
+    @Override
+    public List<Counselor> getAllNonSupervisors() {
+        return bindingMapper.getAllNonSupervisors();
+    }
+
+    @Override
+    public List<Supervisor> getAllSupervisors() {
+        return bindingMapper.getAllSupervisors();
+    }
+
+    @Override
+    public Supervisor getSupervisorById(Integer supervisorId) {
+        return bindingMapper.getSupervisorById(supervisorId);
+    }
+
+    @Override
+    public Counselor getCounselorById(Integer counselorId) {
+        return bindingMapper.getCounselorById(counselorId);
+    }
 }

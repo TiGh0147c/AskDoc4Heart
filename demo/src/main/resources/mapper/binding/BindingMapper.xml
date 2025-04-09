@@ -139,4 +139,38 @@
         WHERE is_supervisor = false
     </select>
 
+    <!--获取所有咨询师信息（非督导）-->
+    <select id="getAllNonSupervisors" resultType="com.example.demo.binding.entity.Counselor">
+        SELECT counselor_id          counselorId,
+               name,
+               phone_number          phoneNumber,
+               avatar,
+               password,
+               email,
+               gender,
+               counselor_certificate counselorCertificate,
+               is_supervisor         isSupervisor,
+               status,
+               expertise_area        expertiseArea,
+               on_duty               onDuty
+        FROM Counselor
+        WHERE is_supervisor = false
+    </select>
+
+    <!--获取所有督导信息-->
+    <select id="getAllSupervisors" resultType="com.example.demo.binding.entity.Supervisor">
+        SELECT supervisor_id         supervisorId,
+               name,
+               phone_number          phoneNumber,
+               avatar,
+               password,
+               email,
+               gender,
+               counselor_certificate counselorCertificate,
+               is_supervisor         isSupervisor,
+               status,
+               expertise_area        expertiseArea,
+               on_duty              onDuty
+        FROM Supervisor
+    </select>
 </mapper>

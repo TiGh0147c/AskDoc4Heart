@@ -34,8 +34,8 @@
         <view class="form-item">
           <label>预约时段：</label>
           <radio-group name="timeGroup" bindchange="bindTimeChange">
-            <label class="time-lab"><radio value="morning"/> 上午 9:00-11:00</label>
-            <label class="time-lab"><radio value="afternoon"/> 下午 14:00-17:00</label>
+            <label class="time-lab"><radio value="上午"/> 上午 9:00-11:00</label>
+            <label class="time-lab"><radio value="下午"/> 下午 14:00-17:00</label>
           </radio-group>
         </view>
         <view class="form-item">

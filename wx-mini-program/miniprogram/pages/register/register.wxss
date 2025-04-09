@@ -28,7 +28,7 @@
   font-weight: bold;
   text-align: center;
   margin-top: 5px; 
-  margin-bottom: 40px; 
+  margin-bottom: 30px; 
 }
 
 /* 表单容器的样式 */
@@ -38,7 +38,7 @@
 
 /* 表单项的样式 */
 .section {
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 /* 输入框和标签的样式 */
