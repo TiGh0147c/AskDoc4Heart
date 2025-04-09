@@ -131,4 +131,14 @@ public class BindingServiceImpl implements BindingService {
     public List<Supervisor> getAllSupervisors() {
         return bindingMapper.getAllSupervisors();
     }
+
+    @Override
+    public Supervisor getSupervisorById(Integer supervisorId) {
+        return bindingMapper.getSupervisorById(supervisorId);
+    }
+
+    @Override
+    public Counselor getCounselorById(Integer counselorId) {
+        return bindingMapper.getCounselorById(counselorId);
+    }
 }

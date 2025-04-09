@@ -31,4 +31,8 @@ public interface BindingService {
 
     // 获取所有督导信息
     List<Supervisor> getAllSupervisors();
+
+    Supervisor getSupervisorById(Integer supervisorId);
+
+    Counselor getCounselorById(Integer counselorId);
 }
