@@ -26,10 +26,12 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS Appointment;
 CREATE TABLE Appointment (
     appointment_id INT PRIMARY KEY AUTO_INCREMENT,
-    appointment_time DATETIME NOT NULL,
+    appointment_date DATE NOT NULL,
+    appointment_time ENUM('morning', 'afternoon') NOT NULL COMMENT '预约时段(上午/下午)',
     appointment_status ENUM('completed', 'expired', 'cancelled', 'scheduled') NOT NULL,
     user_id INT NOT NULL,
     counselor_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id)
 );
@@ -257,6 +259,21 @@ CREATE TABLE `Counselor_Schedule`  (
 -- Records of Counselor_Schedule
 -- ----------------------------
 
+
+
+INSERT INTO Schedule (date, time_slot) VALUES ('2025-04-10', 'morning');
+SET @schedule_id = LAST_INSERT_ID();
+INSERT INTO Counselor_Schedule (schedule_id, counselor_id) VALUES (@schedule_id, 1), (@schedule_id, 2);
+INSERT INTO Supervisor_Schedule (schedule_id, supervisor_id) VALUES (@schedule_id, 1);
+-- 举例子排班记录
+INSERT INTO Schedule (date, time_slot) VALUES ('2025-04-10', 'afternoon');
+SET @schedule_id = LAST_INSERT_ID();
+INSERT INTO Counselor_Schedule (schedule_id, counselor_id) VALUES (@schedule_id, 1), (@schedule_id, 2);
+INSERT INTO Supervisor_Schedule (schedule_id, supervisor_id) VALUES (@schedule_id, 1);
+
+
+
+
 -- ----------------------------
 -- Table structure for Leave_Application
 -- ----------------------------
@@ -284,7 +301,7 @@ DROP TABLE IF EXISTS Queue;
 CREATE TABLE Queue (
     queue_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '排队ID',
     queue_number INT NOT NULL COMMENT '队列序号',
-    user_number VARCHAR(20) COMMENT '用户排队编号(可选)',
+    user_number INT COMMENT '用户排队编号(可选)',
     join_queue_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '加入队列时间',
     exit_queue_time DATETIME COMMENT '离开队列时间',
     queue_status ENUM('waiting', 'completed', 'cancelled') NOT NULL DEFAULT 'waiting' COMMENT '排队状态(等待中/已完成/已取消)',
