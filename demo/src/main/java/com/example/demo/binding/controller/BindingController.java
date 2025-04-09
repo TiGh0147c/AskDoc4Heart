@@ -4,7 +4,10 @@ import com.example.demo.binding.dto.CounselorDTO;
 import com.example.demo.binding.dto.CounselorSupervisorBindingDTO;
 import com.example.demo.binding.dto.SupervisorDTO;
 import com.example.demo.binding.entity.BindingRecord;
+import com.example.demo.binding.entity.Counselor;
+import com.example.demo.binding.entity.Supervisor;
 import com.example.demo.binding.service.BindingService;
+import com.example.demo.profilemanagement.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +48,7 @@ public class BindingController {
 
     }
 
-    // 根据咨询师ID获取绑定咨询师
+    // 根据咨询师ID获取绑定督导
     @GetMapping("/supervisor/{counselorId}")
     public ResponseEntity<SupervisorDTO> getSupervisorByCounselorId(@PathVariable Integer counselorId) {
         return ResponseEntity.ok(bindingService.getSupervisorByCounselorId(counselorId));
@@ -62,4 +65,25 @@ public class BindingController {
     public ResponseEntity<List<CounselorSupervisorBindingDTO>> getAllBindings() {
         return ResponseEntity.ok(bindingService.getAllBindings());
     }
+
+    // 获取所有咨询师信息（非督导）
+    @GetMapping("/counselors")
+    public ResponseEntity<?> getAllNonSupervisorCounselors() {
+        List<Counselor> counselors = bindingService.getAllNonSupervisors();
+        if (counselors == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("暂无咨询师（非督导）");
+        }
+        return ResponseEntity.ok(counselors);
+    }
+
+    // 获取所有督导信息
+    @GetMapping("/supervisors")
+    public ResponseEntity<?> getAllSupervisors() {
+        List<Supervisor> supervisors = bindingService.getAllSupervisors();
+        if (supervisors == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("暂无督导");
+        }
+        return ResponseEntity.ok(supervisors);
+    }
+
 }

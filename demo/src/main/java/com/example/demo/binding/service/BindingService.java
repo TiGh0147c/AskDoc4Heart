@@ -26,4 +26,9 @@ public interface BindingService {
     // 获取所有咨询师和他们绑定的督导
     List<CounselorSupervisorBindingDTO> getAllBindings();
 
+    // 获取所有非督导的咨询师
+    List<Counselor> getAllNonSupervisors();
+
+    // 获取所有督导信息
+    List<Supervisor> getAllSupervisors();
 }
