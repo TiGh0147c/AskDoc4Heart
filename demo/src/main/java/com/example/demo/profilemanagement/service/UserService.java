@@ -15,4 +15,6 @@ public interface UserService {
 
     // 根据用户ID获取用户信息
     User getUserById(Integer userId);
+
+    boolean updateUserAvatar(Integer userId, MultipartFile avatarFile);
 }

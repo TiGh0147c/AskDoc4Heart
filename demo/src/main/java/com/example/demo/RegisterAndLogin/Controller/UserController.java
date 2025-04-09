@@ -29,4 +29,10 @@ public class UserController {
         Optional<User> newUser=userService.login(username,password);
         return ResponseMessage.success(newUser);
     }
+    //小程序登录
+    @GetMapping("/login")
+    public ResponseMessage user_login(@RequestParam String open_id){
+        Optional<User> newUser=userService.login(open_id);
+        return ResponseMessage.success(newUser);
+    }
 }
