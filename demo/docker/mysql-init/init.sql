@@ -221,58 +221,16 @@ DROP TABLE IF EXISTS Schedule;
 CREATE TABLE Schedule (
     schedule_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '排班ID',
     date DATE NOT NULL COMMENT '排班日期(YYYY-MM-DD)',
-    time_slot ENUM('morning', 'afternoon') NOT NULL COMMENT '时间段(上午/下午)'
+    time_slot ENUM('morning', 'afternoon') NOT NULL COMMENT '时间段(上午/下午)',
+    counselor_id INT,
+    supervisor_id INT,
+    FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id),
+    FOREIGN KEY (supervisor_id) REFERENCES Supervisor(supervisor_id)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of Schedule
 -- ----------------------------
-
--- ----------------------------
--- Table structure for Supervisor_Schedule
--- ----------------------------
-DROP TABLE IF EXISTS Supervisor_Schedule;
-CREATE TABLE Supervisor_Schedule  (
-  id INT PRIMARY KEY AUTO_INCREMENT COMMENT '关联ID',
-  schedule_id INT NOT NULL COMMENT '排班ID',
-  supervisor_id INT NOT NULL COMMENT '督导ID',
-  FOREIGN KEY (schedule_id) REFERENCES Schedule(schedule_id),
-  FOREIGN KEY (supervisor_id) REFERENCES Supervisor(supervisor_id)
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of Supervisor_Schedule
--- ----------------------------
--- ----------------------------
--- Table structure for Counselor_Schedule
--- ----------------------------
-DROP TABLE IF EXISTS `Counselor_Schedule`;
-CREATE TABLE `Counselor_Schedule`  (
-  id INT PRIMARY KEY AUTO_INCREMENT COMMENT '关联ID',
-  schedule_id INT NOT NULL COMMENT '排班ID',
-  counselor_id INT NOT NULL COMMENT '咨询师ID',
-  FOREIGN KEY (schedule_id) REFERENCES Schedule(schedule_id),
-  FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id)
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of Counselor_Schedule
--- ----------------------------
-
-
-
-INSERT INTO Schedule (date, time_slot) VALUES ('2025-04-10', 'morning');
-SET @schedule_id = LAST_INSERT_ID();
-INSERT INTO Counselor_Schedule (schedule_id, counselor_id) VALUES (@schedule_id, 1), (@schedule_id, 2);
-INSERT INTO Supervisor_Schedule (schedule_id, supervisor_id) VALUES (@schedule_id, 1);
--- 举例子排班记录
-INSERT INTO Schedule (date, time_slot) VALUES ('2025-04-10', 'afternoon');
-SET @schedule_id = LAST_INSERT_ID();
-INSERT INTO Counselor_Schedule (schedule_id, counselor_id) VALUES (@schedule_id, 1), (@schedule_id, 2);
-INSERT INTO Supervisor_Schedule (schedule_id, supervisor_id) VALUES (@schedule_id, 1);
-
-
-
 
 -- ----------------------------
 -- Table structure for Leave_Application
