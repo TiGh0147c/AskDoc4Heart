@@ -21,4 +21,6 @@ public interface QueueMapper {
     Integer selectLastQueueNumberForUpdate(Integer counselorId);
     int countByStatus(@Param("counselorId") Integer counselorId,
                       @Param("status") String status);
+    Integer getCounselorIdByQueueId(Integer queueId);
+
 }

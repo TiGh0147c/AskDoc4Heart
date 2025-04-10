@@ -1,9 +1,11 @@
 package com.example.demo.Queue.controller;
+import com.example.demo.Queue.entity.Queue;
 import com.example.demo.Queue.service.impl.QueueServiceImpl;
 import com.example.demo.Queue.dto.QueueDTO;
 import com.example.demo.Queue.dto.QueuePositionDTO;
 import com.example.demo.Queue.service.QueueService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,5 +72,15 @@ public class QueueController {
         return ResponseEntity.ok(String.format("等待中: %d/%d, 咨询中: %d/%d",
                 waiting, 10,
                 inProgress, 3));
+    }
+
+    // 根据 queueId 获取队列信息
+    @GetMapping("/getById")
+    public ResponseEntity<Queue> getQueueById(@RequestParam Integer queueId) {
+        Queue queue = queueService.getQueueById(queueId);
+        if (queue == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);  // 如果找不到，返回 404
+        }
+        return ResponseEntity.ok(queue);
     }
 }

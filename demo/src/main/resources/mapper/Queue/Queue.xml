@@ -66,4 +66,5 @@
         SELECT MAX(queue_number) FROM Queue
         WHERE counselor_id = #{counselorId} FOR UPDATE
     </select>
+
 </mapper>

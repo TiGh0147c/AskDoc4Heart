@@ -101,6 +101,7 @@ public class QueueServiceImpl implements QueueService {
     @Override
     @Transactional
     public boolean updateQueueStatus(Integer queueId, String status) {
+
         Queue queue = new Queue();
         queue.setQueueId(queueId);
         queue.setQueueStatus(status);
@@ -155,7 +156,9 @@ public class QueueServiceImpl implements QueueService {
         return queueMapper.countByStatus(counselorId, "in_progress");
     }
 
-
+    public Queue getQueueById(Integer queueId) {
+        return queueMapper.selectById(queueId);
+    }
 
     // === 私有方法 ===
     private QueueDTO convertToDTO(Queue queue) {

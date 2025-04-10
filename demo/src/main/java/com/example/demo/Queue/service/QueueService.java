@@ -2,6 +2,10 @@ package com.example.demo.Queue.service;
 
 import com.example.demo.Queue.dto.QueueDTO;
 import com.example.demo.Queue.dto.QueuePositionDTO;
+import com.example.demo.Queue.entity.Queue;
+import com.example.demo.Queue.mapper.QueueMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.List;
 
 public interface QueueService {
@@ -17,4 +21,5 @@ public interface QueueService {
     int getInProgressCount(Integer counselorId);
 
 
+    Queue getQueueById(Integer queueId);
 }
