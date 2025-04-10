@@ -69,7 +69,7 @@ Page({
   },
 
   registerUser: function(data) {
-    const url = 'http://localhost:8080/user';
+    const url = 'http://localhost:8081/user';
     const formData = data;
     console.log("传入注册数据：", formData);
 

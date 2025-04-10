@@ -6,6 +6,9 @@ Page({
   data: {
     userid: '',
     queue_id: '',
+    queue_number: '',
+    queue_counselor_id: '',
+    queue_counselor_name: '',
     counselors: [],
     description: '',
     showDetails: {}, // 控制每个咨询师详情是否显示的状态对象
@@ -28,25 +31,42 @@ Page({
       description: decodeURIComponent(options.description),
     });
     this.refresh();
+    /*
     // 启动定时器，每 10 秒获取一次数据
     const intervalId1 = setInterval(() => {
       this.refresh();
     }, 10000); // 每 10 秒执行一次
     // 保存定时器 ID，以便后续清除
-    this.setData({ intervalId1 });
+    this.setData({ intervalId1: intervalId1 });*/
+    //this.getAllQueue(userid);
+    //this.leaveQueue(1);this.leaveQueue(10);this.leaveQueue(5);
+    //this.leaveQueue(6);this.leaveQueue(7);this.leaveQueue(8);
+  },
+
+  clearAllTimersGlobally() {
+    let id = 1;
+    while (id < 100) { // 假设最大计时器数量为 10000
+      clearTimeout(id);
+      clearInterval(id);
+      id++;
+    }
   },
 
   onLaunch: function () {
     this.refresh();
   },
 
+   // 监听下拉刷新事件
+   onPullDownRefresh() {
+    console.log("触发下拉刷新...");
+    this.refresh(); // 调用 refresh 函数
+  },
+
   refresh(){
-    this.setData({
-      loading: true
-    });
+    this.setData({ loading: true });
     /* 模拟获取咨询师数据 */
     const everyday = [{
-      _id: "7456afe067c8eeeb007246c80553c0f5",
+      _id: 100,
       name: "苏轼",
       intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
       tag: ["东坡肉", "出去玩", "被贬"],
@@ -55,13 +75,13 @@ Page({
     }];
     const everydayData = Array.isArray(everyday[0]) ? everyday[0] : everyday;
     const data = [{
-      _id: "2134556yhgbfd32122345yh564t321r",
+      _id: 1,
       name: "张三",
       intro: "这是咨询师，真的是咨询师。",
       tag: ["犯法", "文盲", "被捕"],
       status: "繁忙"
     },{
-      _id: "21345523rsbfd32122345yh564t321r",
+      _id: 2,
       name: "李四",
       intro: "显而易见这里是简介。",
       tag: ["想不出来", "就先", "这样吧"],
@@ -71,11 +91,15 @@ Page({
     const processedEverydayData = everydayData.map(item => ({ ...item, isActive: false }));
     const processedDutyData = dutyData.map(item => ({ ...item, type: "counselor", isActive: false }));
     const counselors = [...processedDutyData, ...processedEverydayData];
-    //console.log(counselors);
+    const showDetails = {};
+    const buttonMargins = {};
     this.setData({
       counselors: counselors,
+      showDetails,
+      buttonMargins,
       loading: false
     });
+    wx.stopPullDownRefresh();
   },
   
   toggleDetails(e) {
@@ -132,60 +156,25 @@ Page({
 
   addToQueue(e) {
     const { id, name } = e.currentTarget.dataset; // 获取咨询师的 ID
-    const time = new Date();
     //模拟传入排队数据并获取队伍序号
     const queuedata = {
-      user_id: this.data.userid,
-      counselor_id: id,
-      join_queue_time: time
+      userId: this.data.userid,
+      counselorId: id,
     }
-    console.log("传入排队数据：", queuedata)
-
-    const queueid = Math.floor(Math.random() * 10);
+    console.log("传入排队数据：", queuedata);
     this.setData({
-      queue_id: queueid
-    })
-    console.log("队伍序号为：",this.data.queue_id)
-
-    const data = this.fetchData(queueid);
-    this.setData({
-      modalData: data,
-      showModal: true,
+      queue_counselor_id: id,
+      queue_counselor_name: name
     });
-    // 打开模态框
-    const modal = this.selectComponent("#modal"); 
-    modal.show();
-
-    // 启动定时器，每 10 秒获取一次数据
-    const intervalId2 = setInterval(() => {
-      const newData = this.fetchData(queueid);
-      this.setData({
-        modalData: newData,
-      });
-    }, 10000); // 每 10 秒执行一次
-
-    // 保存定时器 ID，以便后续清除
-    this.setData({ intervalId2 });
-  },
-
-  // 模拟请求队伍状态数据
-  fetchData(queueid) {
-    const queueCount = Math.floor(Math.random() * 10);
-    return {
-      queueCount: queueCount, // 随机生成排队人数
-      waitingTime: Math.floor(Math.random() * 5 * queueCount), // 随机生成等待时间（分钟）
-    };
+    this.addQueue(queuedata);
   },
 
   // 关闭模态框
   handleClose() {
     const time = new Date();
     //模拟修改排队数据
-    const queuedata = {
-      queue_id: this.data.queue_id,
-      exit_queue_time: time
-    }
-    console.log("退出了排队：", queuedata)
+    const queuedata = this.data.queue_id;
+    this.leaveQueue(queuedata);
     this.setData({ showModal: false });
     if (this.data.intervalId2) {
       clearInterval(this.data.intervalId2); // 清除定时器
@@ -193,6 +182,7 @@ Page({
         intervalId2: null, // 清空定时器 ID
         showModal: false, // 隐藏模态框
       });
+      console.log("计时器2已清除");
     }
   },
 
@@ -222,12 +212,6 @@ Page({
     const counselorId = dataset.id;
     const counselorName = dataset.name;
     const description = this.data.description;
-    if (this.data.intervalId1) {
-      clearInterval(this.data.intervalId1); // 清除定时器
-      this.setData({
-        intervalId1: null, // 清空定时器 ID
-      });
-    }
     if(dataset.type == "ai"){
       console.log('选择了ai咨询师');
       wx.reLaunch({
@@ -238,6 +222,190 @@ Page({
         url: `/pages/dialogue/dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
       });
     }
+  },
+
+  queueToDialogue() {
+    const counselorId = this.data.queue_counselor_id;
+    const counselorName = this.data.queue_counselor_name;
+    const description = this.data.description;
+    wx.reLaunch({
+      url: `/pages/dialogue/dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
+    });
+  },
+
+  addQueue: function(data) {
+    const url = 'http://localhost:8081/api/queues/join';
+    const that = this;
+    wx.request({
+      url: url,
+      method: 'POST',
+      data: data,
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("加入队伍成功：", res.data);
+          that.setData({
+            queue_id: res.data.queueId,
+            queue_number: res.data.queueNumber,
+          })
+          const queueId = res.data.queueId;
+          console.log("加入了队列，编号为：", queueId);
+          that.handleFetchAndSetData(queueId);
+          
+          // 启动定时器，每 10 秒获取一次数据
+          const intervalId2 = setInterval(() => {
+            that.handleFetchAndSetData(queueId);
+          }, 10000); // 每 10 秒执行一次
+
+          // 保存定时器 ID，以便后续清除
+          that.setData({ intervalId2: intervalId2 });
+        } else {
+          console.log("加入队伍失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+     }
+    });
+  },
+
+  leaveQueue: function(data) {
+    const url = `http://localhost:8081/api/queues/${data}/cancel`;
+    wx.request({
+      url: url,
+      method: 'POST',
+      data: {
+        queueId: data
+      },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("退出队伍成功：", res.data);
+        } else {
+          console.log("退出队伍失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    });
+  },
+
+  // 请求队伍状态数据
+  fetchData(queueId) {
+    return new Promise((resolve, reject) => {
+      const url = `http://localhost:8081/api/queues/position/${queueId}`;
+      wx.request({
+        url: url,
+        method: 'GET',
+        success(res) {
+          if (res.statusCode === 200) {
+            console.log("获取队伍信息成功：", res.data);
+            resolve(res.data); // 将数据传递给调用者
+          } else {
+            console.log("获取队伍信息失败：", res);
+            reject(new Error("获取队伍信息失败"));
+          }
+        },
+        fail(err) {
+          console.error('请求失败:', err);
+          wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+          });
+          reject(err);
+        }
+      });
+    });
+  },
+
+  // 获取队伍状态数据
+  handleFetchAndSetData(queueId) {
+    const that = this;
+    that.fetchData(queueId)
+      .then(data => {
+        const modalData = {
+          queueCount: data.aheadCount,
+          waitingTime: data.estimatedMinutes
+        };
+        that.setData({
+          modalData: modalData,
+          showModal: true,
+        });
+        const modal = that.selectComponent("#modal"); 
+        modal.show();
+        /*
+        const updateData = {
+          queueId: queueId,
+          status: 'in_progress'
+        }
+        console.log("传入更新数据", updateData);
+        that.updateQueue(updateData);*/
+      })
+      .catch(err => {
+        console.error("获取数据失败：", err);
+        wx.showToast({
+          title: '获取数据失败，请稍后再试',
+          icon: 'none'
+        });
+      });
+  },
+
+  // 模拟更新排队状态
+  updateQueue(data) {
+    const url = `http://localhost:8081/api/queues/${data.queueId}/status`;
+    wx.request({
+      url: url,
+      method: 'POST',
+      data: {
+        status: data.status,
+      },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("更新排队状态成功：", res.data);
+        } else {
+          console.log("更新排队状态失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    });
+  },
+
+  getAllQueue(id) {
+    const url = `http://localhost:8081/api/queues/user/${id}`;
+    wx.request({
+      url: url,
+      method: 'GET',
+      data: {
+        userId: id
+      },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("获取排队数据成功：", res.data);
+        } else {
+          console.log("获取排队数据失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    });
   },
 
   // 页面卸载时触发

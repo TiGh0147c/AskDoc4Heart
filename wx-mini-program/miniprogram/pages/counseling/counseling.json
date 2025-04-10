@@ -1,5 +1,8 @@
 {
-  "usingComponents": {
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "backgroundColor": "#1C1D21",
+  "usingComponents": { 
     "modal-waiting": "/components/modal-waiting/modal-waiting"
   }
 }
