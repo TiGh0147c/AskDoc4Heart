@@ -129,12 +129,22 @@ export default {
           localStorage.setItem('isAuthenticated', 'true')
           localStorage.setItem('userRole', selectedRole.value)
           
-          // 如果是咨询师登录，特别保存counselor_id和name
+          // 根据不同角色保存对应的ID和名称
           if (selectedRole.value === 'counselor') {
             localStorage.setItem('counselor_id', response.data.data.counselor_id)
             localStorage.setItem('counselor_name', response.data.data.name)
             console.log('已保存咨询师ID:', response.data.data.counselor_id)
             console.log('已保存咨询师姓名:', response.data.data.name)
+          } else if (selectedRole.value === 'user') {
+            localStorage.setItem('user_id', response.data.data.user_id)
+            localStorage.setItem('user_name', response.data.data.username || response.data.data.name)
+            console.log('已保存用户ID:', response.data.data.user_id)
+            console.log('已保存用户姓名:', response.data.data.username || response.data.data.name)
+          } else if (selectedRole.value === 'admin') {
+            localStorage.setItem('administrator_id', response.data.data.administrator_id)
+            localStorage.setItem('admin_name', response.data.data.username)
+            console.log('已保存管理员ID:', response.data.data.administrator_id)
+            console.log('已保存管理员姓名:', response.data.data.username)
           }
           
           router.push(`/${selectedRole.value}/home`)

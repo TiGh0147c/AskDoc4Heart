@@ -166,75 +166,80 @@
           // 获取所有绑定关系
           const bindingsResponse = await axios.get('/api/binding/all')
           
+          // 获取所有督导
+          const supervisorsResponse = await axios.get('/api/binding/supervisors')
+          
+          // 获取所有咨询师（非督导）
+          const counselorsResponse = await axios.get('/api/binding/counselors')
+          
           // 创建督导和咨询师的映射表
           const supervisorsMap = new Map()
           const counselorsMap = new Map()
           
-          // 处理绑定数据
-          if (bindingsResponse.data && Array.isArray(bindingsResponse.data)) {
-            bindingsResponse.data.forEach(binding => {
-              // 处理督导数据
-              if (binding.supervisorId && !supervisorsMap.has(binding.supervisorId)) {
-                supervisorsMap.set(binding.supervisorId, {
-                  id: binding.supervisorId,
-                  name: binding.supervisorName || '未知督导',
-                  specialties: [binding.supervisorExpertiseArea || '咨询'], // 使用expertiseArea作为专长
-                  counselorCount: 0,
-                  maxCounselors: 5 // 默认最大容量
-                })
-              }
-              
-              // 处理咨询师数据
-              if (binding.counselorId && !counselorsMap.has(binding.counselorId)) {
-                counselorsMap.set(binding.counselorId, {
-                  id: binding.counselorId,
-                  name: binding.counselorName || '未知咨询师',
-                  specialties: [binding.counselorExpertiseArea || '咨询'], // 使用expertiseArea作为专长
-                  supervisorId: binding.bindingStatus === 'bound' ? binding.supervisorId : null
-                })
-              }
-              
-              // 如果绑定状态为已绑定，更新督导的咨询师数量
-              if (binding.bindingStatus === 'bound' && supervisorsMap.has(binding.supervisorId)) {
-                const supervisor = supervisorsMap.get(binding.supervisorId)
-                supervisor.counselorCount += 1
-              }
+          // 处理督导数据
+          if (supervisorsResponse.data && Array.isArray(supervisorsResponse.data)) {
+            supervisorsResponse.data.forEach(supervisor => {
+              supervisorsMap.set(supervisor.supervisorId, {
+                id: supervisor.supervisorId,
+                name: supervisor.name || '未知督导',
+                specialties: [supervisor.expertiseArea || '咨询'], // 使用expertiseArea作为专长
+                counselorCount: 0, // 初始化为0，后面会根据绑定关系更新
+                maxCounselors: 5 // 默认最大容量
+              })
             })
           }
           
-          // 获取所有督导
-          // 如果后端提供了专门的督导接口，可以替换为该接口
-          
-          // 获取所有咨询师
-          try {
-            const counselorsResponse = await axios.get('/api/counselor/all')
-            if (counselorsResponse.data && Array.isArray(counselorsResponse.data)) {
-              counselorsResponse.data.forEach(counselor => {
-                // 如果是督导，添加到督导列表
-                if (counselor.isSupervisor && !supervisorsMap.has(counselor.counselorId)) {
-                  supervisorsMap.set(counselor.counselorId, {
-                    id: counselor.counselorId,
-                    name: counselor.name || '未知督导',
-                    specialties: [counselor.expertiseArea || '咨询'],
-                    counselorCount: 0,
-                    maxCounselors: 5
-                  })
-                }
-                
-                // 如果不是督导或者已经在绑定关系中处理过，添加到咨询师列表
-                if (!counselor.isSupervisor && !counselorsMap.has(counselor.counselorId)) {
-                  counselorsMap.set(counselor.counselorId, {
-                    id: counselor.counselorId,
-                    name: counselor.name || '未知咨询师',
-                    specialties: [counselor.expertiseArea || '咨询'],
-                    supervisorId: null
-                  })
-                }
+          // 处理咨询师数据 - 初始化所有咨询师为未分配状态
+          if (counselorsResponse.data && Array.isArray(counselorsResponse.data)) {
+            counselorsResponse.data.forEach(counselor => {
+              counselorsMap.set(counselor.counselorId, {
+                id: counselor.counselorId,
+                name: counselor.name || '未知咨询师',
+                specialties: [counselor.expertiseArea || '咨询'], // 使用expertiseArea作为专长
+                supervisorId: null, // 默认未分配督导
+                hasBinding: false // 标记是否有绑定记录
               })
-            }
-          } catch (error) {
-            console.error('获取咨询师列表失败:', error)
-            // 即使获取咨询师失败，我们仍然可以继续处理已有的数据
+            })
+          }
+          
+          // 处理绑定数据，更新咨询师的督导分配情况
+          if (bindingsResponse.data && Array.isArray(bindingsResponse.data)) {
+            // 首先按照counselorId分组，然后找出每个咨询师最新的绑定记录
+            const counselorBindings = new Map()
+            
+            // 对绑定记录按时间排序（从新到旧）
+            const sortedBindings = [...bindingsResponse.data].sort((a, b) => 
+              new Date(b.createdAt) - new Date(a.createdAt)
+            )
+            
+            // 获取每个咨询师的最新绑定记录
+            sortedBindings.forEach(binding => {
+              if (!counselorBindings.has(binding.counselorId)) {
+                counselorBindings.set(binding.counselorId, binding)
+              }
+            })
+            
+            // 根据最新的绑定记录更新咨询师和督导信息
+            counselorBindings.forEach(binding => {
+              if (counselorsMap.has(binding.counselorId)) {
+                const counselor = counselorsMap.get(binding.counselorId)
+                counselor.hasBinding = true // 标记有绑定记录
+                
+                // 只有当绑定状态为bound时才设置督导ID
+                if (binding.bindingStatus === 'bound') {
+                  counselor.supervisorId = binding.supervisorId
+                  
+                  // 更新督导的咨询师数量
+                  if (supervisorsMap.has(binding.supervisorId)) {
+                    const supervisor = supervisorsMap.get(binding.supervisorId)
+                    supervisor.counselorCount += 1
+                  }
+                } else {
+                  // 如果状态为unbound，确保咨询师没有督导
+                  counselor.supervisorId = null
+                }
+              }
+            })
           }
           
           // 转换Map为数组
@@ -247,7 +252,7 @@
           console.error('加载数据失败:', error)
         }
       }
-  
+
       // 过滤功能
       const filteredSupervisors = computed(() => {
         if (!supervisorSearchTerm.value) return supervisors.value
@@ -337,14 +342,16 @@
             const record = {
               supervisorId: selectedSupervisorId.value,
               counselorId: counselorId,
-              bindingStatus: 'unbound' // 使用 unbound 状态表示解绑
+              bindingStatus: 'unbound', // 使用 unbound 状态表示解绑
+              createdAt: new Date().toISOString() // 添加创建时间确保这是最新的记录
             }
             return axios.post('/api/binding/add', record)
           })
           
-          await Promise.all(requests)
+          const results = await Promise.all(requests)
+          console.log('解绑结果:', results)
           await loadData() // 重新加载数据
-          selectedAssignedCounselorIds.value = []
+          selectedAssignedCounselorIds.value = [] // 清空选中的已分配咨询师
         } catch (error) {
           console.error('解绑失败:', error)
           // 可以添加错误提示UI
@@ -358,16 +365,19 @@
             const record = {
               supervisorId: selectedSupervisorId.value,
               counselorId: counselorId,
-              bindingStatus: 'bound'
+              bindingStatus: 'bound',
+              createdAt: new Date().toISOString() // 添加创建时间确保这是最新的记录
             }
             return axios.post('/api/binding/add', record)
           })
           
-          await Promise.all(requests)
-          await loadData()
-          selectedCounselorIds.value = []
+          const results = await Promise.all(requests)
+          console.log('绑定结果:', results)
+          await loadData() // 重新加载数据
+          selectedCounselorIds.value = [] // 清空选中的未分配咨询师
         } catch (error) {
           console.error('绑定失败:', error)
+          // 可以添加错误提示UI
         }
       }
       

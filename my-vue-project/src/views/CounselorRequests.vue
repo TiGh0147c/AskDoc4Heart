@@ -22,17 +22,35 @@
         <h1>用户申请</h1>
         <p>这是用户申请页面。您可以在这里查看和处理用户的咨询申请。</p>
         
+        <div v-if="loading" class="loading">加载中...</div>
+        <div v-else-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+        
         <!-- 预约申请列表 -->
-        <div v-if="requests.length > 0" class="requests-list">
+        <div v-else-if="requests.length > 0" class="requests-list">
           <div v-for="request in requests" :key="request.id" class="request-item">
             <div class="request-info">
               <h3>{{ request.username }} - {{ request.type }}</h3>
               <p>预约时间: {{ request.dateTime }}</p>
-              <p>状态: <span :class="['status-text', request.status === 'pending' ? 'pending' : 'upcoming']">{{ request.status === 'pending' ? '等待确认' : '即将开始' }}</span></p>
+              <p>状态: 
+                <span :class="['status-text', 
+                             request.status === 'pending' ? 'pending' : 
+                             request.status === 'confirmed' ? 'confirmed' : 'rejected']">
+                  {{ request.status === 'pending' ? '等待确认' : 
+                     request.status === 'confirmed' ? '已确认' : '已拒绝' }}
+                </span>
+              </p>
             </div>
             <div class="request-actions">
-              <button class="primary-btn" @click="confirmAppointment(request.id)" v-if="request.status === 'pending'">确认预约</button>
-              <button class="cancel-btn" @click="rejectAppointment(request.id)" v-if="request.status === 'pending'">拒绝预约</button>
+              <button class="primary-btn" 
+                      @click="confirmAppointment(request.id)" 
+                      v-if="request.status === 'pending'">
+                确认预约
+              </button>
+              <button class="cancel-btn" 
+                      @click="rejectAppointment(request.id)" 
+                      v-if="request.status === 'pending'">
+                拒绝预约
+              </button>
             </div>
           </div>
         </div>
@@ -48,6 +66,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
   name: 'CounselorRequests',
@@ -56,78 +75,78 @@ export default {
     const router = useRouter()
 
     const username = computed(() => store.getters.username)
+    const requests = ref([])
+    const loading = ref(false)
+    const errorMessage = ref('')
 
-    // 模拟从后端获取的预约申请数据
-    const requests = ref([
-      {
-        id: 101,
-        userId: 1,
-        username: '用户1',
-        counselorId: 3,
-        counselorName: '王芳',
-        type: '情绪管理咨询',
-        dateTime: '2025-03-15 14:00',
-        status: 'pending'
-      },
-      {
-        id: 102,
-        userId: 2,
-        username: '用户2',
-        counselorId: 1,
-        counselorName: '李明',
-        type: '焦虑症咨询',
-        dateTime: '2025-03-13 11:00',
-        status: 'pending'
+    // 从localStorage获取咨询师ID
+    const counselorId = localStorage.getItem('counselor_id') || 
+                       JSON.parse(localStorage.getItem('user'))?.counselorId || 
+                       1 // 默认值
+
+    // 加载预约数据
+    const loadAppointments = async () => {
+      loading.value = true
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/appointments/counselor/${counselorId}`
+        )
+        
+        if (response.data && Array.isArray(response.data)) {
+          requests.value = response.data.map(app => ({
+            id: app.appointmentId,
+            userId: app.userId,
+            username: app.userName || '未知用户',
+            counselorId: app.counselorId,
+            counselorName: app.counselorName || '未知咨询师',
+            type: '心理咨询', // 固定类型
+            dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
+            status: app.appointmentStatus === 'scheduled' ? 'pending' : 'confirmed'
+          }))
+        }
+      } catch (error) {
+        console.error('加载预约数据失败:', error)
+        errorMessage.value = '加载预约数据失败，请刷新重试'
+      } finally {
+        loading.value = false
       }
-    ])
+    }
 
     // 确认预约
-    const confirmAppointment = (requestId) => {
+    const confirmAppointment = async (appointmentId) => {
       if (confirm('确认接受此预约吗？')) {
-        // 后端需要实现：
-        // 1. PUT /api/requests/{id}/confirm
-        // 2. 更新预约状态为confirmed
-        console.log(`确认预约: ${requestId}`);
-        // 示例代码：
-        // axios.put(`/api/requests/${requestId}/confirm`)
-        //   .then(response => {
-        //     // 处理响应
-        //     console.log(response.data);
-        //     // 更新本地数据
-        //     const request = requests.value.find(r => r.id === requestId);
-        //     if (request) {
-        //       request.status = 'confirmed';
-        //     }
-        //   })
-        //   .catch(error => {
-        //     // 处理错误
-        //     console.error(error);
-        //   });
+        try {
+          const response = await axios.put(
+            `http://localhost:8080/api/appointments/update/${appointmentId}`,
+            { newStatus: 'confirmed' }
+          )
+          
+          if (response.status === 200) {
+            await loadAppointments()
+          }
+        } catch (error) {
+          console.error('确认预约失败:', error)
+          errorMessage.value = '确认预约失败，请重试'
+        }
       }
     }
 
     // 拒绝预约
-    const rejectAppointment = (requestId) => {
+    const rejectAppointment = async (appointmentId) => {
       if (confirm('确认拒绝此预约吗？')) {
-        // 后端需要实现：
-        // 1. PUT /api/requests/{id}/reject
-        // 2. 更新预约状态为rejected
-        console.log(`拒绝预约: ${requestId}`);
-        // 示例代码：
-        // axios.put(`/api/requests/${requestId}/reject`)
-        //   .then(response => {
-        //     // 处理响应
-        //     console.log(response.data);
-        //     // 更新本地数据
-        //     const request = requests.value.find(r => r.id === requestId);
-        //     if (request) {
-        //       request.status = 'rejected';
-        //     }
-        //   })
-        //   .catch(error => {
-        //     // 处理错误
-        //     console.error(error);
-        //   });
+        try {
+          const response = await axios.put(
+            `http://localhost:8080/api/appointments/update/${appointmentId}`,
+            { newStatus: 'rejected' }
+          )
+          
+          if (response.status === 200) {
+            await loadAppointments()
+          }
+        } catch (error) {
+          console.error('拒绝预约失败:', error)
+          errorMessage.value = '拒绝预约失败，请重试'
+        }
       }
     }
 
@@ -139,43 +158,31 @@ export default {
 
     // 页面导航
     const goTo = (path) => {
-      switch (path) {
-        case 'home':
-          router.push('/counselor/home')
-          break
-        case 'settings':
-          router.push('/counselor/settings')
-          break
-        case 'requests':
-          router.push('/counselor/requests')
-          break
-        case 'chat':
-          router.push('/counselor/chat')
-          break
-        case 'schedule':
-          router.push('/counselor/schedule')
-          break
-          case 'history':
-          router.push('/counselor/history')
-          break
-          case 'evaluation':
-          router.push('/counselor/evaluation')
-          break
-        default:
-          console.error('Invalid path')
+      const paths = {
+        home: '/counselor/home',
+        settings: '/counselor/settings',
+        requests: '/counselor/requests',
+        chat: '/counselor/chat',
+        schedule: '/counselor/schedule',
+        history: '/counselor/history',
+        evaluation: '/counselor/evaluation'
+      }
+      const targetPath = paths[path]
+      if (targetPath) {
+        router.push(targetPath)
       }
     }
 
-    // 加载数据
+    // 组件挂载时加载数据
     onMounted(() => {
-      console.log('加载预约申请数据');
-      // 在实际项目中，这里应该调用API加载数据
-      // fetchRequests()
+      loadAppointments()
     })
 
     return {
       username,
       requests,
+      loading,
+      errorMessage,
       confirmAppointment,
       rejectAppointment,
       logout,
@@ -334,5 +341,26 @@ export default {
   background-color: #f9f9f9;
   border-radius: 6px;
   margin: 10px 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.error-message {
+  color: #dc3545;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px;
+}
+
+.status-text.confirmed {
+  color: #28a745;
+}
+
+.status-text.rejected {
+  color: #dc3545;
 }
 </style>
