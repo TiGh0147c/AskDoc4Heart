@@ -32,4 +32,5 @@ public interface ScheduleMapper {
 
     // 查询某督导安排的所有排班
     List<Schedule> selectBySupervisorId(Integer supervisorId);
+
 }

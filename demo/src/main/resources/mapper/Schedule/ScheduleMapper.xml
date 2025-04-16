@@ -8,7 +8,15 @@
         <result property="counselorId" column="counselor_id"/>
         <result property="supervisorId" column="supervisor_id"/>
     </resultMap>
-
+    <resultMap id="ScheduleWithNamesResultMap" type="com.example.demo.Schedule.entity.Schedule">
+        <id property="scheduleId" column="schedule_id"/>
+        <result property="date" column="date"/>
+        <result property="timeSlot" column="time_slot"/>
+        <result property="counselorId" column="counselor_id"/>
+        <result property="counselorName" column="counselor_name"/>
+        <result property="supervisorId" column="supervisor_id"/>
+        <result property="supervisorName" column="supervisor_name"/>
+    </resultMap>
     <insert id="insertSchedule" parameterType="com.example.demo.Schedule.entity.Schedule"
             useGeneratedKeys="true" keyProperty="scheduleId">
         INSERT INTO Schedule(date, time_slot, counselor_id, supervisor_id)
@@ -25,8 +33,19 @@
 
 
 
-    <select id="selectByDate" parameterType="java.util.Date" resultMap="ScheduleResultMap">
-        SELECT * FROM Schedule WHERE date = #{date}
+    <select id="selectByDate" parameterType="java.util.Date" resultMap="ScheduleWithNamesResultMap">
+        SELECT
+        s.schedule_id,
+        s.date,
+        s.time_slot,
+        s.counselor_id,
+        c.name AS counselor_name,
+        s.supervisor_id,
+        sv.name AS supervisor_name
+        FROM Schedule s
+        LEFT JOIN Counselor c ON s.counselor_id = c.counselor_id
+        LEFT JOIN Supervisor sv ON s.supervisor_id = sv.supervisor_id
+        WHERE s.date = #{date}
     </select>
 
     <update id="updateSchedule" parameterType="com.example.demo.Schedule.entity.Schedule">
