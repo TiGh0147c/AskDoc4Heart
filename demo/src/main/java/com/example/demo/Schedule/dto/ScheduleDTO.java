@@ -1,6 +1,5 @@
 package com.example.demo.Schedule.dto;
 
-
 import java.util.Date;
 
 public class ScheduleDTO {
@@ -8,8 +7,9 @@ public class ScheduleDTO {
     private Date date;
     private String timeSlot;
     private Integer counselorId;
+    private String counselorName;  // 新增
     private Integer supervisorId;
-
+    private String supervisorName;  // 新增
 
     // getters and setters
     public Integer getScheduleId() {
@@ -44,6 +44,14 @@ public class ScheduleDTO {
         this.counselorId = counselorId;
     }
 
+    public String getCounselorName() {
+        return counselorName;
+    }
+
+    public void setCounselorName(String counselorName) {
+        this.counselorName = counselorName;
+    }
+
     public Integer getSupervisorId() {
         return supervisorId;
     }
@@ -52,4 +60,11 @@ public class ScheduleDTO {
         this.supervisorId = supervisorId;
     }
 
+    public String getSupervisorName() {
+        return supervisorName;
+    }
+
+    public void setSupervisorName(String supervisorName) {
+        this.supervisorName = supervisorName;
+    }
 }

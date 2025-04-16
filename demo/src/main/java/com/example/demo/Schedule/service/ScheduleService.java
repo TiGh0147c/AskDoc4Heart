@@ -1,4 +1,5 @@
 package com.example.demo.Schedule.service;
+import java.util.stream.Collectors;
 
 
 
@@ -30,6 +31,7 @@ public class ScheduleService {
     public Schedule getScheduleById(Integer scheduleId) {
         return scheduleMapper.selectById(scheduleId);
     }
+
 
     // 根据日期获取排班
     public List<Schedule> getSchedulesByDate(Date date) {

@@ -90,4 +90,5 @@ public class ScheduleController {
             @PathVariable Integer supervisorId) {
         return ResponseEntity.ok(scheduleService.getSchedulesBySupervisorId(supervisorId));
     }
+
 }
