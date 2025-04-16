@@ -30,7 +30,8 @@
           </div>
         </div>
         
-        <div class="status-card">
+        <!-- 由于后端可能没有 active 状态，可以考虑移除这个卡片或修改其逻辑 -->
+        <div class="status-card" v-if="false">
           <div class="status-icon active" v-if="activeAppointments.length > 0">
             <i class="status-dot"></i>
           </div>

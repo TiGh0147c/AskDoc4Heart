@@ -44,10 +44,18 @@
               >
                 咨询记录
               </div>
+              <div 
+                class="tab" 
+                :class="{ 'active': activeTab === 'audits' }" 
+                @click="activeTab = 'audits'; fetchUserAudits()"
+              >
+                用户审核
+              </div>
             </div>
             
             <!-- 用户账号标签页 -->
             <div v-if="activeTab === 'users'" class="tab-content">
+              <!-- 现有用户账号内容保持不变 -->
               <div class="search-bar">
                 <input type="text" v-model="userSearchTerm" placeholder="搜索用户..." class="search-input">
                 <button class="action-btn" @click="addNewUser">添加用户</button>
@@ -90,6 +98,7 @@
             
             <!-- 咨询师账号标签页 -->
             <div v-if="activeTab === 'counselors'" class="tab-content">
+              <!-- 现有咨询师账号内容保持不变 -->
               <div class="search-bar">
                 <input type="text" v-model="counselorSearchTerm" placeholder="搜索咨询师..." class="search-input">
                 <button class="action-btn" @click="addNewCounselor">添加咨询师</button>
@@ -134,6 +143,7 @@
             
             <!-- 咨询记录标签页 -->
             <div v-if="activeTab === 'sessions'" class="tab-content">
+              <!-- 现有咨询记录内容保持不变 -->
               <div class="search-bar">
                 <input type="text" v-model="sessionSearchTerm" placeholder="搜索咨询记录..." class="search-input">
                 <select v-model="sessionStatusFilter" class="filter-select">
@@ -176,6 +186,66 @@
                 </tbody>
               </table>
             </div>
+            
+            <!-- 用户审核标签页 -->
+            <div v-if="activeTab === 'audits'" class="tab-content">
+              <div class="search-bar">
+                <select v-model="auditStatusFilter" class="filter-select" @change="fetchUserAudits()">
+                  <option value="">全部状态</option>
+                  <option value="pending">待审核</option>
+                  <option value="approved">已通过</option>
+                  <option value="rejected">已拒绝</option>
+                </select>
+                <div class="status-info">
+                  <span v-if="loading">加载中...</span>
+                  <span v-else>共 {{ userAudits.length }} 条记录</span>
+                </div>
+              </div>
+              
+              <table v-if="!loading">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>用户ID</th>
+                    <th>修改字段</th>
+                    <th>新值</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="audit in userAudits" :key="audit.auditId">
+                    <td>{{ audit.auditId }}</td>
+                    <td>{{ audit.userId }}</td>
+                    <td>{{ formatAuditField(audit.modifyField) }}</td>
+                    <td>
+                      <span v-if="audit.modifyField === 'avatar'">
+                        <img :src="audit.newValue" alt="新头像" class="audit-image" />
+                      </span>
+                      <span v-else>{{ audit.newValue }}</span>
+                    </td>
+                    <td>
+                      <span :class="'status-badge ' + audit.auditStatus">
+                        {{ formatAuditStatus(audit.auditStatus) }}
+                      </span>
+                    </td>
+                    <td>
+                      <div v-if="audit.auditStatus === 'pending'">
+                        <button class="small-btn approve-btn" @click="reviewAudit(audit.auditId, 'approved')">通过</button>
+                        <button class="small-btn reject-btn" @click="reviewAudit(audit.auditId, 'rejected')">拒绝</button>
+                      </div>
+                      <span v-else>已处理</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div v-else-if="loading" class="loading-container">
+                加载中...
+              </div>
+              <div v-else-if="userAudits.length === 0" class="empty-message">
+                暂无审核记录
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -183,15 +253,17 @@
   </template>
   
   <script>
-  import { ref, computed } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { useStore } from 'vuex'
   import { useRouter } from 'vue-router'
+  import axios from 'axios'
   
   export default {
     name: 'AdminAccounts',
     setup() {
       const store = useStore()
       const router = useRouter()
+      const loading = ref(false)
   
       const username = computed(() => store.getters.username)
       const activeTab = ref('users')
@@ -201,6 +273,10 @@
       const counselorSearchTerm = ref('')
       const sessionSearchTerm = ref('')
       const sessionStatusFilter = ref('all')
+      const auditStatusFilter = ref('')
+      
+      // 用户审核数据
+      const userAudits = ref([])
       
       // 模拟用户数据
       const users = ref([
@@ -274,6 +350,68 @@
           case 'completed': return '已完成'
           case 'cancelled': return '已取消'
           default: return status
+        }
+      }
+      
+      // 格式化审核字段名称
+      const formatAuditField = (field) => {
+        switch (field) {
+          case 'nickname': return '昵称'
+          case 'avatar': return '头像'
+          default: return field
+        }
+      }
+      
+      // 格式化审核状态
+      const formatAuditStatus = (status) => {
+        switch (status) {
+          case 'pending': return '待审核'
+          case 'approved': return '已通过'
+          case 'rejected': return '已拒绝'
+          default: return status
+        }
+      }
+      
+      // 获取用户审核记录
+      const fetchUserAudits = async () => {
+        try {
+          loading.value = true
+          const response = await axios.get(
+            'http://localhost:8080/api/profile-management/administrator/user-modification-audits',
+            { params: { status: auditStatusFilter.value || null } }
+          )
+          
+          if (response.status === 200) {
+            userAudits.value = response.data
+          }
+        } catch (error) {
+          console.error('获取用户审核记录失败:', error)
+        } finally {
+          loading.value = false
+        }
+      }
+      
+      // 审核用户修改
+      const reviewAudit = async (auditId, decision) => {
+        try {
+          loading.value = true
+          const response = await axios.post(
+            `http://localhost:8080/api/profile-management/administrator/user-modification-audits/${auditId}/review`,
+            null,
+            { params: { decision } }
+          )
+          
+          if (response.status === 200) {
+            // 更新本地审核记录状态
+            const audit = userAudits.value.find(a => a.auditId === auditId)
+            if (audit) {
+              audit.auditStatus = decision
+            }
+          }
+        } catch (error) {
+          console.error('审核操作失败:', error)
+        } finally {
+          loading.value = false
         }
       }
       
@@ -352,6 +490,13 @@
             console.error('Invalid path')
         }
       }
+      
+      // 初始化时加载数据
+      onMounted(() => {
+        if (activeTab.value === 'audits') {
+          fetchUserAudits()
+        }
+      })
   
       return {
         username,
@@ -362,11 +507,18 @@
         counselorSearchTerm,
         sessionSearchTerm,
         sessionStatusFilter,
+        auditStatusFilter,
         filteredUsers,
         filteredCounselors,
         filteredSessions,
+        userAudits,
+        loading,
         getStatusText,
         getSessionStatusText,
+        formatAuditField,
+        formatAuditStatus,
+        fetchUserAudits,
+        reviewAudit,
         addNewUser,
         editUser,
         toggleUserStatus,
@@ -491,6 +643,7 @@
     display: flex;
     margin-bottom: 20px;
     gap: 10px;
+    justify-content: space-between;
   }
   
   .search-input {
@@ -570,6 +723,21 @@
     color: #721c24;
   }
   
+  .status-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  .status-badge.approved {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .status-badge.rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
   .small-btn {
     padding: 3px 8px;
     margin: 0 2px;
@@ -604,7 +772,45 @@
     color: white;
   }
   
-  .edit-btn:hover, .view-btn:hover, .block-btn:hover, .activate-btn:hover, .delete-btn:hover {
+  .approve-btn {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .reject-btn {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .edit-btn:hover, .view-btn:hover, .block-btn:hover, .activate-btn:hover, .delete-btn:hover, .approve-btn:hover, .reject-btn:hover {
     opacity: 0.9;
+  }
+  
+  .audit-image {
+    max-width: 50px;
+    max-height: 50px;
+    border-radius: 4px;
+  }
+  
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 1.2rem;
+    color: #6c757d;
+  }
+  
+  .empty-message {
+    text-align: center;
+    padding: 30px;
+    color: #6c757d;
+    font-style: italic;
+  }
+  
+  .status-info {
+    display: flex;
+    align-items: center;
+    color: #6c757d;
   }
   </style>
