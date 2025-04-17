@@ -13,7 +13,7 @@
     <!-- 主内容区域 -->
     <div class="main-content">
       <div class="top-right">
-        <p class="welcome">欢迎回来，{{ userInfo.nickname || '用户' }}！</p>
+        <p class="welcome">欢迎回来，{{ username }}！</p>
         <button class="logout-btn" @click="logout">退出登录</button>
       </div>
 
@@ -184,28 +184,32 @@ export default {
       }
     }
     
-    // 获取用户信息
+    // 从localStorage获取用户信息 - 修改为与UserHome.vue一致的方式
+    const userData = JSON.parse(localStorage.getItem('user'))
+    const username = ref(userData?.username || '用户')
+    const userId = ref(userData?.user_id || 1)
+    
+    // 获取用户信息 - 修改后的fetchUserInfo方法
     const fetchUserInfo = async () => {
       try {
         loading.value = true
-        // 从localStorage获取userId，如果没有则使用默认值1
-        const userId = localStorage.getItem('userId') || 1
-        
         const response = await axios.get(
           'http://localhost:8080/api/profile-management/user/profile',
-          { params: { userId } }
+          { params: { userId: userId.value } }
         )
         
         if (response.status === 200 && response.data) {
-          userInfo.userId = response.data.userId
-          userInfo.nickname = response.data.nickname
-          userInfo.gender = response.data.gender
-          userInfo.birthday = response.data.birthday ? 
-            new Date(response.data.birthday).toISOString().split('T')[0] : ''
-          userInfo.email = response.data.email
-          userInfo.occupation = response.data.occupation
-          userInfo.phoneNumber = response.data.phoneNumber
-          userInfo.avatar = response.data.avatar
+          Object.assign(userInfo, {
+            userId: userId.value,
+            nickname: response.data.nickname || '',
+            gender: response.data.gender || 'unknown',
+            birthday: response.data.birthday ? 
+              new Date(response.data.birthday).toISOString().split('T')[0] : '',
+            email: response.data.email || '',
+            occupation: response.data.occupation || '',
+            phoneNumber: response.data.phoneNumber || '',
+            avatar: response.data.avatar || null
+          })
         }
       } catch (error) {
         console.error('获取用户信息失败:', error)
@@ -215,13 +219,14 @@ export default {
       }
     }
     
-    // 保存用户信息修改
+    // 保存用户信息修改 - 修改后的saveChanges方法
     const saveChanges = async () => {
       saving.value = true
       errorMessage.value = ''
       
       try {
         const formData = new FormData()
+        formData.append('userId', userId.value)
         
         // 添加用户信息到FormData
         formData.append('userId', editForm.userId)
@@ -248,6 +253,13 @@ export default {
         )
         
         if (response.status === 200) {
+          // 更新本地存储的用户信息
+          const updatedUser = {
+            ...userData,
+            username: editForm.nickname || userData.username
+          }
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+          
           // 更新用户信息和审核记录
           await fetchUserInfo()
           await fetchAuditRecords()
@@ -257,7 +269,6 @@ export default {
         }
       } catch (error) {
         console.error('保存失败:', error)
-        // 显示后端返回的错误信息或默认错误信息
         errorMessage.value = error.response?.data || '保存失败，请稍后重试'
       } finally {
         saving.value = false
@@ -302,15 +313,11 @@ export default {
     // 获取用户审核记录
     const fetchAuditRecords = async () => {
       try {
-        const userId = localStorage.getItem('userId') || 1
-        
         const response = await axios.get(
           'http://localhost:8080/api/profile-management/user/modification-audits', 
           {
             params: { 
-              userId,
-              // 可以添加status参数来筛选特定状态的审核记录
-              // status: 'pending' // 例如只获取待审核的记录
+              userId: userId.value,  // 使用userId.value获取实际值
             }
           }
         )
@@ -320,6 +327,7 @@ export default {
         }
       } catch (error) {
         console.error('获取审核记录失败:', error)
+        errorMessage.value = '获取审核记录失败，请稍后重试'  // 添加错误提示
       }
     }
     
