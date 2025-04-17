@@ -13,9 +13,11 @@
         </button>
         <view class="details" id="details-{{item._id}}" wx:if="{{showDetails[item._id]}}">
           <text class="tag-text">擅长:</text>
+          <text class="intro-text">- {{item.tag}}</text>
+          <!-- 
           <view wx:for="{{item.tag}}" wx:key="index">
             <text class="intro-text">- {{item}}</text>
-          </view>
+          </view> -->
           <text class="tag-text">简介:</text>
           <text class="intro-text">- {{item.intro}}</text>
           <block wx:if="{{item.status === '空闲'}}">

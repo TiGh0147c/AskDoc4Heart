@@ -16,8 +16,10 @@
       <view class="section"> 
         <label>性别</label>
         <radio-group name="gender">
-          <label><radio value="男" checked="{{gender == '男'}}"/>男</label>
-          <label><radio value="女" checked="{{gender == '女'}}"/>女</label>
+          <label><radio value="male" checked="{{gender == 'male'}}"/>男</label>
+          <label><radio value="female" checked="{{gender == 'female'}}"/>女</label>
+          <label><radio value="other" checked="{{gender == 'other'}}"/>其他</label>
+          <label><radio value="unknown" checked="{{gender == 'unknown'}}"/>不明</label>
         </radio-group>
       </view>
       <view class="section">

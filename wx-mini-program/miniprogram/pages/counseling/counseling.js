@@ -9,6 +9,7 @@ Page({
     queue_number: '',
     queue_counselor_id: '',
     queue_counselor_name: '',
+    counselorIds: [],
     counselors: [],
     description: '',
     showDetails: {}, // 控制每个咨询师详情是否显示的状态对象
@@ -18,8 +19,7 @@ Page({
     buttonMargins: {}, // 按钮的 margin-bottom 样式
     showModal: false, // 控制模态框显示
     modalData: {}, // 模态框需要显示的数据，初始值为空对象
-    intervalId1: null,
-    intervalId2: null, // 定时器 ID，用于后续清除定时器
+    intervalId: null, // 定时器 ID，用于后续清除定时器
   },
 
   onLoad: function (options) {
@@ -30,26 +30,38 @@ Page({
     this.setData({
       description: decodeURIComponent(options.description),
     });
+    //this.addSchedules(0); this.addSchedules(1);
+    //this.getAllschedules();
+    this.fetchSchedules();
     this.refresh();
-    /*
-    // 启动定时器，每 10 秒获取一次数据
-    const intervalId1 = setInterval(() => {
-      this.refresh();
-    }, 10000); // 每 10 秒执行一次
-    // 保存定时器 ID，以便后续清除
-    this.setData({ intervalId1: intervalId1 });*/
-    //this.getAllQueue(userid);
     //this.leaveQueue(1);this.leaveQueue(10);this.leaveQueue(5);
     //this.leaveQueue(6);this.leaveQueue(7);this.leaveQueue(8);
   },
 
-  clearAllTimersGlobally() {
-    let id = 1;
-    while (id < 100) { // 假设最大计时器数量为 10000
-      clearTimeout(id);
-      clearInterval(id);
-      id++;
+  // 标准化日期
+  getTodayDate(today) {
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // 月份从 0 开始，需加 1
+    const day = String(today.getDate()).padStart(2, '0');
+    console.log(`获取了今日日期：${year}-${month}-${day}`);
+    return `${year}-${month}-${day}`;
+  },
+
+  getCurrentTimeSlot() {
+    const now = new Date();
+    const hours = now.getHours();
+
+    if (hours >= 9 && hours < 11) {
+      return "morning";
+    } else if (hours >= 14 && hours < 17) {
+      return "afternoon";
+    } else {
+      return null;
     }
+  },
+
+  filterDataByTimeSlot(data, currentTimeSlot) {
+    return data.filter(item => item.timeSlot === currentTimeSlot);
   },
 
   onLaunch: function () {
@@ -64,16 +76,61 @@ Page({
 
   refresh(){
     this.setData({ loading: true });
+    const showDetails = {};
+    const buttonMargins = {};
     /* 模拟获取咨询师数据 */
     const everyday = [{
       _id: 100,
       name: "苏轼",
       intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
-      tag: ["东坡肉", "出去玩", "被贬"],
+      tag: "被贬",
+      // tag: ["东坡肉", "出去玩", "被贬"],
       status: "空闲",
       type: "ai"
     }];
     const everydayData = Array.isArray(everyday[0]) ? everyday[0] : everyday;
+    const currentTimeSlot = this.getCurrentTimeSlot(); // 获取当前时间段
+    console.log("现在的时间段为:", currentTimeSlot);
+    if (currentTimeSlot) {
+      this.fetchAllCounselors()
+        .then(counselors => {
+          console.log("所有咨询师信息加载完成：", counselors);
+          const dutyData = Array.isArray(counselors[0]) ? counselors[0] : counselors;
+          const processedEverydayData = everydayData.map(item => ({ ...item, isActive: false }));
+          const processedDutyData = dutyData.map(item => ({ ...item, type: "counselor", isActive: false }));
+          const processedCounselors = [...processedDutyData, ...processedEverydayData];
+          this.setData({
+            counselors: processedCounselors,
+            showDetails,
+            buttonMargins,
+            loading: false
+          });
+          wx.stopPullDownRefresh();
+        })
+        .catch(error => {
+          console.error("加载咨询师信息失败：", error);
+          wx.showToast({
+            title: '加载咨询师信息失败',
+            icon: 'none'
+          });
+          this.setData({
+            showDetails,
+            buttonMargins,
+            loading: false
+          });
+          wx.stopPullDownRefresh();
+        });
+    } else {
+      const processedEverydayData = everydayData.map(item => ({ ...item, isActive: false }));
+      this.setData({
+        counselors: processedEverydayData,
+        showDetails,
+        buttonMargins,
+        loading: false
+      });
+      wx.stopPullDownRefresh();
+    }
+    /*
     const data = [{
       _id: 1,
       name: "张三",
@@ -99,7 +156,7 @@ Page({
       buttonMargins,
       loading: false
     });
-    wx.stopPullDownRefresh();
+    wx.stopPullDownRefresh();*/
   },
   
   toggleDetails(e) {
@@ -176,10 +233,10 @@ Page({
     const queuedata = this.data.queue_id;
     this.leaveQueue(queuedata);
     this.setData({ showModal: false });
-    if (this.data.intervalId2) {
-      clearInterval(this.data.intervalId2); // 清除定时器
+    if (this.data.intervalId) {
+      clearInterval(this.data.intervalId); // 清除定时器
       this.setData({
-        intervalId2: null, // 清空定时器 ID
+        intervalId: null, // 清空定时器 ID
         showModal: false, // 隐藏模态框
       });
       console.log("计时器2已清除");
@@ -188,22 +245,16 @@ Page({
 
   // 清空计时器
   clearTimers() {
-    const { intervalId1, intervalId2 } = this.data;
+    const { intervalId } = this.data;
 
-    if (intervalId1) {
-      clearInterval(intervalId1); // 清除第一个计时器
-      console.log('计时器 1 已清除');
-    }
-
-    if (intervalId2) {
-      clearInterval(intervalId2); // 清除第二个计时器
-      console.log('计时器 2 已清除');
+    if (intervalId) {
+      clearInterval(intervalId); // 清除计时器
+      console.log('计时器 已清除');
     }
 
     // 清空计时器 ID
     this.setData({
-      intervalId1: null,
-      intervalId2: null,
+      intervalId: null,
     });
   },
 
@@ -252,12 +303,12 @@ Page({
           that.handleFetchAndSetData(queueId);
           
           // 启动定时器，每 10 秒获取一次数据
-          const intervalId2 = setInterval(() => {
+          const intervalId = setInterval(() => {
             that.handleFetchAndSetData(queueId);
           }, 10000); // 每 10 秒执行一次
 
           // 保存定时器 ID，以便后续清除
-          that.setData({ intervalId2: intervalId2 });
+          that.setData({ intervalId: intervalId });
         } else {
           console.log("加入队伍失败：",res);
         }
@@ -340,18 +391,70 @@ Page({
         });
         const modal = that.selectComponent("#modal"); 
         modal.show();
-        /*
-        const updateData = {
-          queueId: queueId,
-          status: 'in_progress'
-        }
-        console.log("传入更新数据", updateData);
-        that.updateQueue(updateData);*/
+        that.checkQueue(queueId);
       })
       .catch(err => {
         console.error("获取数据失败：", err);
         wx.showToast({
           title: '获取数据失败，请稍后再试',
+          icon: 'none'
+        });
+      });
+  },
+
+  // 获取咨询师数据
+  getCounselor(id) {
+    return new Promise((resolve, reject) => {
+      const url = 'http://localhost:8081/api/profile-management/counselor/profile';
+      wx.request({
+        url: url,
+        method: 'GET',
+        data: {
+          counselorId: id
+        },
+        success(res) {
+          if (res.statusCode === 200) {
+            // 提取需要的字段
+            const status = res.data.status === "available" ? "空闲" : "繁忙";
+            const counselor = {
+              _id: res.data.counselorId,
+              name: res.data.name,
+              avatar: res.data.avatar,
+              counselor_certificate: res.data.counselorCertificate,
+              tag: res.data.expertiseArea,
+              intro: "无",
+              status: status
+            };
+            console.log(`查询咨询师 ${id} 信息成功：`, counselor);
+            resolve(counselor); // 返回提取的数据
+          } else {
+            console.log(`查询咨询师 ${id} 信息失败：`, res);
+            reject(new Error(`查询咨询师 ${id} 失败`));
+          }
+        },
+        fail(err) {
+          console.error(`请求咨询师 ${id} 信息失败：`, err);
+          reject(err);
+        }
+      });
+    });
+  },
+
+  // 根据存储的值班咨询师id，获取值班咨询师状态
+  fetchAllCounselors() {
+    const { counselorIds } = this.data;
+
+    // 使用 Promise.all 并发请求所有咨询师信息
+    return Promise.all(counselorIds.map(id => this.getCounselor(id)))
+      .then(results => {
+        // 将所有成功的结果存入页面数据
+        console.log("所有咨询师信息：", results);
+        return results;
+      })
+      .catch(err => {
+        console.error("获取咨询师信息失败：", err);
+        wx.showToast({
+          title: '获取咨询师信息失败',
           icon: 'none'
         });
       });
@@ -371,6 +474,35 @@ Page({
           console.log("更新排队状态成功：", res.data);
         } else {
           console.log("更新排队状态失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    });
+  },
+
+  checkQueue: function(data) {
+    const url = `http://localhost:8081/api/queues/getById`;
+    const that = this;
+    wx.request({
+      url: url,
+      method: 'GET',
+      data: {
+        queueId: data
+      },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("查询排队状态成功：", res.data);
+          if(res.data.queueStatus === "in_progress"){
+            that.queueToDialogue();
+          }
+        } else {
+          console.log("查询排队状态失败：",res);
         }
       },
       fail(err) {
@@ -408,6 +540,109 @@ Page({
     });
   },
 
+  // 获取当前时间段排班
+  fetchSchedules() {
+    const today = new Date();
+    const todayDate = this.getTodayDate(today); // 获取当前日期
+    const currentTimeSlot = this.getCurrentTimeSlot(); // 获取当前时间段
+    wx.request({
+      url: `http://localhost:8081/api/schedules/date/${todayDate}`, 
+      method: 'GET',
+      success: (res) => {
+        if (res.statusCode === 200) {
+          console.log("查询今日排班成功：", res.data);
+          if (currentTimeSlot) {
+            // 筛选数据
+            const filteredData = this.filterDataByTimeSlot(res.data, currentTimeSlot);
+      
+            // 提取 counselorId 并更新页面数据
+            const counselorIds = filteredData.map(item => item.counselorId);
+            console.log("查询当前时间段排班成功：", counselorIds);
+            this.setData({ counselorIds });
+            this.refresh();
+          } else {
+            wx.showToast({
+              title: '当前时间不在有效时间段内',
+              icon: 'none'
+            });
+            this.setData({ loading: false });
+          }
+        } else {
+          console.log("查询今日排班失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    })
+  },
+
+  // 获取全部排班
+  getAllschedules() {
+    const url = 'http://localhost:8081/api/schedules/all';
+    wx.request({
+      url: url,
+      method: 'GET',
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("查询排班成功：", res.data);
+        } else {
+          console.log("查询排班失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    });
+  },
+
+  // 新建排班
+  addSchedules(n) {
+    const today = new Date();
+    const day = new Date(today);
+    day.setDate(today.getDate() + n);
+    console.log("获取日期：", day);
+    const Thedate = this.getTodayDate(day);
+    const url = 'http://localhost:8081/api/schedules/create';
+    const data =  {
+      date: Thedate,
+      //timeSlot: "afternoon",
+      timeSlot: "morning",
+      counselorId: 1,
+    }
+
+    wx.request({
+      url: url, 
+      method: 'POST',
+      data: data,
+      header: {
+        'Content-Type': 'application/json'
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          console.log("新增排班成功：",res.data);
+        } else {
+          console.log("新增排班失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    })
+  },
+  
   // 页面卸载时触发
   onUnload() {
     this.clearTimers(); // 清空计时器

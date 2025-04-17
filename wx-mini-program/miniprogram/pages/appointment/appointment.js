@@ -33,8 +33,8 @@ Page({
       userName: userName
     });
     /* 模拟获取值班表数据 */
-    const today = new Date();
-    console.log("传入日期", today);
+    this.fetchSchedules();
+    /* 
     const scheduledata = [
       {date: "2025-04-07", time: "morning", counselorName: "李明", id: 3},
       {date: "2025-04-07", time: "morning", counselorName: "王芳", id: 4},
@@ -54,7 +54,7 @@ Page({
       {date: "2025-04-11", time: "afternoon", counselorName: "王芳", id: 4}
     ];
     console.log("获取值班数据：", scheduledata);
-    this.setData({schedule: scheduledata});
+    this.setData({schedule: scheduledata});*/
     this.calculateDates();
     this.refresh();
   },
@@ -67,26 +67,15 @@ Page({
     const inputdata = {
       userId: this.data.userid
     }
-    this.getAppointments(this.data.userid);
-    /* 
-    const data = [{
-      appointmentId:"0001",
-      counselorName:"小陈",
-      notes:"焦虑症咨询",
-      appointment_time:"2025-04-20 morning"
-    },{
-      appointmentId:"0002",
-      counselorName:"小林",
-      notes:"焦虑症咨询",
-      appointment_time:"2025-04-22 morning"
-    }];
-    console.log("获取预约数据:", data);
-    const appointmentData = Array.isArray(data[0]) ? data[0] : data;
-    this.setData({
-      appointment: appointmentData || [],
-      loading: false
-    })*/
+    this.getAppointmentsWithCounselorNames(this.data.userid);
+  },
 
+  // 标准化日期
+  getTodayDate(today) {
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // 月份从 0 开始，需加 1
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   },
 
   // 计算可选日期范围
@@ -162,7 +151,14 @@ Page({
 
     // 筛选出符合条件的咨询师
     const filteredConsultants = schedule
-      .filter(item => item.date === selectedDate && item.time === selectedTime);
+      .filter(item => item.date === selectedDate)
+      .flatMap(item => item.schedules)
+      .filter(scheduleItem => scheduleItem.timeSlot === selectedTime);
+    console.log("筛选结果：", filteredConsultants);
+    /*
+    const filteredConsultants = schedule
+      .filter(item => item.date === selectedDate && item.timeSlot === selectedTime);
+    */
 
     if (filteredConsultants.length > 0) {
       const consultantNames = filteredConsultants.map(item => item.counselorName); // 提取咨询师名字
@@ -213,14 +209,14 @@ Page({
 
     const { selectedDate, selectedTime, consultants, selectedConsultantIndex, problemTypes, selectedProblemTypeIndex, userid, userName } = this.data;
 
-    //模拟传入预约数据
+    // 传入预约数据
     const appointmentData = {
       appointmentDate: selectedDate,
       appointmentTime: selectedTime,
       userId: userid,
-      userName: userName,
-      counselorId: consultants[selectedConsultantIndex].id,
-      counselorName: consultants[selectedConsultantIndex].counselorName,
+      //userName: userName,
+      counselorId: consultants[selectedConsultantIndex].counselorId,
+      //counselorName: consultants[selectedConsultantIndex].counselorName,
       appointmentStatus: 'scheduled'
       //problemType: problemTypes[selectedProblemTypeIndex],
     };
@@ -247,6 +243,45 @@ Page({
     });
   },
 
+  // 获取未来七天的值班数据
+  fetchSchedules() {
+      const today = new Date(); // 当前日期
+      const futureSchedules = []; // 存储未来七天的值班表数据
+    
+      for (let i = 1; i <= 7; i++) { // 从明天开始，未来七天
+        const day = new Date(today);
+        day.setDate(today.getDate() + i);
+        const dateStr = this.getTodayDate(day);
+    
+        wx.request({
+          url: `http://localhost:8081/api/schedules/date/${dateStr}`,
+          method: 'GET',
+          success: (res) => {
+            if (res.statusCode === 200) {
+              //console.log(`${dateStr} 查询排班成功：`, res.data);
+              futureSchedules.push({ date: dateStr, schedules: res.data }); // 存储当天的值班表数据
+            } else {
+              console.log(`${dateStr} 查询排班失败：`, res);
+            }
+          },
+          fail: (err) => {
+            console.error(`${dateStr} 请求失败:`, err);
+            wx.showToast({
+              title: `${dateStr} 网络错误，请稍后再试`,
+              icon: 'none'
+            });
+          },
+          complete: () => {
+            if (futureSchedules.length === 7) {
+              console.log("未来七天的值班表数据：", futureSchedules);
+              this.setData({ schedule: futureSchedules });
+            }
+          }
+        });
+      }
+  },
+
+  // 获取预约数据
   getAppointments: function(data) {
     const userId = data;
     const url = `http://localhost:8081/api/appointments/user/${userId}`;
@@ -268,7 +303,11 @@ Page({
             appointment: appointmentData || []
           });
         } else {
-          console.log("获取预约数据失败：",res);
+          if(res.statusCode === 404) {
+            console.log("暂无预约");
+          } else {
+            console.error("获取预约数据失败：",res);
+          }
         }
       },
       fail(err) {
@@ -281,6 +320,127 @@ Page({
     });
     that.setData({
       loading: false
+    });
+  },
+
+  getAppointmentsWithCounselorNames: function(data) {
+    const userId = data;
+    const url = `http://localhost:8081/api/appointments/user/${userId}`;
+  
+    const that = this;
+  
+    wx.request({
+      url: url,
+      method: 'GET',
+      data: {
+        userId: userId
+      },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("获取预约数据成功：", res.data);
+  
+          // 筛选出 appointmentStatus 为 "scheduled" 的数据
+          const appointments = res.data.filter(item => item.appointmentStatus === "scheduled");
+  
+          // 如果没有符合条件的预约数据，直接返回
+          if (!appointments || appointments.length === 0) {
+            console.log("暂无有效预约");
+            that.setData({ appointment: [] });
+            return;
+          }
+
+          // 提取 counselorId 列表，并去重
+          const counselorIds = appointments.reduce((uniqueIds, item) => {
+            if (uniqueIds.indexOf(item.counselorId) === -1) {
+              uniqueIds.push(item.counselorId);
+            }
+            return uniqueIds;
+          }, []);
+
+          // 根据 counselorId 获取所有咨询师信息
+          const counselorPromises = counselorIds.map(id => that.getCounselor(id));
+
+          Promise.all(counselorPromises)
+          .then(counselors => {
+            // 构建 counselorId -> counselorName 的映射
+            const counselorMap = {};
+            counselors.forEach(counselor => {
+              counselorMap[counselor.id] = counselor.name;
+            });
+
+            // 填充 counselorName 到预约数据中
+            const updatedAppointments = appointments.map(appointment => {
+              const newAppointment = {};
+              for (let key in appointment) {
+                newAppointment[key] = appointment[key];
+              }
+              newAppointment.counselorName = counselorMap[appointment.counselorId] || "未知";
+              return newAppointment;
+            });
+
+            // 更新页面数据
+            that.setData({
+              appointment: updatedAppointments || []
+            });
+
+            console.log("更新后的预约数据：", updatedAppointments);
+          })
+          .catch(err => {
+            console.error("获取咨询师信息失败：", err);
+            wx.showToast({
+              title: '获取咨询师信息失败，请稍后再试',
+              icon: 'none'
+            });
+          });
+      } else if (res.statusCode === 404) {
+        console.log("暂无预约");
+        that.setData({ appointment: [] });
+      } else {
+        console.error("获取预约数据失败：", res);
+      }
+    },
+    fail(err) {
+      console.error('请求失败:', err);
+      wx.showToast({
+        title: '网络错误，请稍后再试',
+        icon: 'none'
+      });
+    }
+  });
+  
+    that.setData({
+      loading: false
+    });
+  },
+  
+  // 获取咨询师信息的方法
+  getCounselor(id) {
+    return new Promise((resolve, reject) => {
+      const url = 'http://localhost:8081/api/profile-management/counselor/profile';
+      wx.request({
+        url: url,
+        method: 'GET',
+        data: {
+          counselorId: id
+        },
+        success(res) {
+          if (res.statusCode === 200) {
+            const counselor = {
+              id: res.data.counselorId,
+              name: res.data.name,
+            }
+            console.log(`查询咨询师 ${id} 信息成功：`, counselor);
+            resolve(counselor); // 返回提取的数据
+          } else {
+            console.log(`查询咨询师 ${id} 信息失败：`, res);
+            reject(new Error(`查询咨询师 ${id} 失败`));
+          }
+        },
+        fail(err) {
+          console.error(`请求咨询师 ${id} 信息失败：`, err);
+          reject(err);
+        }
+      });
     });
   },
 
