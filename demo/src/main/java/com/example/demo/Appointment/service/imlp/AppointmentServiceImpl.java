@@ -1,14 +1,16 @@
 package com.example.demo.Appointment.service.imlp;
 
 import com.example.demo.Appointment.dto.AppointmentDTO;
+import com.example.demo.Appointment.dto.CounselorDTO;
 import com.example.demo.Appointment.entity.Appointment;
+import com.example.demo.Appointment.entity.Counselor;
 import com.example.demo.Appointment.mapper.AppointmentMapper;
 import com.example.demo.Appointment.mapper.CounselorScheduleMapper;
 import com.example.demo.Appointment.service.AppointmentService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -130,6 +132,21 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .collect(Collectors.toList());
     }
 
+
+    //获取所有咨询师信息
+    @Override
+    public List<CounselorDTO> getAllCounselor() {
+        // 获取所有咨询师的实体列表
+        List<Counselor> counselors = appointmentMapper.getAllCounselor();
+
+        // 将实体列表转换为DTO列表
+        return counselors.stream()
+                .map(counselor -> convert1ToDTO(counselor, "", ""))
+                .collect(Collectors.toList());
+    }
+
+
+
     /**
      * 取消预约
      * Cancel an appointment
@@ -193,6 +210,21 @@ public class AppointmentServiceImpl implements AppointmentService {
     private AppointmentDTO convertToDTO(Appointment appointment, String userName, String counselorName) {
         return new AppointmentDTO(appointment, userName, counselorName);
     }
+    private CounselorDTO convert1ToDTO(Counselor counselor, String supervisorStatus, String expertiseArea) {
+        return new CounselorDTO(
+                counselor.getCounselorId(),
+                counselor.getName(),
+                counselor.getAvatar(),
+                counselor.getPhoneNumber(),
+                counselor.getEmail(),
+                counselor.getGender(),
+                expertiseArea,  // Example: expertise area can be passed as additional info
+                counselor.getIsSupervisor(),
+                counselor.getStatus(),
+                counselor.getOnDuty()
+        );
+    }
+
     private int isUserOverAppointmentLimit(Integer userId) {
         // 只查询 scheduled 状态的预约
         List<Appointment> waitingAppointments = appointmentMapper.getAppointmentsByUserIdAndStatus(
@@ -200,6 +232,18 @@ public class AppointmentServiceImpl implements AppointmentService {
                 "scheduled"  // 或你的实际状态值
         );
         return waitingAppointments.size();
+    }
+
+
+    @Override
+    public String getUserNameByUserId(Integer userId) {
+        // 直接调用Mapper
+        return appointmentMapper.getUserNameByUserId(userId);
+    }
+    @Override
+    public String getCounselorNameByCounselorId(Integer counselorId) {
+        // 直接调用Mapper
+        return appointmentMapper.getCounselorNameByCounselorId(counselorId);
     }
 
 
@@ -219,4 +263,6 @@ public class AppointmentServiceImpl implements AppointmentService {
         List<Appointment> counselorAppointments = appointmentMapper.getAppointmentsByCounselorIdAndTime(counselorId, appointmentDate, appointmentTime,"waiting");
         return counselorAppointments.size() >= 10;
     }
+
+
 }

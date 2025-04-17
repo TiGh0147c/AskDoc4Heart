@@ -10,8 +10,7 @@
         INSERT INTO Appointment (appointment_date, appointment_time, appointment_status, user_id, counselor_id, created_at)
         VALUES (#{appointmentDate}, #{appointmentTime}, #{appointmentStatus}, #{userId}, #{counselorId}, NOW())
     </insert>
-
-
+    
 
     <!-- 根据用户ID获取预约记录 -->
     <select id="getAppointmentsByUserId" resultType="com.example.demo.Appointment.entity.Appointment">
@@ -87,6 +86,25 @@
         FROM Appointment
         ORDER BY appointment_date DESC, appointment_time DESC
     </select>
+    <!--获取所有咨询师信息-->
+    <!-- 获取所有咨询师 -->
+    <select id="getAllCounselor" resultType="com.example.demo.Appointment.entity.Counselor">
+        SELECT
+        counselor_id  counselorId,
+        name,
+        avatar,
+        phone_number  phoneNumber,
+        password,
+        email,
+        gender,
+        counselor_certificate  counselorCertificate,
+        is_supervisor  isSupervisor,
+        status,
+        expertise_area  expertiseArea,
+        on_duty  onDuty
+        FROM
+        Counselor
+    </select>
     <!-- 根据用户ID获取未完成的预约记录 -->
     <select id="getUncompletedAppointmentsByUserId" resultType="com.example.demo.Appointment.entity.Appointment">
         SELECT appointment_id     appointmentId,
@@ -113,5 +131,15 @@
         SELECT * FROM Appointment
         WHERE user_id = #{userId}
         AND appointment_status = #{appointmentStatus}
+    </select>
+    <!--根据user_id返回user_name-->
+    <select id="getUserNameByUserId" resultType="string">
+       SELECT nickname FROM User
+       WHERE user_id = #{userId}
+    </select>
+    <!--根据counselor_id返回counselor_name-->
+    <select id="getCounselorNameByCounselorId" resultType="string">
+        SELECT name FROM Counselor
+        WHERE counselor_id = #{counselorId}
     </select>
 </mapper>

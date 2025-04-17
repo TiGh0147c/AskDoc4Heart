@@ -28,8 +28,8 @@ public class AppointmentDTO {
         this.appointmentStatus = appointment.getAppointmentStatus().toString().toLowerCase();
         this.userId = appointment.getUserId();
         this.counselorId = appointment.getCounselorId();
-        this.userName = userName; // 从外部传入的用户信息
-        this.counselorName = counselorName; // 从外部传入的咨询师信息
+        this.userName = userName;
+        this.counselorName = counselorName;
         this.statusMessage = "Appointment found";  // 默认状态消息
     }
 
