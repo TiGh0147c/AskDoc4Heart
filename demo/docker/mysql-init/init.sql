@@ -300,6 +300,14 @@ INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '2ecaew','13800138001',
 INSERT INTO `Counselor` VALUES (2, '李督导','2fwefv','13800138002','hashed_password_2', 'supervisor1@example.com', 'female',NULL, 1, 'available', '抑郁症', 0);
 
 
+DROP TABLE IF EXISTS Average_Evaluation;
+CREATE TABLE Average_Evaluation (
+    average_evaluation_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '平均分ID',
+    counselor_id INT NOT NULL COMMENT '咨询师ID',
+    average_rating DECIMAL(2,1) NOT NULL COMMENT '平均评分(2位小数)',
+    evaluation_count INT NOT NULL COMMENT '评估次数',
+    FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for Supervisor
