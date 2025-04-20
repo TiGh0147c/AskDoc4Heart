@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.Leave.mapper.LeaveApplicationMapper">
+    <resultMap id="LeaveApplicationResultMap" type="com.example.demo.Leave.entity.LeaveApplication">
+        <id property="leaveId" column="leave_id"/>
+        <result property="leaveReason" column="leave_reason"/>
+        <result property="leaveStatus" column="leave_status"/>
+        <result property="role" column="role"/>
+        <result property="applicantId" column="applicant_id"/>
+        <result property="scheduleId" column="schedule_id"/>
+    </resultMap>
+
+    <resultMap id="LeaveApplicationWithDetailsResultMap" type="com.example.demo.Leave.dto.LeaveApplicationDTO">
+        <id property="leaveId" column="leave_id"/>
+        <result property="leaveReason" column="leave_reason"/>
+        <result property="leaveStatus" column="leave_status"/>
+        <result property="role" column="role"/>
+        <result property="applicantId" column="applicant_id"/>
+        <result property="scheduleId" column="schedule_id"/>
+        <result property="applicantName" column="applicant_name"/>
+        <result property="scheduleDate" column="schedule_date"/>
+        <result property="scheduleTimeSlot" column="time_slot"/>
+    </resultMap>
+
+    <insert id="insertLeaveApplication" parameterType="com.example.demo.Leave.entity.LeaveApplication"
+            useGeneratedKeys="true" keyProperty="leaveId">
+        INSERT INTO Leave_Application(leave_reason, leave_status, application_date,
+        application_time, role, applicant_id, schedule_id)
+        VALUES(#{leaveReason}, #{leaveStatus}, #{applicationDate},
+        #{applicationTime}, #{role}, #{applicantId}, #{scheduleId})
+    </insert>
+
+    <select id="selectById" parameterType="int" resultMap="LeaveApplicationResultMap">
+        SELECT * FROM Leave_Application WHERE leave_id = #{leaveId}
+    </select>
+
+    <select id="selectAll" resultMap="LeaveApplicationWithDetailsResultMap">
+        SELECT la.*,
+        CASE la.role
+        WHEN 'counselor' THEN c.name
+        WHEN 'supervisor' THEN s.name
+        END AS applicant_name,
+        sch.date AS schedule_date,
+        sch.time_slot
+        FROM Leave_Application la
+        LEFT JOIN Schedule sch ON la.schedule_id = sch.schedule_id
+        LEFT JOIN Counselor c ON la.role = 'counselor' AND la.applicant_id = c.counselor_id
+        LEFT JOIN Supervisor s ON la.role = 'supervisor' AND la.applicant_id = s.supervisor_id
+    </select>
+
+    <select id="selectByApplicant" resultMap="LeaveApplicationWithDetailsResultMap">
+        SELECT la.*,
+        CASE la.role
+        WHEN 'counselor' THEN c.name
+        WHEN 'supervisor' THEN s.name
+        END AS applicant_name,
+        sch.date AS schedule_date,
+        sch.time_slot
+        FROM Leave_Application la
+        LEFT JOIN Schedule sch ON la.schedule_id = sch.schedule_id
+        LEFT JOIN Counselor c ON la.role = 'counselor' AND la.applicant_id = c.counselor_id
+        LEFT JOIN Supervisor s ON la.role = 'supervisor' AND la.applicant_id = s.supervisor_id
+        WHERE la.applicant_id = #{applicantId} AND la.role = #{role}
+    </select>
+
+    <update id="updateLeaveStatus">
+        UPDATE Leave_Application
+        SET leave_status = #{status}
+        WHERE leave_id = #{leaveId}
+    </update>
+
+    <delete id="deleteLeaveApplication" parameterType="int">
+        DELETE FROM Leave_Application WHERE leave_id = #{leaveId}
+    </delete>
+
+    <select id="selectByScheduleId" parameterType="int" resultMap="LeaveApplicationResultMap">
+        SELECT * FROM Leave_Application WHERE schedule_id = #{scheduleId}
+    </select>
+
+</mapper>

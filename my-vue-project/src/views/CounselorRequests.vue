@@ -23,7 +23,7 @@
         <p>这是用户申请页面。您可以在这里查看和处理用户的咨询申请。</p>
         
         <div v-if="loading" class="loading">加载中...</div>
-        <div v-else-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+        <div v-else-if="errorMessage" class="no-data">{{ errorMessage }}</div>
         
         <!-- 预约申请列表 -->
         <div v-else-if="requests.length > 0" class="requests-list">
@@ -31,12 +31,13 @@
             <div class="request-info">
               <h3>{{ request.username }} - {{ request.type }}</h3>
               <p>预约时间: {{ request.dateTime }}</p>
+              <!-- 修改状态显示部分 -->
               <p>状态: 
                 <span :class="['status-text', 
                              request.status === 'pending' ? 'pending' : 
-                             request.status === 'confirmed' ? 'confirmed' : 'rejected']">
+                             request.status === 'completed' ? 'completed' : 'rejected']">
                   {{ request.status === 'pending' ? '等待确认' : 
-                     request.status === 'confirmed' ? '已确认' : '已拒绝' }}
+                     request.status === 'completed' ? '已完成' : '已拒绝' }}
                 </span>
               </p>
             </div>
@@ -85,6 +86,7 @@ export default {
                        1 // 默认值
 
     // 加载预约数据
+    // 修改加载预约数据部分
     const loadAppointments = async () => {
       loading.value = true
       try {
@@ -99,26 +101,28 @@ export default {
             username: app.userName || '未知用户',
             counselorId: app.counselorId,
             counselorName: app.counselorName || '未知咨询师',
-            type: '心理咨询', // 固定类型
+            type: '心理咨询',
             dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
-            status: app.appointmentStatus === 'scheduled' ? 'pending' : 'confirmed'
+            status: app.appointmentStatus === 'scheduled' ? 'pending' : 
+                   app.appointmentStatus === 'completed' ? 'completed' : 'rejected'
           }))
         }
       } catch (error) {
         console.error('加载预约数据失败:', error)
-        errorMessage.value = '加载预约数据失败，请刷新重试'
+        errorMessage.value = '您当前没有预约'
       } finally {
         loading.value = false
       }
     }
 
     // 确认预约
+    // 修改确认预约方法
     const confirmAppointment = async (appointmentId) => {
       if (confirm('确认接受此预约吗？')) {
         try {
-          const response = await axios.put(
+          const response = await axios.post(
             `http://localhost:8080/api/appointments/update/${appointmentId}`,
-            { newStatus: 'confirmed' }
+            { newStatus: 'completed' }  // 确保发送的是'completed'
           )
           
           if (response.status === 200) {
@@ -130,18 +134,18 @@ export default {
         }
       }
     }
-
-    // 拒绝预约
+    
+    // 修改拒绝预约方法
     const rejectAppointment = async (appointmentId) => {
       if (confirm('确认拒绝此预约吗？')) {
         try {
-          const response = await axios.put(
-            `http://localhost:8080/api/appointments/update/${appointmentId}`,
-            { newStatus: 'rejected' }
+          const response = await axios.post(
+            `http://localhost:8080/api/appointments/cancel/${appointmentId}`
           )
           
           if (response.status === 200) {
             await loadAppointments()
+            alert('预约已成功拒绝')
           }
         } catch (error) {
           console.error('拒绝预约失败:', error)
@@ -356,7 +360,7 @@ export default {
   padding: 10px;
 }
 
-.status-text.confirmed {
+.status-text.completed {
   color: #28a745;
 }
 

@@ -9,6 +9,7 @@
         WHERE counselor_id = #{counselorId}
         AND date = #{appointmentDate}
         AND time_slot = #{timeSlot}
+        AND status = 'working'
     </select>
 
 </mapper>

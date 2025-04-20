@@ -1,4 +1,5 @@
 package com.example.demo.Appointment.service;
+import com.example.demo.Appointment.dto.CounselorDTO;
 import com.example.demo.Appointment.mapper.CounselorScheduleMapper;
 import com.example.demo.Appointment.mapper.SupervisorScheduleMapper;
 import java.time.LocalDate;
@@ -28,12 +29,20 @@ public interface AppointmentService {
     // 获取所有预约
     List<AppointmentDTO> getAllAppointments();
 
+
     // 取消预约
     boolean cancelAppointment(Integer appointmentId);
 
     // 更新预约状态（例如更改为已完成）
     boolean updateAppointmentStatus(Integer appointmentId, String newStatus);
 
+    String getUserNameByUserId(Integer userId);
+
+    String getCounselorNameByCounselorId(Integer counselorId);
+
+     //List<CounselorDTO> getAllCounselor();
+
+     List<CounselorDTO> getAllCounselor();
 
 }
 

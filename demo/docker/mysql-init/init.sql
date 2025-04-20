@@ -51,7 +51,7 @@ CREATE TABLE Attendance_Record (
     supervisor_id INT,  -- 督导ID（当角色为督导时使用）
     check_in_time DATETIME NOT NULL,  -- 打卡时间
     status ENUM('check_in', 'check_out') NOT NULL,  -- 上班/下班状态
-    attendance_status ENUM('on_time', 'late', 'absent') NOT NULL DEFAULT 'absent',  -- 考勤状态
+    attendance_status ENUM('on_time', 'late') NOT NULL DEFAULT 'absent',  -- 考勤状态
     FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id),  -- 关联咨询师表
     FOREIGN KEY (supervisor_id) REFERENCES Supervisor(supervisor_id)  -- 关联督导表
 )ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
@@ -220,10 +220,11 @@ CREATE TABLE `Help_Session`  (
 DROP TABLE IF EXISTS Schedule;
 CREATE TABLE Schedule (
     schedule_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '排班ID',
-    date DATE NOT NULL COMMENT '排班日期(YYYY-MM-DD)',
+    date DATE COMMENT '排班日期(YYYY-MM-DD)',
     time_slot ENUM('morning', 'afternoon') NOT NULL COMMENT '时间段(上午/下午)',
     counselor_id INT,
     supervisor_id INT,
+     status ENUM('working', 'on_leave') NOT NULL DEFAULT 'working' COMMENT '状态(上班中/已请假)',
     FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id),
     FOREIGN KEY (supervisor_id) REFERENCES Supervisor(supervisor_id)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
@@ -240,11 +241,11 @@ CREATE TABLE Leave_Application (
     leave_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '请假ID',
     leave_reason TEXT NOT NULL COMMENT '请假原因',
     leave_status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending' COMMENT '审批状态(待定/已批准/已拒绝)',
-    application_date date NOT NULL COMMENT '申请日期(YYYY-MM-DD )',
-    application_time ENUM('morning','afternoon') NOT NULL COMMENT '申请时间段(上午/下午)',
-    role ENUM('counselor','supervisor') NOT NULL COMMENT '请假角色(咨询师/督导)',
-    applicant_id INT NOT NULL COMMENT '申请者ID(咨询师ID或督导ID)',
-    schedule_id INT COMMENT '关联的排班ID',
+    application_date date COMMENT '申请日期(YYYY-MM-DD )',
+    application_time ENUM('morning','afternoon') COMMENT '申请时间段(上午/下午)',
+    role ENUM('counselor','supervisor') COMMENT '请假角色(咨询师/督导)',
+    applicant_id INT COMMENT '申请者ID(咨询师ID或督导ID)',
+    schedule_id INT NOT NULL COMMENT '关联的排班ID',
     FOREIGN KEY (schedule_id) REFERENCES Schedule(schedule_id)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
@@ -300,6 +301,14 @@ INSERT INTO `Counselor` VALUES (1, '张心理咨询师', '2ecaew','13800138001',
 INSERT INTO `Counselor` VALUES (2, '李督导','2fwefv','13800138002','hashed_password_2', 'supervisor1@example.com', 'female',NULL, 1, 'available', '抑郁症', 0);
 
 
+DROP TABLE IF EXISTS Average_Evaluation;
+CREATE TABLE Average_Evaluation (
+    average_evaluation_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '平均分ID',
+    counselor_id INT NOT NULL COMMENT '咨询师ID',
+    average_rating DECIMAL(2,1) NOT NULL COMMENT '平均评分(2位小数)',
+    evaluation_count INT NOT NULL COMMENT '评估次数',
+    FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for Supervisor

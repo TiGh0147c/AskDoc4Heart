@@ -2,6 +2,7 @@ package com.example.demo.Appointment.mapper;
 
 
 import com.example.demo.Appointment.entity.Appointment;
+import com.example.demo.Appointment.entity.Counselor;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.time.LocalDate;
@@ -13,6 +14,12 @@ import java.util.List;
 @Mapper
 public interface AppointmentMapper {
 
+    String getUserNameByUserId(
+            @Param("userId") Integer userId
+    );
+    String getCounselorNameByCounselorId(
+            @Param("counselorId") Integer counselorId
+    );
     // 插入预约记录
     int insertAppointment(Appointment appointment);
 
@@ -49,4 +56,8 @@ public interface AppointmentMapper {
             @Param("userId") Integer userId,
             @Param("appointmentStatus") String status
     );
+
+
+
+    List<Counselor> getAllCounselor();
 }

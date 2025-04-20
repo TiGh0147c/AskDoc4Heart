@@ -2,6 +2,8 @@ package com.example.demo.Appointment.controller;
 
 import java.util.Collections;
 import com.example.demo.Appointment.dto.AppointmentDTO;
+import com.example.demo.Appointment.dto.CounselorDTO;
+import com.example.demo.Appointment.mapper.AppointmentMapper;
 import com.example.demo.Appointment.service.AppointmentService; // 注入接口而不是实现类
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -61,6 +63,17 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
         }
     }
+    //获取所有咨询师内容
+    @GetMapping("/allCounselor")
+    public ResponseEntity<List<CounselorDTO>> getAllCounselor() {
+        List<CounselorDTO> counselor = appointmentService.getAllCounselor();
+        if (counselor != null && !counselor.isEmpty()) {
+            return ResponseEntity.ok(counselor);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+        }
+    }
+
 
     // 取消预约
     @PostMapping("/cancel/{appointmentId}")
@@ -86,7 +99,29 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update appointment status!");
         }
     }
+    @GetMapping("/username/{userId}")
+    public ResponseEntity<String> getUserNameByUserId(@PathVariable Integer userId) {
+        // 调用静态工具方法获取用户名
+        String userName = appointmentService.getUserNameByUserId(userId);
 
+        // 判断用户是否存在
+        if (userName != null) {
+            return new ResponseEntity<>(userName, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+    }
+    @GetMapping("/counselorname/{counselorId}")
+    public ResponseEntity<String> getCounselorNameByCounselorId(@PathVariable Integer counselorId) {
+        // 调用静态工具方法获取用户名
+        String counselorName = appointmentService.getCounselorNameByCounselorId(counselorId);
 
+        // 判断用户是否存在
+        if (counselorName != null) {
+            return new ResponseEntity<>(counselorName, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+    }
 
 }

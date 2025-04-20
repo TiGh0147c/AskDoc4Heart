@@ -1,5 +1,7 @@
 package com.example.demo.RegisterAndLogin.Service;
 
+import com.example.demo.Evaluation.Entity.Average;
+import com.example.demo.Evaluation.Mapper.AverageRepository;
 import com.example.demo.RegisterAndLogin.Entity.Counselor;
 import com.example.demo.RegisterAndLogin.Entity.Supervisor;
 import com.example.demo.RegisterAndLogin.Entity.dto.CounselorDTO;
@@ -21,6 +23,9 @@ public class CounselorService implements ICounselorService {
     @Autowired
     private SupervisorRepository supervisorRepository;
 
+    @Autowired
+    private AverageRepository averageRepository;
+
     @Override
     public Counselor register(CounselorDTO counselor){
         Counselor newCounselor = new Counselor();
@@ -34,6 +39,12 @@ public class CounselorService implements ICounselorService {
             BeanUtils.copyProperties(counselor,supervisor);
             supervisorRepository.save(supervisor);
         }
+
+        counselorRepository.save(newCounselor);
+
+        Average average = new Average();
+        average.setCounselorId(newCounselor.getCounselor_id());
+        averageRepository.save(average);
 
         return counselorRepository.save(newCounselor);
     }
