@@ -32,5 +32,6 @@ public interface ScheduleMapper {
 
     // 查询某督导安排的所有排班
     List<Schedule> selectBySupervisorId(Integer supervisorId);
-
+    int updateScheduleStatus(@Param("scheduleId") Integer scheduleId,
+                             @Param("status") String status);
 }

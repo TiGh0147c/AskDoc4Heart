@@ -66,4 +66,10 @@
     <select id="selectBySupervisorId" parameterType="int" resultMap="ScheduleResultMap">
         SELECT * FROM Schedule WHERE supervisor_id = #{supervisorId}
     </select>
+    <!-- 更新排班状态 -->
+    <update id="updateScheduleStatus">
+        UPDATE Schedule
+        SET status = #{status}
+        WHERE schedule_id = #{scheduleId}
+    </update>
 </mapper>

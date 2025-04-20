@@ -29,5 +29,7 @@ public class Schedule {
     @Setter
     @Getter
     private String counselorName;
-
+    @Setter
+    @Getter
+    private String status; // "working" or "on_leave"
 }

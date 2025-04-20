@@ -247,7 +247,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
 
-
     @Autowired
     private CounselorScheduleMapper counselorScheduleMapper;
 
