@@ -184,7 +184,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         if ("morning".equals(timeSlot)) {
             return LocalTime.of(11, 0);
         } else if ("afternoon".equals(timeSlot)) {
-            return LocalTime.of(20, 0);
+            return LocalTime.of(17, 0);
         }
         return null;
     }
