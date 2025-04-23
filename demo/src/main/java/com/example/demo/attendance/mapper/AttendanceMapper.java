@@ -13,4 +13,7 @@ public interface AttendanceMapper {
 
     // 插入一条考勤记录
     void insert(AttendanceRecord attendanceRecord);
+
+    // 更新指定用户和角色的在线状态
+    void updateOnDutyStatus(Integer userId, String role, Boolean onDuty);
 }

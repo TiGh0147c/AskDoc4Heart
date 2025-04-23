@@ -39,4 +39,20 @@
         INSERT INTO Attendance_Record (role, counselor_id, supervisor_id, check_in_time, status, attendance_status)
         VALUES (#{role}, #{counselorId}, #{supervisorId}, #{checkInTime}, #{status}, #{attendanceStatus})
     </insert>
+
+    <!-- 更新某个咨询师或督导的on_duty字段 -->
+    <update id="updateOnDutyStatus">
+        <choose>
+            <when test="role == 'counselor'">
+                UPDATE Counselor
+                SET on_duty = #{onDuty}
+                WHERE counselor_id = #{userId}
+            </when>
+            <when test="role == 'supervisor'">
+                UPDATE Supervisor
+                SET on_duty = #{onDuty}
+                WHERE supervisor_id = #{userId}
+            </when>
+        </choose>
+    </update>
 </mapper>

@@ -117,7 +117,11 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         // 插入打卡记录
         attendanceMapper.insert(attendanceRecord);
+
+        // 更新角色表中的 on_duty 状态
+        attendanceMapper.updateOnDutyStatus(userId, role, true);
     }
+
 
     // 打卡下班
     @Override
@@ -156,9 +160,13 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         // 插入下班打卡记录
         attendanceMapper.insert(attendanceRecord);
+
+        // 更新角色表中的 on_duty 状态
+        attendanceMapper.updateOnDutyStatus(userId, role, false);
     }
 
 
+    // 创建打卡记录
     private static AttendanceRecord getAttendanceRecord(Integer userId, String role, LocalDateTime now) {
         AttendanceRecord attendanceRecord = new AttendanceRecord();
         attendanceRecord.setRole(role);
