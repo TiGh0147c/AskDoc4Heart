@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.attendance.mapper.AttendanceMapper">
+    <!-- 查询指定日期指定时间段的某人的考勤记录 -->
+    <select id="selectRecords" resultType="com.example.demo.attendance.entity.AttendanceRecord">
+        SELECT
+            attendance_id attendanceId,
+            role,
+            counselor_id counselorId,
+            supervisor_id supervisorId,
+            check_in_time checkInTime,
+            status,
+            attendance_status attendanceStatus
+        FROM Attendance_Record
+        WHERE DATE(check_in_time) = #{today}
+        <choose>
+            <when test="timeSlot == 'morning'">
+                AND HOUR(check_in_time) &lt; 12
+            </when>
+            <when test="timeSlot == 'afternoon'">
+                AND HOUR(check_in_time) >= 12
+            </when>
+        </choose>
+        <choose>
+            <when test="role == 'counselor'">
+                AND counselor_id = #{userId}
+            </when>
+            <when test="role == 'supervisor'">
+                AND supervisor_id = #{userId}
+            </when>
+        </choose>
+    </select>
+
+    <!-- 插入一条考勤记录 -->
+    <insert id="insert" parameterType="com.example.demo.attendance.entity.AttendanceRecord">
+        INSERT INTO Attendance_Record (role, counselor_id, supervisor_id, check_in_time, status, attendance_status)
+        VALUES (#{role}, #{counselorId}, #{supervisorId}, #{checkInTime}, #{status}, #{attendanceStatus})
+    </insert>
+
+    <!-- 更新某个咨询师或督导的on_duty字段 -->
+    <update id="updateOnDutyStatus">
+        <choose>
+            <when test="role == 'counselor'">
+                UPDATE Counselor
+                SET on_duty = #{onDuty}
+                WHERE counselor_id = #{userId}
+            </when>
+            <when test="role == 'supervisor'">
+                UPDATE Supervisor
+                SET on_duty = #{onDuty}
+                WHERE supervisor_id = #{userId}
+            </when>
+        </choose>
+    </update>
+</mapper>
