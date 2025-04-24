@@ -30,8 +30,9 @@ Page({
     this.setData({
       description: decodeURIComponent(options.description),
     });
-    //this.addSchedules(0); this.addSchedules(1);
+    //this.addSchedules(0); this.addSchedules(1); this.addSchedules(2);
     //this.getAllschedules();
+    //this.deleteSchedules(3);
     this.fetchSchedules();
     this.refresh();
     //this.leaveQueue(1);this.leaveQueue(10);this.leaveQueue(5);
@@ -47,13 +48,14 @@ Page({
     return `${year}-${month}-${day}`;
   },
 
+  // 获取当前时间段
   getCurrentTimeSlot() {
     const now = new Date();
     const hours = now.getHours();
 
     if (hours >= 9 && hours < 11) {
       return "morning";
-    } else if (hours >= 14 && hours < 17) {
+    } else if (hours >= 14 && hours < 24) {
       return "afternoon";
     } else {
       return null;
@@ -86,7 +88,9 @@ Page({
       tag: "被贬",
       // tag: ["东坡肉", "出去玩", "被贬"],
       status: "空闲",
-      type: "ai"
+      type: "ai",
+      average: 0,
+      count: 0
     }];
     const everydayData = Array.isArray(everyday[0]) ? everyday[0] : everyday;
     const currentTimeSlot = this.getCurrentTimeSlot(); // 获取当前时间段
@@ -130,33 +134,6 @@ Page({
       });
       wx.stopPullDownRefresh();
     }
-    /*
-    const data = [{
-      _id: 1,
-      name: "张三",
-      intro: "这是咨询师，真的是咨询师。",
-      tag: ["犯法", "文盲", "被捕"],
-      status: "繁忙"
-    },{
-      _id: 2,
-      name: "李四",
-      intro: "显而易见这里是简介。",
-      tag: ["想不出来", "就先", "这样吧"],
-      status: "空闲"
-    }];
-    const dutyData = Array.isArray(data[0]) ? data[0] : data;
-    const processedEverydayData = everydayData.map(item => ({ ...item, isActive: false }));
-    const processedDutyData = dutyData.map(item => ({ ...item, type: "counselor", isActive: false }));
-    const counselors = [...processedDutyData, ...processedEverydayData];
-    const showDetails = {};
-    const buttonMargins = {};
-    this.setData({
-      counselors: counselors,
-      showDetails,
-      buttonMargins,
-      loading: false
-    });
-    wx.stopPullDownRefresh();*/
   },
   
   toggleDetails(e) {
@@ -402,41 +379,73 @@ Page({
       });
   },
 
-  // 获取咨询师数据
-  getCounselor(id) {
-    return new Promise((resolve, reject) => {
-      const url = 'http://localhost:8081/api/profile-management/counselor/profile';
-      wx.request({
-        url: url,
-        method: 'GET',
-        data: {
-          counselorId: id
-        },
-        success(res) {
-          if (res.statusCode === 200) {
-            // 提取需要的字段
-            const status = res.data.status === "available" ? "空闲" : "繁忙";
-            const counselor = {
-              _id: res.data.counselorId,
-              name: res.data.name,
-              avatar: res.data.avatar,
-              counselor_certificate: res.data.counselorCertificate,
-              tag: res.data.expertiseArea,
-              intro: "无",
-              status: status
-            };
-            console.log(`查询咨询师 ${id} 信息成功：`, counselor);
-            resolve(counselor); // 返回提取的数据
-          } else {
-            console.log(`查询咨询师 ${id} 信息失败：`, res);
-            reject(new Error(`查询咨询师 ${id} 失败`));
-          }
-        },
-        fail(err) {
-          console.error(`请求咨询师 ${id} 信息失败：`, err);
-          reject(err);
-        }
-      });
+  // 获取咨询师信息+均分
+  getCounselorMore(id) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // 获取咨询师基本信息
+        const profileResponse = await new Promise((resolve, reject) => {
+          wx.request({
+            url: 'http://localhost:8081/api/profile-management/counselor/profile',
+            method: 'GET',
+            data: { counselorId: id },
+            success(res) {
+              if (res.statusCode === 200) {
+                resolve(res);
+              } else {
+                reject(new Error(`查询咨询师 ${id} 基本信息失败`));
+              }
+            },
+            fail(err) {
+              reject(err);
+            }
+          });
+        });
+  
+        // 获取平均评分和评价数量
+        const averageResponse = await new Promise((resolve, reject) => {
+          wx.request({
+            url: 'http://localhost:8081/evaluation/average',
+            method: 'GET',
+            data: { counselorId: id },
+            success(res) {
+              if (res.statusCode === 200) {
+                resolve(res);
+              } else {
+                reject(new Error(`查询咨询师 ${id} 平均评分失败`));
+              }
+            },
+            fail(err) {
+              reject(err);
+            }
+          });
+        });
+
+        // 检查 averageResponse.data.data 是否为 null
+        const averageData = averageResponse.data.data || { count: 0, average: 0 };
+  
+        // 合并数据
+        const profileData = profileResponse.data;
+  
+        const status = profileData.status === "available" ? "空闲" : "繁忙";
+        const counselor = {
+          _id: id,
+          name: profileData.name,
+          avatar: profileData.avatar,
+          counselor_certificate: profileData.counselorCertificate,
+          tag: profileData.expertiseArea,
+          intro: profileData.intro || "无",
+          status: status,
+          average: averageData.average,
+          count: averageData.count
+        };
+  
+        console.log(`查询咨询师 ${id} 信息成功：`, counselor);
+        resolve(counselor);
+      } catch (error) {
+        console.error(`查询咨询师 ${id} 信息失败：`, error);
+        reject(error);
+      }
     });
   },
 
@@ -445,7 +454,7 @@ Page({
     const { counselorIds } = this.data;
 
     // 使用 Promise.all 并发请求所有咨询师信息
-    return Promise.all(counselorIds.map(id => this.getCounselor(id)))
+    return Promise.all(counselorIds.map(id => this.getCounselorMore(id)))
       .then(results => {
         // 将所有成功的结果存入页面数据
         console.log("所有咨询师信息：", results);
@@ -614,9 +623,9 @@ Page({
     const url = 'http://localhost:8081/api/schedules/create';
     const data =  {
       date: Thedate,
-      //timeSlot: "afternoon",
-      timeSlot: "morning",
-      counselorId: 1,
+      timeSlot: "afternoon",
+      //timeSlot: "morning",
+      counselorId: 1
     }
 
     wx.request({
@@ -631,6 +640,32 @@ Page({
           console.log("新增排班成功：",res.data);
         } else {
           console.log("新增排班失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    })
+  },
+
+  // 删除排班
+  deleteSchedules(n) {
+    const url = `http://localhost:8081/api/schedules/clear/${n}`;
+    wx.request({
+      url: url, 
+      method: 'DELETE',
+      header: {
+        'Content-Type': 'application/json'
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          console.log("删除排班成功：",res.data);
+        } else {
+          console.log("删除排班失败：",res);
         }
       },
       fail(err) {

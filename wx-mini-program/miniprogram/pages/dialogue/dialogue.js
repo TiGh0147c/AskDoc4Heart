@@ -9,6 +9,7 @@ Page({
     messages: [],
     messageContent: "", // 初始化为空字符串
     messageTableName: '',
+    evaluationContent: '',
     session_id: '',
     isButtonVisible: true,
     isConfirmModalVisible: false,
@@ -49,7 +50,7 @@ Page({
     }
     console.log("创建了会话:", data);
     const getdata={
-      Session_Id: "0001"
+      Session_Id: 1
     }
     this.setData({session_id: getdata.Session_Id});
     console.log("获取会话id", getdata);
@@ -247,19 +248,8 @@ Page({
     });
   },
 
-  showConfirmModal() {
-    this.setData({ isButtonVisible: false });
-    this.setData({ isConfirmModalVisible: true });
-  },
-  hideConfirmModal() {
-    this.setData({ isButtonVisible: true });
-    this.setData({ isConfirmModalVisible: false });
-  },
-  hideConfirmModal_() {
-    this.setData({ isConfirmModalVisible: false });
-  },
+
   onConfirmEndConsultation() {
-    this.hideConfirmModal_();
     this.setData({ isRatingModalVisible: true });
   },
   hideRatingModal() {
@@ -272,21 +262,91 @@ Page({
       'currentRating': rating
     });
   },
+  // 显示结束咨询的模态框
+  showConfirmModal() {
+    wx.showModal({
+      title: '提示',
+      content: '确定要结束咨询吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 用户点击了确认按钮
+          this.setData({ isButtonVisible: false });
+          this.onConfirmEndConsultation();
+        } else if (res.cancel) {
+          // 用户点击了取消按钮
+          console.log('用户取消了操作');
+        }
+      },
+    });
+  },
+  // 监听评价输入框内容变化
+  onCommentInput(e) {
+    this.setData({
+      evaluationContent: e.detail.value,
+    });
+  },
   submitRating() {
     console.log(`提交的评分是：${this.data.currentRating}`);
-    // 处理评分提交逻辑...
+     // 获取当前评分和评价内容
+    const rating = this.data.currentRating; // 当前评分
+    const evaluationContent = this.data.evaluationContent || "无"; // 评价内容，默认值为 "无"
+    const sessionId = this.data.session_id; // 会话 ID
+
+    const ratingdata = {
+      evaluation_content: evaluationContent,
+      evaluation_time: new Date().toISOString().split('T')[0], // 当前日期，格式为 YYYY-MM-DD
+      rating: rating,
+      session_id: sessionId
+    };
+    console.log("提交的评价数据：", ratingdata);
+    this.rating(ratingdata);
 
     /* 模拟结束咨询会话 */
     const now = new Date();
-    const data = {
+    const leavedata = {
       session_id: this.data.session_id,
       Session_End_Time: now
     }
-    console.log("结束了会话:", data);
-    this.hideRatingModal();
+    console.log("结束了会话:", leavedata);
+    /*this.hideRatingModal();
     app.setGlobalData('counseling', 0); 
     wx.reLaunch({ 
       url: '/pages/index/index', 
-    })
+    })*/
   },
+  rating(data) {
+    wx.request({
+      url: 'http://localhost:8081/evaluation/user', // 后端接口地址
+      method: 'POST',
+      data: data,
+      header: {
+        'content-type': 'application/json' // 设置请求头为 JSON 格式
+      },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("评价提交成功：", res.data);
+          wx.showToast({
+            title: '评价提交成功',
+            icon: 'success',
+            duration: 2000
+          });
+        } else {
+          console.error("评价提交失败：", res);
+          wx.showToast({
+            title: '评价提交失败',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+      },
+      fail(err) {
+        console.error("请求失败：", err);
+        wx.showToast({
+          title: '网络错误',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    });
+  }
 })

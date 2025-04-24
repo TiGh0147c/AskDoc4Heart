@@ -32,29 +32,8 @@ Page({
       userid: userid,
       userName: userName
     });
-    /* 模拟获取值班表数据 */
+    /* 获取值班表数据 */
     this.fetchSchedules();
-    /* 
-    const scheduledata = [
-      {date: "2025-04-07", time: "morning", counselorName: "李明", id: 3},
-      {date: "2025-04-07", time: "morning", counselorName: "王芳", id: 4},
-      {date: "2025-04-07", time: "afternoon", counselorName: "小陈", id: 1},
-      {date: "2025-04-07", time: "afternoon", counselorName: "小林", id: 2},
-      {date: "2025-04-08", time: "morning", counselorName: "李明", id: 3},
-      {date: "2025-04-08", time: "morning", counselorName: "王芳", id: 4},
-      {date: "2025-04-08", time: "afternoon", counselorName: "小陈", id: 1},
-      {date: "2025-04-08", time: "afternoon", counselorName: "小林", id: 2},
-      {date: "2025-04-10", time: "morning", counselorName: "小陈", id: 1},
-      {date: "2025-04-10", time: "morning", counselorName: "小林", id: 2},
-      {date: "2025-04-10", time: "afternoon", counselorName: "李明", id: 3},
-      {date: "2025-04-10", time: "afternoon", counselorName: "王芳", id: 4},
-      {date: "2025-04-11", time: "morning", counselorName: "小陈", id: 1},
-      {date: "2025-04-11", time: "morning", counselorName: "小林", id: 2},
-      {date: "2025-04-11", time: "afternoon", counselorName: "李明", id: 3},
-      {date: "2025-04-11", time: "afternoon", counselorName: "王芳", id: 4}
-    ];
-    console.log("获取值班数据：", scheduledata);
-    this.setData({schedule: scheduledata});*/
     this.calculateDates();
     this.refresh();
   },
@@ -63,7 +42,7 @@ Page({
     this.setData({
       loading: true
     })
-    /* 模拟获取预约数据 */
+    /* 获取预约数据 */
     const inputdata = {
       userId: this.data.userid
     }
@@ -99,6 +78,39 @@ Page({
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  },
+
+  // 获取当前日期和时间
+  getCurrentDateTime() {
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0]; // 当前日期，格式：YYYY-MM-DD
+    const currentHours = now.getHours(); // 当前小时
+    return { currentDate, currentHours };
+  },
+
+  // 判断预约是否过期
+  isExpired(appointment) {
+    const { currentDate, currentHours } = this.getCurrentDateTime();
+    const appointmentDate = appointment.appointmentDate; // 预约日期
+    const appointmentTime = appointment.appointmentTime; // 预约时间段
+
+    // 如果预约日期早于当前日期
+    if (appointmentDate < currentDate) {
+      return true;
+    }
+
+    // 如果预约日期等于当前日期
+    if (appointmentDate === currentDate) {
+      if (appointmentTime === 'morning' && currentHours >= 11) {
+        return true;
+      }
+      if (appointmentTime === 'afternoon' && currentHours >= 17) {
+        return true;
+      }
+    }
+
+    // 其他情况不过期
+    return false;
   },
 
   // 显示新预约模态框
@@ -349,6 +361,9 @@ Page({
             return;
           }
 
+          // 检查并更新过期状态
+          that.checkAndExpireAppointments(appointments);
+
           // 提取 counselorId 列表，并去重
           const counselorIds = appointments.reduce((uniqueIds, item) => {
             if (uniqueIds.indexOf(item.counselorId) === -1) {
@@ -382,6 +397,7 @@ Page({
             that.setData({
               appointment: updatedAppointments || []
             });
+            
 
             console.log("更新后的预约数据：", updatedAppointments);
           })
@@ -425,6 +441,7 @@ Page({
         },
         success(res) {
           if (res.statusCode === 200) {
+            console.log(`查询咨询师 ${id} 信息成功：`, res.data);
             const counselor = {
               id: res.data.counselorId,
               name: res.data.name,
@@ -482,6 +499,49 @@ Page({
         });
       }
     });
+  },
+
+  // 调用后端接口更新预约状态
+  updateAppointmentStatus(appointmentId, newStatus) {
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `http://localhost:8081/api/appointments/update/${appointmentId}`,
+        method: 'POST',
+        data: { newStatus: newStatus },
+        success(res) {
+          if (res.statusCode === 200) {
+            resolve(true); // 更新成功
+          } else {
+            reject(false); // 更新失败
+          }
+        },
+        fail(err) {
+          reject(err);
+        }
+      });
+    });
+  },
+
+  // 遍历预约数据，检查并更新过期状态
+  checkAndExpireAppointments(appointments) {
+    let expiredCount = 0;
+
+    appointments.forEach(async (appointment) => {
+      if (this.isExpired(appointment)) {
+        try {
+          await this.updateAppointmentStatus(appointment.appointmentId, 'expired');
+          expiredCount++;
+          console.log(`Appointment ${appointment.appointmentId} marked as expired.`);
+          if (expiredCount > 1) {
+            this.refresh();
+          }
+        } catch (error) {
+          console.error(`Failed to update appointment ${appointment.appointmentId}:`, error);
+        }
+      }
+    });
+
+    console.log(`${expiredCount} appointments have been marked as expired.`);
   },
 
   // 取消预约

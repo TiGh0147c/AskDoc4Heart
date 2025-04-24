@@ -15,23 +15,23 @@
 
   <view class="end-consultation-btn" wx:if="{{isButtonVisible}}" bindtap="showConfirmModal">结束咨询</view>
 
-  <view class="modal-mask" wx:if="{{isConfirmModalVisible}}" catchtouchmove="preventTouchMove">
-    <view class="modal-content">
-      <view class="modal-title">提示</view>
-      <view class="modal-body">是否要结束本次咨询？</view>
-      <view class="modal-buttons">
-        <button bindtap="hideConfirmModal">取消</button>
-        <button bindtap="onConfirmEndConsultation">确定</button>
-      </view>
-    </view>
-  </view>
-
   <!-- 星级评分组件 -->
   <view class="modal-mask" wx:if="{{isRatingModalVisible}}" catchtouchmove="preventTouchMove">
     <view class="modal-content">
       <view class="modal-title">评分</view>
+      <!-- 星级评分 -->
       <view class="modal-body">
         <star-rating rating="{{currentRating}}" bindratingchange="onRatingChange"></star-rating>
+      </view>
+
+      <!-- 评价输入框 -->
+      <view class="modal-comment">
+        <textarea 
+          placeholder="请输入您的评价（选填）" 
+          maxlength="200" 
+          value="{{comment}}" 
+          bindinput="onCommentInput"
+        ></textarea>
       </view>
       <view class="modal-buttons">
         <button bindtap="hideRatingModal">取消</button>

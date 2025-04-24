@@ -18,8 +18,10 @@
           <view wx:for="{{item.tag}}" wx:key="index">
             <text class="intro-text">- {{item}}</text>
           </view> -->
+          <text class="intro-text">总咨询数:{{item.count}} | 平均评分:{{item.average}}</text>
+          <!-- 
           <text class="tag-text">简介:</text>
-          <text class="intro-text">- {{item.intro}}</text>
+          <text class="intro-text">- {{item.intro}}</text> -->
           <block wx:if="{{item.status === '空闲'}}">
             <button bindtap="navigateToDialogue" data-id="{{item._id}}" data-name="{{item.name}}" data-type="{{item.type}}">咨询</button>
           </block>

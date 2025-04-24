@@ -258,20 +258,7 @@ Page({
       duration: 10 // 滚动动画的持续时间
     });
   },
-
-  showConfirmModal() {
-    this.setData({ isButtonVisible: false });
-    this.setData({ isConfirmModalVisible: true });
-  },
-  hideConfirmModal() {
-    this.setData({ isButtonVisible: true });
-    this.setData({ isConfirmModalVisible: false });
-  },
-  hideConfirmModal_() {
-    this.setData({ isConfirmModalVisible: false });
-  },
   onConfirmEndConsultation() {
-    this.hideConfirmModal_();
     this.setData({ isRatingModalVisible: true });
   },
   hideRatingModal() {
@@ -282,6 +269,23 @@ Page({
     const rating = e.detail.rating;
     this.setData({
       'currentRating': rating
+    });
+  },
+  // 显示结束咨询的模态框
+  showConfirmModal() {
+    wx.showModal({
+      title: '提示',
+      content: '确定要结束咨询吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 用户点击了确认按钮
+          this.setData({ isButtonVisible: false });
+          this.onConfirmEndConsultation();
+        } else if (res.cancel) {
+          // 用户点击了取消按钮
+          console.log('用户取消了操作');
+        }
+      },
     });
   },
   submitRating() {

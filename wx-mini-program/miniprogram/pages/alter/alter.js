@@ -122,7 +122,7 @@ Page({
       userId: this.data.userid
     };
     if(this.data.newUserName){
-      formData.username = this.data.newUserName;
+      formData.nickname = this.data.newUserName;
     }
     if(this.data.newEmail){
       formData.email = this.data.newEmail;

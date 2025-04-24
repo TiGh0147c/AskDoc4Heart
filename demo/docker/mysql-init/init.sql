@@ -51,7 +51,7 @@ CREATE TABLE Attendance_Record (
     supervisor_id INT,  -- 督导ID（当角色为督导时使用）
     check_in_time DATETIME NOT NULL,  -- 打卡时间
     status ENUM('check_in', 'check_out') NOT NULL,  -- 上班/下班状态
-    attendance_status ENUM('on_time', 'late') NOT NULL DEFAULT 'absent',  -- 考勤状态
+    attendance_status ENUM('on_time', 'late') NOT NULL,  -- 考勤状态
     FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id),  -- 关联咨询师表
     FOREIGN KEY (supervisor_id) REFERENCES Supervisor(supervisor_id)  -- 关联督导表
 )ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
