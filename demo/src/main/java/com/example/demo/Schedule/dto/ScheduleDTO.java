@@ -1,15 +1,15 @@
 package com.example.demo.Schedule.dto;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class ScheduleDTO {
     private Integer scheduleId;
-    private Date date;
+    private LocalDate date;
     private String timeSlot;
     private Integer counselorId;
-    private String counselorName;  // 新增
+    private String counselorName;
     private Integer supervisorId;
-    private String supervisorName;  // 新增
+    private String supervisorName;
 
     // getters and setters
     public Integer getScheduleId() {
@@ -20,11 +20,11 @@ public class ScheduleDTO {
         this.scheduleId = scheduleId;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 

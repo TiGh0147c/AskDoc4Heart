@@ -3,37 +3,40 @@
 <mapper namespace="com.example.demo.Schedule.mapper.ScheduleMapper">
     <resultMap id="ScheduleResultMap" type="com.example.demo.Schedule.entity.Schedule">
         <id property="scheduleId" column="schedule_id"/>
-        <result property="date" column="date"/>
+        <result property="date" column="date" jdbcType="DATE" javaType="java.time.LocalDate"/>
         <result property="timeSlot" column="time_slot"/>
         <result property="counselorId" column="counselor_id"/>
         <result property="supervisorId" column="supervisor_id"/>
+        <result property="status" column="status"/>
     </resultMap>
     <resultMap id="ScheduleWithNamesResultMap" type="com.example.demo.Schedule.entity.Schedule">
         <id property="scheduleId" column="schedule_id"/>
-        <result property="date" column="date"/>
+        <result property="date" column="date" jdbcType="DATE" javaType="java.time.LocalDate"/>
         <result property="timeSlot" column="time_slot"/>
         <result property="counselorId" column="counselor_id"/>
-        <result property="counselorName" column="counselor_name"/>
+
         <result property="supervisorId" column="supervisor_id"/>
-        <result property="supervisorName" column="supervisor_name"/>
+
+        <result property="status" column="status"/>
     </resultMap>
+
     <insert id="insertSchedule" parameterType="com.example.demo.Schedule.entity.Schedule"
             useGeneratedKeys="true" keyProperty="scheduleId">
-        INSERT INTO Schedule(date, time_slot, counselor_id, supervisor_id)
-        VALUES(#{date}, #{timeSlot}, #{counselorId}, #{supervisorId})
+        INSERT INTO Schedule(date, time_slot, counselor_id, supervisor_id, status)
+        VALUES(#{date, jdbcType=DATE}, #{timeSlot}, #{counselorId}, #{supervisorId}, #{status})
     </insert>
 
     <select id="selectById" parameterType="int" resultMap="ScheduleResultMap">
-        SELECT * FROM Schedule WHERE schedule_id = #{scheduleId}
+        SELECT schedule_id, date, time_slot, counselor_id, supervisor_id, status
+        FROM Schedule WHERE schedule_id = #{scheduleId}
     </select>
 
     <select id="selectAll" resultMap="ScheduleResultMap">
-        SELECT * FROM Schedule
+        SELECT schedule_id, date, time_slot, counselor_id, supervisor_id, status
+        FROM Schedule
     </select>
 
-
-
-    <select id="selectByDate" parameterType="java.util.Date" resultMap="ScheduleWithNamesResultMap">
+    <select id="selectByDate" parameterType="java.time.LocalDate" resultMap="ScheduleWithNamesResultMap">
         SELECT
         s.schedule_id,
         s.date,
@@ -41,17 +44,21 @@
         s.counselor_id,
         c.name AS counselor_name,
         s.supervisor_id,
-        sv.name AS supervisor_name
+        sv.name AS supervisor_name,
+        s.status
         FROM Schedule s
         LEFT JOIN Counselor c ON s.counselor_id = c.counselor_id
         LEFT JOIN Supervisor sv ON s.supervisor_id = sv.supervisor_id
-        WHERE s.date = #{date}
+        WHERE s.date = #{date, jdbcType=DATE}
     </select>
 
     <update id="updateSchedule" parameterType="com.example.demo.Schedule.entity.Schedule">
         UPDATE Schedule
-        SET date = #{date}, time_slot = #{timeSlot},
-        counselor_id = #{counselorId}, supervisor_id = #{supervisorId}
+        SET date = #{date, jdbcType=DATE},
+        time_slot = #{timeSlot},
+        counselor_id = #{counselorId},
+        supervisor_id = #{supervisorId},
+        status = #{status}
         WHERE schedule_id = #{scheduleId}
     </update>
 
@@ -60,13 +67,15 @@
     </delete>
 
     <select id="selectByCounselorId" parameterType="int" resultMap="ScheduleResultMap">
-        SELECT * FROM Schedule WHERE counselor_id = #{counselorId}
+        SELECT schedule_id, date, time_slot, counselor_id, supervisor_id, status
+        FROM Schedule WHERE counselor_id = #{counselorId}
     </select>
 
     <select id="selectBySupervisorId" parameterType="int" resultMap="ScheduleResultMap">
-        SELECT * FROM Schedule WHERE supervisor_id = #{supervisorId}
+        SELECT schedule_id, date, time_slot, counselor_id, supervisor_id, status
+        FROM Schedule WHERE supervisor_id = #{supervisorId}
     </select>
-    <!-- 更新排班状态 -->
+
     <update id="updateScheduleStatus">
         UPDATE Schedule
         SET status = #{status}
