@@ -32,15 +32,8 @@
         <div class="schedule-container">
           <div class="time-labels">
             <div class="time-label"></div>
-            <div class="time-label">08:00</div>
-            <div class="time-label">09:00</div>
-            <div class="time-label">10:00</div>
-            <div class="time-label">11:00</div>
-            <div class="time-label">12:00</div>
-            <div class="time-label">13:00</div>
-            <div class="time-label">14:00</div>
-            <div class="time-label">15:00</div>
-            <div class="time-label">16:00</div>
+            <div class="time-label">上午</div>
+            <div class="time-label">下午</div>
           </div>
           
           <div class="schedule-grid">
@@ -54,17 +47,27 @@
             <!-- 排班时间格 -->
             <div class="schedule-slots">
               <div v-for="day in weekDays" :key="day.date" class="day-column">
+                <!-- 上午时间段 -->
                 <div 
-                  v-for="slot in day.slots" 
-                  :key="`${day.date}-${slot.time}`" 
                   class="time-slot"
                   :class="{ 
-                    'working': slot.status === 'working', 
-                    'empty': slot.status === 'empty'
+                    'working': day.morning, 
+                    'empty': !day.morning
                   }"
-                  @click="toggleSlotStatus(day, slot)"
                 >
-                  <span v-if="slot.status === 'working'" class="slot-info">工作时间</span>
+                  <span v-if="day.morning" class="slot-info">上午 (09:00-11:00)</span>
+                  <span v-else class="slot-info">无</span>
+                </div>
+                
+                <!-- 下午时间段 -->
+                <div 
+                  class="time-slot"
+                  :class="{ 
+                    'working': day.afternoon, 
+                    'empty': !day.afternoon
+                  }"
+                >
+                  <span v-if="day.afternoon" class="slot-info">下午 (14:00-17:00)</span>
                   <span v-else class="slot-info">无</span>
                 </div>
               </div>
@@ -72,9 +75,8 @@
           </div>
         </div>
         
-        <!-- 保存与操作按钮 -->
+        <!-- 图例说明 -->
         <div class="schedule-actions">
-          <button @click="saveSchedule" class="save-btn">保存排班设置</button>
           <div class="legend">
             <div class="legend-item">
               <div class="legend-color working"></div>
@@ -95,6 +97,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
   name: 'CounselorSchedule',
@@ -102,11 +105,21 @@ export default {
     const store = useStore()
     const router = useRouter()
     
-    const username = computed(() => store.getters.username)
+    // 从localStorage获取用户信息
+    const userData = JSON.parse(localStorage.getItem('user'))
+    const username = ref(userData?.username || '咨询师')
+    
+    // 获取存储在localStorage中的counselorId
+    const counselorId = ref(localStorage.getItem('counselor_id') || userData?.counselorId || userData?.userId || null)
+    
     const currentWeekStart = ref(new Date())
+    const weekDays = ref([]);
+    const loading = ref(true);
     
     // 调整当前日期到本周一
     onMounted(() => {
+      console.log('组件已挂载，counselorId:', counselorId.value);
+      
       const today = new Date();
       const day = today.getDay() || 7; // 获取星期几，星期天为0转换为7
       if (day !== 1) { // 如果不是星期一
@@ -114,8 +127,11 @@ export default {
       }
       currentWeekStart.value = today;
       
-      // 这里可以添加从后端获取排班数据的代码
-      // fetchScheduleData();
+      // 初始化一周的数据
+      initWeekDays();
+      
+      // 从后端获取排班数据
+      fetchScheduleData();
     })
     
     // 计算本周的日期范围
@@ -135,41 +151,112 @@ export default {
       return `${year}-${month}-${day}`;
     }
     
-    // 计算本周的天
-    const weekDays = computed(() => {
+    // 初始化一周的数据
+    const initWeekDays = () => {
       const days = [];
       const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
       
       for (let i = 0; i < 7; i++) {
         const date = new Date(currentWeekStart.value);
         date.setDate(date.getDate() + i);
-        
-        const slots = [];
-        
-        // 创建上午8点到下午4点，每小时一个时间段
-        for (let hour = 8; hour <= 16; hour++) {
-          // 随机生成状态用于演示，实际应从后端获取
-          // 'working' - 工作时间, 'empty' - 无
-          const statuses = ['working', 'empty'];
-          const randomStatus = statuses[Math.floor(Math.random() * 2)];
-          
-          slots.push({
-            time: `${hour}:00`,
-            status: randomStatus,
-            // 这里可以添加预约的详细信息，如用户ID、咨询类型等
-            // userInfo: randomStatus === 'working' ? { id: 123, name: '张三' } : null,
-          });
-        }
+        const formattedDate = formatDate(date);
         
         days.push({
           name: dayNames[i],
-          date: formatDate(date),
-          slots: slots
+          date: formattedDate,
+          morning: false,
+          afternoon: false
         });
       }
       
-      return days;
-    })
+      weekDays.value = days;
+    }
+    
+    // 从后端获取排班数据
+    const fetchScheduleData = async () => {
+      try {
+        if (!counselorId.value) {
+          console.error('咨询师ID不存在，无法获取排班数据');
+          return;
+        }
+        
+        loading.value = true;
+        console.log('正在获取排班数据，使用counselorId:', counselorId.value);
+        
+        // 调用后端API获取排班数据
+        const response = await axios.get(`/api/schedules/counselor/${counselorId.value}`);
+        console.log('获取到排班数据:', response.data);
+        
+        // 处理后端返回的数据
+        if (response.data && Array.isArray(response.data)) {
+          // 先重置所有日期的排班状态
+          weekDays.value.forEach(day => {
+            day.morning = false;
+            day.afternoon = false;
+          });
+          
+          // 遍历后端返回的排班数据
+          response.data.forEach(schedule => {
+            // 将后端返回的日期字符串转换为Date对象，并处理时区问题
+            const scheduleDate = new Date(schedule.date);
+            
+            // 调整为本地时间（加上时区偏移）
+            const localDate = new Date(scheduleDate.getTime() + scheduleDate.getTimezoneOffset() * 60000);
+            
+            // 获取日期的年、月、日
+            const year = localDate.getFullYear();
+            const month = localDate.getMonth() + 1;
+            const day = localDate.getDate();
+            
+            // 创建一个新的日期对象，确保使用本地日期（不含时间）
+            const adjustedDate = new Date(year, month - 1, day);
+            
+            console.log('原始日期:', schedule.date);
+            console.log('调整后日期:', formatDate(adjustedDate));
+            
+            // 获取该日期在当前周的索引
+            const dayIndex = getDayIndex(adjustedDate);
+            
+            console.log('日期索引:', dayIndex, '对应星期:', weekDays.value[dayIndex]?.name);
+            
+            // 如果日期在当前周内
+            if (dayIndex >= 0 && dayIndex < 7) {
+              // 根据timeSlot设置对应时间段的排班状态
+              if (schedule.timeSlot === 'morning' && schedule.status === 'working') {
+                weekDays.value[dayIndex].morning = true;
+              } else if (schedule.timeSlot === 'afternoon' && schedule.status === 'working') {
+                weekDays.value[dayIndex].afternoon = true;
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('获取排班数据失败:', error);
+      } finally {
+        loading.value = false;
+      }
+    };
+    
+    // 获取日期对应的星期索引（0-6）
+    const getDayIndex = (date) => {
+      const start = new Date(currentWeekStart.value);
+      // 确保比较的是日期而不是时间
+      const startYear = start.getFullYear();
+      const startMonth = start.getMonth();
+      const startDay = start.getDate();
+      const startDate = new Date(startYear, startMonth, startDay);
+      
+      const dateYear = date.getFullYear();
+      const dateMonth = date.getMonth();
+      const dateDay = date.getDate();
+      const compareDate = new Date(dateYear, dateMonth, dateDay);
+      
+      // 计算日期差异（天数）
+      const diffTime = compareDate.getTime() - startDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays;
+    };
     
     // 切换周次
     const changeWeek = (offset) => {
@@ -177,58 +264,15 @@ export default {
       newDate.setDate(newDate.getDate() + (offset * 7));
       currentWeekStart.value = newDate;
       
-      // 这里应该重新从后端获取新的一周排班数据
-      // fetchScheduleData(formatDate(newDate));
-    }
-    
-    // 切换时间段状态
-    const toggleSlotStatus = (day, slot) => {
-      if (slot.status === 'working') {
-        const confirmCancel = confirm('是否取消任务？');
-        if (confirmCancel) {
-          const cancelReason = prompt('请输入取消原因：');
-          if (cancelReason) {
-            // 调用后端接口，传递取消原因
-            console.log(`Canceling ${day.date} ${slot.time} with reason: ${cancelReason}`);
-            slot.status = 'empty';
-          }
-        }
-      } else {
-        // 如果当前状态为“无”，可以切换为“工作时间”
-        slot.status = 'working';
-      }
+      // 重新初始化一周的数据
+      initWeekDays();
       
-      // 记录修改，等待保存
-      console.log(`Changed ${day.date} ${slot.time} to ${slot.status}`);
-    }
-    
-    // 保存排班设置
-    const saveSchedule = () => {
-      // 在真实场景中，这里应该将数据发送到后端保存
-      console.log('Saving schedule...', weekDays.value);
-      
-      // 模拟API调用
-      setTimeout(() => {
-        alert('排班表已保存'); // 实际环境中应使用更友好的提示方式
-      }, 800);
-      
-      /* 
-      实际代码可能如下:
-      try {
-        await api.saveSchedule({
-          counselorId: store.getters.userId,
-          weekStart: formatDate(currentWeekStart.value),
-          scheduleData: weekDays.value
-        });
-        // 显示成功提示
-      } catch (error) {
-        // 错误处理
-      }
-      */
+      // 重新从后端获取新的一周排班数据
+      fetchScheduleData();
     }
     
     const logout = () => {
-      store.dispatch('logout')
+      localStorage.removeItem('user')
       router.push('/login')
     }
 
@@ -249,10 +293,10 @@ export default {
         case 'schedule':
           router.push('/counselor/schedule')
           break
-          case 'history':
+        case 'history':
           router.push('/counselor/history')
           break
-          case 'evaluation':
+        case 'evaluation':
           router.push('/counselor/evaluation')
           break
         default:
@@ -262,20 +306,18 @@ export default {
 
     return {
       username,
+      counselorId,
       logout,
       goTo,
       currentDateRange,
       weekDays,
-      changeWeek,
-      toggleSlotStatus,
-      saveSchedule
+      changeWeek
     }
   }
 }
 </script>
 
 <style scoped>
-/* 样式保持与咨询师主页一致 */
 .container {
   display: flex;
   height: 100vh;
@@ -445,8 +487,6 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.2s;
   position: relative;
 }
 
@@ -454,16 +494,8 @@ export default {
   background-color: rgba(0, 128, 0, 0.1);
 }
 
-.time-slot.working:hover {
-  background-color: rgba(0, 128, 0, 0.2);
-}
-
 .time-slot.empty {
   background-color: rgba(255, 255, 255, 0.1);
-}
-
-.time-slot.empty:hover {
-  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .slot-info {
@@ -473,24 +505,9 @@ export default {
 
 .schedule-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-top: 20px;
-}
-
-.save-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
-}
-
-.save-btn:hover {
-  background-color: #0056b3;
 }
 
 .legend {
@@ -547,51 +564,6 @@ export default {
   
   .schedule-container {
     flex-direction: column;
-  }
-  
-  .time-labels {
-    width: 100%;
-    flex-direction: row;
-    border-right: none;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .time-label {
-    flex: 1;
-    height: 30px;
-    border-bottom: none;
-    border-right: 1px solid #eee;
-  }
-  
-  .weekday-row {
-    height: 40px;
-  }
-  
-  .schedule-slots {
-    flex-direction: column;
-  }
-  
-  .day-column {
-    flex-direction: row;
-    border-right: none;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .time-slot {
-    flex: 1;
-    height: 40px;
-    border-bottom: none;
-    border-right: 1px solid #eee;
-  }
-  
-  .schedule-actions {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .legend {
-    flex-wrap: wrap;
-    justify-content: center;
   }
 }
 </style>

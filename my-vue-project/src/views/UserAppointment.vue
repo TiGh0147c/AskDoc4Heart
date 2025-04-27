@@ -30,17 +30,7 @@
           </div>
         </div>
         
-        <!-- 由于后端可能没有 active 状态，可以考虑移除这个卡片或修改其逻辑 -->
-        <div class="status-card" v-if="false">
-          <div class="status-icon active" v-if="activeAppointments.length > 0">
-            <i class="status-dot"></i>
-          </div>
-          <div class="status-info">
-            <h3>进行中咨询</h3>
-            <p>{{ activeAppointments.length }}个</p>
-            <a @click="goTo('currentChat')" v-if="activeAppointments.length > 0">立即前往</a>
-          </div>
-        </div>
+        <!-- 移除active状态卡片，因为后端没有此状态 -->
         
         <div class="status-card">
           <div class="status-icon upcoming">
@@ -192,7 +182,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import axios from 'axios' // 添加 axios 导入
+import axios from 'axios'
 
 export default {
   name: 'UserAppointment',
@@ -223,75 +213,26 @@ export default {
     
     // 预约数据
     const pendingAppointments = ref([])
-    const activeAppointments = ref([])
+    const activeAppointments = ref([]) // 保留变量但不使用
     const upcomingAppointments = ref([])
 
     // 加载咨询师数据
     const loadCounselors = async () => {
       try {
-        // 这里应该调用获取咨询师列表的API
-        // 示例: const response = await axios.get('http://localhost:8080/api/counselors')
-        // 由于没有提供咨询师API，这里仍使用模拟数据
-        counselors.value = [
-          {
-            id: 1,
-            name: '李明',
-            certification: '一级',
-            status: '空闲',
-            description: '专注于焦虑症治疗，拥有10年临床经验',
-            avatar: 'data:image/svg+xml;base64,'
-          },
-          {
-            id: 2,
-            name: '张华',
-            certification: '二级',
-            status: '繁忙',
-            description: '婚姻家庭咨询专家，擅长沟通技巧辅导',
-            avatar: 'data:image/svg+xml;base64,'
-          },
-          {
-            id: 3,
-            name: '王芳',
-            certification: '一级',
-            status: '空闲',
-            description: '抑郁症和情绪管理专家，心理学博士',
-            avatar: 'data:image/svg+xml;base64,'
-          },
-          {
-            id: 4,
-            name: '赵刚',
-            certification: '三级',
-            status: '空闲',
-            description: '青少年心理辅导专家，关注成长问题',
-            avatar: 'data:image/svg+xml;base64,'
-          },
-          {
-            id: 5,
-            name: '陈静',
-            certification: '二级',
-            status: '繁忙',
-            description: '压力管理和职场心理健康顾问',
-            avatar: 'data:image/svg+xml;base64,'
-          },
-          {
-            id: 6,
-            name: '林强',
-            certification: '一级',
-            status: '空闲',
-            description: '创伤后应激障碍(PTSD)治疗专家',
-            avatar: 'data:image/svg+xml;base64,'
-          },
-          {
-            id: 7,
-            name: '郑美',
-            certification: '三级',
-            status: '空闲',
-            description: '人际关系和社交焦虑问题咨询师',
-            avatar: 'data:image/svg+xml;base64,'
-          }
-        ]
+        // 调用获取咨询师列表的API
+        const response = await axios.get('http://localhost:8080/api/appointments/allCounselor')
+        // 确保数据结构一致，将counselorId映射为id以便前端使用
+        counselors.value = (response.data || []).map(counselor => ({
+          id: counselor.counselorId, // 将counselorId映射为id
+          name: counselor.counselorName || counselor.name,
+          avatar: counselor.avatar || 'https://via.placeholder.com/80',
+          certification: counselor.certification || '未知',
+          description: counselor.description || '暂无描述',
+          status: counselor.status || '空闲'
+        }))
       } catch (error) {
         console.error('加载咨询师数据失败:', error)
+        counselors.value = []
       }
     }
 
@@ -319,16 +260,8 @@ export default {
               status: 'pending'
             }))
           
-          activeAppointments.value = response.data
-            .filter(app => app.appointmentStatus === 'active')
-            .map(app => ({
-              id: app.appointmentId,
-              counselorId: app.counselorId,
-              counselorName: app.counselorName || '未知咨询师',
-              type: '心理咨询',
-              dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
-              status: 'active'
-            }))
+          // 不再使用activeAppointments，保持数组为空
+          activeAppointments.value = []
           
           upcomingAppointments.value = response.data
             .filter(app => app.appointmentStatus === 'confirmed')
@@ -361,51 +294,10 @@ export default {
         }
       } catch (error) {
         console.error('加载预约数据失败:', error)
-        // 使用模拟数据作为备用
-        pendingAppointments.value = [
-          {
-            id: 101,
-            counselorId: 3,
-            counselorName: '王芳',
-            type: '情绪管理咨询',
-            dateTime: '2025-03-15 14:00',
-            status: 'pending'
-          }
-        ]
-        
-        activeAppointments.value = [
-          {
-            id: 102,
-            counselorId: 1,
-            counselorName: '李明',
-            type: '焦虑症咨询',
-            dateTime: '2025-03-13 11:00',
-            status: 'active'
-          }
-        ]
-        
-        upcomingAppointments.value = [
-          {
-            id: 103,
-            counselorId: 6,
-            counselorName: '林强',
-            type: '创伤治疗',
-            dateTime: '2025-03-14 10:00',
-            status: 'confirmed',
-            timeRemaining: '23小时',
-            canStart: false
-          },
-          {
-            id: 104,
-            counselorId: 4,
-            counselorName: '赵刚',
-            type: '青少年心理咨询',
-            dateTime: '2025-03-13 15:00',
-            status: 'confirmed',
-            timeRemaining: '3小时',
-            canStart: true
-          }
-        ]
+        // 加载失败时清空数据，不使用模拟数据
+        pendingAppointments.value = []
+        activeAppointments.value = []
+        upcomingAppointments.value = []
       }
     }
 
@@ -627,6 +519,7 @@ export default {
   }
 }
 </script>
+
 
 <style scoped>
 /* 基础样式保持与原有一致 */
