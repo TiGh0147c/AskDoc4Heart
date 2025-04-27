@@ -4,16 +4,17 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class Schedule {
-    // getters and setters
     @Setter
     @Getter
     private Integer scheduleId;
+
     @Setter
     @Getter
-    private Date date;
+    private LocalDate date;
+
     @Setter
     @Getter
     private String timeSlot; // "morning" or "afternoon"
