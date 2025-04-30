@@ -4,9 +4,12 @@ import com.example.demo.attendance.dto.AttendanceStatusDTO;
 import com.example.demo.attendance.exception.AttendanceException;
 import com.example.demo.attendance.service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/attendance")
@@ -52,6 +55,22 @@ public class AttendanceController {
         }
     }
 
-
-
+    // 获取指定用户的指定时间段的打卡状态：
+    // 未打卡上班
+    // 已打卡上班（准时或迟到）
+    // 缺勤
+    // 已完成打卡（已打卡上班并且已打卡下班，同时会给出上班是准时还是迟到）
+    @GetMapping("/now-status")
+    public ResponseEntity<?> getTimeSlotStatus(@RequestParam("userId") Integer userId,
+                                               @RequestParam("role") String role,
+                                               @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                               @RequestParam("timeSlot") String timeSlot) {
+        // timeSlot 示例值："morning" 或 "afternoon"
+        try {
+            String status = attendanceService.getTimeSlotStatus(userId, role, date, timeSlot);
+            return ResponseEntity.ok(status);  // 直接返回中文状态描述
+        } catch (AttendanceException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

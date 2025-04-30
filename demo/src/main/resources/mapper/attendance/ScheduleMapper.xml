@@ -11,7 +11,8 @@
             date,
             time_slot timeSlot,
             counselor_id counselorId,
-            supervisor_id supervisorId
+            supervisor_id supervisorId,
+            `status`
         FROM Schedule
         WHERE date = #{today}
         AND time_slot = #{timeSlot}

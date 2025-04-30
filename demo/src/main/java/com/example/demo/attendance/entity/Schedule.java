@@ -16,4 +16,5 @@ public class Schedule {
 
     private Integer counselorId;
     private Integer supervisorId;
+    private String status; // 'working' or 'on_leave'
 }
