@@ -89,6 +89,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios' // 添加axios导入
 
 export default {
   name: 'CounselorHome',
@@ -99,6 +100,9 @@ export default {
     // 从localStorage获取用户信息
     const userData = JSON.parse(localStorage.getItem('user'))
     const username = ref(userData?.username || '咨询师')
+    
+    // 获取counselorId
+    const counselorId = ref(localStorage.getItem('counselor_id') || userData?.counselorId || userData?.userId || null)
     
     // 打卡相关状态
     const isWorking = ref(false)
@@ -198,43 +202,97 @@ export default {
     }
     
     // 处理打卡
-    const handleClockInOut = () => {
-      if (!isWorking.value) {
-        // 打卡上班
-        clockInTime.value = new Date()
-        isWorking.value = true
-        // 在这里应该调用后端API记录打卡信息
-        // store.dispatch('clockIn', { time: clockInTime.value })
-      } else {
-        // 打卡下班
-        clockOutTime.value = new Date()
-        isWorking.value = false
-        // 在这里应该调用后端API记录打卡信息
-        // store.dispatch('clockOut', { time: clockOutTime.value })
+    const handleClockInOut = async () => {
+      try {
+        if (!counselorId.value) {
+          console.error('咨询师ID不存在，无法打卡');
+          return;
+        }
+        
+        if (!isWorking.value) {
+          // 打卡上班
+          const response = await axios.post('/api/attendance/check-in', null, {
+            params: {
+              userId: counselorId.value,
+              role: 'counselor'
+            }
+          });
+          
+          if (response.status === 200) {
+            clockInTime.value = new Date();
+            isWorking.value = true;
+            console.log('打卡上班成功');
+          }
+        } else {
+          // 打卡下班
+          const response = await axios.post('/api/attendance/check-out', null, {
+            params: {
+              userId: counselorId.value,
+              role: 'counselor'
+            }
+          });
+          
+          if (response.status === 200) {
+            clockOutTime.value = new Date();
+            isWorking.value = false;
+            console.log('打卡下班成功');
+          }
+        }
+      } catch (error) {
+        console.error('打卡失败:', error);
+        alert(error.response?.data || '打卡失败，请重试');
       }
-    }
+    };
     
     // 获取今日排班信息
-    const fetchTodaySchedule = () => {
-      // 模拟从后端获取数据
-      // 实际应用中应通过API获取：store.dispatch('fetchTodaySchedule')
-      const today = currentTime.value.getDay()
-      
-      // 示例数据：假设今天有排班
-      if (today >= 1 && today <= 5) { // 周一到周五
-        if (today % 2 === 0) {
-          todaySchedule.value = [
-            { start: '09:00', end: '11:00' },
-            { start: '14:00', end: '17:00' }
-          ]
-        } else {
-          todaySchedule.value = [
-            { start: '14:00', end: '17:00' }
-          ]
+    const fetchTodaySchedule = async () => {
+      try {
+        if (!counselorId.value) {
+          console.error('咨询师ID不存在，无法获取排班数据');
+          return;
         }
-      } else {
-        todaySchedule.value = [] // 周末无排班
+        
+        // 调用后端API获取排班数据
+        const response = await axios.get(`/api/schedules/counselor/${counselorId.value}`);
+        console.log('获取到排班数据:', response.data);
+        
+        // 处理后端返回的数据
+        if (response.data && Array.isArray(response.data)) {
+          // 清空当前排班
+          todaySchedule.value = [];
+          
+          // 获取今天的日期
+          const today = new Date();
+          const todayStr = formatDate(today);
+          
+          // 遍历后端返回的排班数据，找出今天的排班
+          response.data.forEach(schedule => {
+            // 将后端返回的日期字符串转换为Date对象
+            const scheduleDate = new Date(schedule.date);
+            const scheduleDateStr = formatDate(scheduleDate);
+            
+            // 如果是今天的排班
+            if (scheduleDateStr === todayStr) {
+              // 根据timeSlot添加对应的时间段
+              if (schedule.timeSlot === 'morning' && schedule.status === 'working') {
+                todaySchedule.value.push({ start: '09:00', end: '11:00' });
+              } else if (schedule.timeSlot === 'afternoon' && schedule.status === 'working') {
+                todaySchedule.value.push({ start: '14:00', end: '17:00' });
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('获取排班数据失败:', error);
       }
+    };
+    
+    // 格式化日期为 YYYY-MM-DD
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
     
     // 启动定时器，每分钟更新一次
@@ -244,10 +302,40 @@ export default {
       }, 60000) // 每分钟更新一次
     }
     
+    // 获取当前打卡状态
+    const fetchAttendanceStatus = async () => {
+      try {
+        if (!counselorId.value) {
+          console.error('咨询师ID不存在，无法获取打卡状态');
+          return;
+        }
+        
+        const response = await axios.get('/api/attendance/status', {
+          params: {
+            userId: counselorId.value,
+            role: 'counselor'
+          }
+        });
+        
+        if (response.status === 200 && response.data) {
+          isWorking.value = response.data.isWorking;
+          if (response.data.checkInTime) {
+            clockInTime.value = new Date(response.data.checkInTime);
+          }
+          if (response.data.checkOutTime) {
+            clockOutTime.value = new Date(response.data.checkOutTime);
+          }
+        }
+      } catch (error) {
+        console.error('获取打卡状态失败:', error);
+      }
+    };
+    
     onMounted(() => {
-      fetchTodaySchedule()
-      startTimer()
-    })
+      fetchTodaySchedule();
+      fetchAttendanceStatus();
+      startTimer();
+    });
     
     onUnmounted(() => {
       if (timerInterval.value) {
@@ -290,6 +378,7 @@ export default {
 
     return {
       username,
+      counselorId,
       logout,
       goTo,
       isWorking,
