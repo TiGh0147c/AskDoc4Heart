@@ -96,6 +96,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios'  // 添加axios导入
 
 export default {
   name: 'UserHome',
@@ -107,6 +108,7 @@ export default {
     // 从localStorage获取用户信息
     const userData = JSON.parse(localStorage.getItem('user'))
     const username = ref(userData?.username || '用户')
+    const userId = computed(() => userData?.id || null)  // 添加用户ID
 
     const logout = () => {
       store.dispatch('logout')
@@ -134,41 +136,89 @@ export default {
     const upcomingAppointments = ref([])
 
     // 加载预约信息
-    const loadAppointments = () => {
-      // 模拟预约数据
-      pendingAppointments.value = [
-        {
-          id: 101,
-          counselorName: '王芳',
-          type: '情绪管理咨询',
-          dateTime: '2025-03-15 14:00',
-          status: 'pending'
+    // 加载预约信息
+    const loadAppointments = async () => {
+      if (!userId.value) {
+        console.error('用户ID不存在，无法加载预约数据')
+        return
+      }
+
+      try {
+        // 调用后端API获取用户的预约列表
+        const response = await axios.get(`http://localhost:8080/api/appointments/user/${userId.value}`)
+        
+        if (response.data && Array.isArray(response.data)) {
+          // 处理待确认预约
+          const pendingApps = response.data.filter(app => app.appointmentStatus === 'scheduled')
+          // 处理已确认预约
+          const upcomingApps = response.data.filter(app => app.appointmentStatus === 'confirmed')
+          
+          // 获取所有预约的咨询师ID
+          const allApps = [...pendingApps, ...upcomingApps]
+          const counselorIds = [...new Set(allApps.map(app => app.counselorId))]
+          
+          // 获取所有咨询师的姓名
+          const counselorNames = {}
+          await Promise.all(
+            counselorIds.map(async (counselorId) => {
+              try {
+                const nameResponse = await axios.get(`http://localhost:8080/api/appointments/counselorname/${counselorId}`)
+                if (nameResponse.data) {
+                  counselorNames[counselorId] = nameResponse.data
+                }
+              } catch (error) {
+                console.error(`获取咨询师${counselorId}姓名失败:`, error)
+              }
+            })
+          )
+          
+          // 根据预约状态分类并添加咨询师姓名
+          pendingAppointments.value = pendingApps.map(app => ({
+            id: app.appointmentId,
+            counselorId: app.counselorId,
+            counselorName: counselorNames[app.counselorId] || app.counselorName || '未知咨询师',
+            type: '心理咨询',
+            dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
+            status: 'pending'
+          }))
+          
+          upcomingAppointments.value = upcomingApps.map(app => {
+            // 计算距离开始时间
+            const appointmentDate = new Date(app.appointmentDate)
+            const now = new Date()
+            const diffTime = appointmentDate - now
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+            const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+            
+            const timeRemaining = diffDays > 0 
+              ? `${diffDays}天${diffHours}小时` 
+              : `${diffHours}小时`
+            
+            // 如果距离开始时间小于6小时，允许开始咨询
+            const canStart = diffTime < 6 * 60 * 60 * 1000 && diffTime > 0
+            
+            return {
+              id: app.appointmentId,
+              counselorId: app.counselorId,
+              counselorName: counselorNames[app.counselorId] || app.counselorName || '未知咨询师',
+              type: '心理咨询',
+              dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
+              status: 'confirmed',
+              timeRemaining,
+              canStart
+            }
+          })
         }
-      ]
-      
-      upcomingAppointments.value = [
-        {
-          id: 103,
-          counselorName: '林强',
-          type: '创伤治疗',
-          dateTime: '2025-03-14 10:00',
-          status: 'confirmed',
-          timeRemaining: '23小时'
-        },
-        {
-          id: 104,
-          counselorName: '赵刚',
-          type: '青少年心理咨询',
-          dateTime: '2025-03-13 15:00',
-          status: 'confirmed',
-          timeRemaining: '3小时',
-          canStart: true
-        }
-      ]
+      } catch (error) {
+        console.error('加载预约数据失败:', error)
+        // 加载失败时清空数据
+        pendingAppointments.value = []
+        upcomingAppointments.value = []
+      }
     }
 
-    onMounted(() => {
-      loadAppointments()
+    onMounted(async () => {
+      await loadAppointments()
     })
 
     // 跳转到预约页面
