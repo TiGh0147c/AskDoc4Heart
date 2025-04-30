@@ -160,6 +160,9 @@
       const isEditing = ref(false)
       const editingId = ref(null)
       
+      // 新增：用于存储原始排班信息
+      const originalScheduleData = ref({})
+      
       // 新排班数据
       const newSchedule = reactive({
         id: null,
@@ -212,14 +215,34 @@
           // 根据日期计算周次
           const scheduleDate = new Date(schedule.date)
           const today = new Date()
-          const diffTime = scheduleDate.getTime() - today.getTime()
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
           
+          // 获取本周的周一
+          const currentWeekMonday = new Date(today)
+          const dayOfWeek = today.getDay() || 7 // 将周日的0转为7
+          currentWeekMonday.setDate(today.getDate() - dayOfWeek + 1) // 设置为本周一
+          currentWeekMonday.setHours(0, 0, 0, 0) // 设置为当天开始时间
+          
+          // 获取下周一
+          const nextWeekMonday = new Date(currentWeekMonday)
+          nextWeekMonday.setDate(currentWeekMonday.getDate() + 7)
+          
+          // 获取两周后的周一
+          const afterNextWeekMonday = new Date(currentWeekMonday)
+          afterNextWeekMonday.setDate(currentWeekMonday.getDate() + 14)
+          
+          // 获取三周后的周一（用于判断两周后的结束时间）
+          const threeWeeksLaterMonday = new Date(currentWeekMonday)
+          threeWeeksLaterMonday.setDate(currentWeekMonday.getDate() + 21)
+          
+          // 判断日期属于哪个周次
           let week = 'current'
-          if (diffDays > 7 && diffDays <= 14) {
+          if (scheduleDate >= nextWeekMonday && scheduleDate < afterNextWeekMonday) {
             week = 'next'
-          } else if (diffDays > 14) {
+          } else if (scheduleDate >= afterNextWeekMonday && scheduleDate < threeWeeksLaterMonday) {
             week = 'after'
+          } else if (scheduleDate < currentWeekMonday || scheduleDate >= threeWeeksLaterMonday) {
+            // 如果日期不在这三周内，跳过此排班
+            return
           }
           
           const key = `${schedule.counselorId}-${week}`
@@ -316,21 +339,38 @@
           const schedulesToSave = [];
           
           for (let day = 1; day <= 7; day++) {
-            if (newSchedule.days[day]) {
-              schedulesToSave.push({
-                counselorId: parseInt(newSchedule.counselorId),
-                date: calculateDate(newSchedule.week, day),
-                timeSlot: 'morning',
-                status: 'available'
-              });
+            // 检查上午时间段
+            if (newSchedule.slots[day].morning) {
+              // 如果是编辑模式，检查这个时间段是否已经存在
+              const shouldSaveMorning = !isEditing.value || 
+                !originalScheduleData.value[day] || 
+                !originalScheduleData.value[day].includes('morning');
+                
+              if (shouldSaveMorning) {
+                schedulesToSave.push({
+                  counselorId: parseInt(newSchedule.counselorId),
+                  date: calculateDate(newSchedule.week, day),
+                  timeSlot: 'morning',
+                  status: 'working'
+                });
+              }
             }
+            
+            // 检查下午时间段
             if (newSchedule.slots[day].afternoon) {
-              schedulesToSave.push({
-                counselorId: parseInt(newSchedule.counselorId),
-                date: calculateDate(newSchedule.week, day),
-                timeSlot: 'afternoon', 
-                status: 'available'
-              });
+              // 如果是编辑模式，检查这个时间段是否已经存在
+              const shouldSaveAfternoon = !isEditing.value || 
+                !originalScheduleData.value[day] || 
+                !originalScheduleData.value[day].includes('afternoon');
+                
+              if (shouldSaveAfternoon) {
+                schedulesToSave.push({
+                  counselorId: parseInt(newSchedule.counselorId),
+                  date: calculateDate(newSchedule.week, day),
+                  timeSlot: 'afternoon', 
+                  status: 'working'
+                });
+              }
             }
           }
           
@@ -390,17 +430,25 @@
         newSchedule.counselorId = schedule.counselorId
         newSchedule.week = schedule.week
         
+        // 存储原始排班数据，用于后续比较
+        originalScheduleData.value = {}
+        
         // 设置已选择的日期和时间段
         Object.keys(schedule.slots).forEach(day => {
           const dayNum = parseInt(day)
           newSchedule.days[dayNum] = true
           
+          // 记录原始数据
+          originalScheduleData.value[dayNum] = []
+          
           schedule.slots[day].forEach(slot => {
             if (slot.includes('上午')) {
               newSchedule.slots[dayNum].morning = true
+              originalScheduleData.value[dayNum].push('morning')
             }
             if (slot.includes('下午')) {
               newSchedule.slots[dayNum].afternoon = true
+              originalScheduleData.value[dayNum].push('afternoon')
             }
           })
         })
@@ -739,7 +787,7 @@
   .cancel-btn:hover {
     background-color: #5a6268;
   }
-  </style>
+
 .day-time-selector {
   display: flex;
   flex-direction: column;
@@ -765,3 +813,4 @@
   flex-direction: column;
   gap: 5px;
 }
+</style>

@@ -366,7 +366,15 @@ export default {
       // 创建预约对象
       const today = new Date();
       const appointmentDate = new Date(today);
-      appointmentDate.setDate(today.getDate() + 1); // 默认预约明天
+      
+      // 根据当前时间设置时间段
+      const hours = today.getHours();
+      let timePeriod = 'afternoon'; // 默认下午
+      if (hours >= 6 && hours < 12) {
+        timePeriod = 'morning';
+      } else if (hours >= 18) {
+        timePeriod = 'evening';
+      }
       
       const appointmentData = {
         userId: userId.value,
@@ -374,7 +382,7 @@ export default {
         userName: username.value,
         counselorName: counselor.name,
         appointmentDate: appointmentDate.toISOString().split('T')[0], // 格式化为YYYY-MM-DD
-        appointmentTime: '下午', // 默认下午，实际应由用户选择
+        appointmentTime: timePeriod, // 动态设置时间段
         appointmentStatus: 'scheduled' // 初始状态为待确认
       };
       

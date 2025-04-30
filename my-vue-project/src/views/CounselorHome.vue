@@ -8,6 +8,7 @@
       <div class="sidebar-item" @click="goTo('schedule')">排班表</div>
       <div class="sidebar-item" @click="goTo('history')">历史会话</div>
       <div class="sidebar-item" @click="goTo('evaluation')">用户评估</div>
+      <div class="sidebar-item" @click="goTo('help')">督导求助</div>
     </div>
 
     <!-- 主内容区域 -->
@@ -278,6 +279,9 @@ export default {
           break
         case 'evaluation':
           router.push('/counselor/evaluation')
+          break
+        case 'help':
+          router.push('/counselor/help')
           break
         default:
           console.error('Invalid path')

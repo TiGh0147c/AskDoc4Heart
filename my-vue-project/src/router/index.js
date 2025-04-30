@@ -17,6 +17,7 @@ import CounselorChat from '../views/CounselorChat.vue'  // 添加咨询窗口页
 import CounselorSchedule from '../views/CounselorSchedule.vue'  // 添加排班表页面
 import CounselorHistory from '../views/CounselorHistory.vue'  // 添加咨询窗口页面
 import CounselorEvaluation from '../views/CounselorEvaluation.vue'  // 添加排班表页面
+import CounselorHelp from '../views/CounselorHelp.vue'  // 添加督导求助页面
 //管理员
 import AdminHome from '../views/AdminHome.vue'
 import AdminManage from '../views/AdminManage.vue'  // 管理注册页面
@@ -123,6 +124,12 @@ const routes = [
     name: 'CounselorEvaluation',
     component: CounselorEvaluation,
     meta: { requiresAuth: true, role: 'counselor' }  // 排班表页面
+  },
+  {
+    path: '/counselor/help',
+    name: 'CounselorHelp',
+    component: CounselorHelp,
+    meta: { requiresAuth: true, role: 'counselor' }  // 督导求助页面
   },
   //管理员部分
   {
