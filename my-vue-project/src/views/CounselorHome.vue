@@ -55,6 +55,9 @@
               <p :class="{'status': true, 'working': isWorking, 'not-working': !isWorking}">
                 {{ isWorking ? '上班中' : '未上班' }}
               </p>
+              <p v-if="detailedStatus" class="detailed-status">
+                {{ detailedStatus }}
+              </p>
               <p v-if="isLate && !isWorking && shouldWork" class="late-warning">
                 <i class="warning-icon">⚠️</i> 您已迟到 {{ lateMinutes }} 分钟
               </p>
@@ -326,8 +329,72 @@ export default {
             clockOutTime.value = new Date(response.data.checkOutTime);
           }
         }
+        
+        // 获取今天的详细打卡状态
+        await fetchDetailedStatus();
       } catch (error) {
         console.error('获取打卡状态失败:', error);
+      }
+    };
+    
+    // 获取详细打卡状态
+    const detailedStatus = ref('');
+    const fetchDetailedStatus = async () => {
+      try {
+        if (!counselorId.value) return;
+        
+        // 获取今天的日期
+        const today = new Date();
+        const formattedDate = formatDate(today);
+        
+        // 获取当前时间段
+        const currentHour = today.getHours();
+        const timeSlot = currentHour < 12 ? 'morning' : 'afternoon';
+        
+        // 调用新接口获取详细状态
+        const response = await axios.get('/api/attendance/now-status', {
+          params: {
+            userId: counselorId.value,
+            role: 'counselor',
+            date: formattedDate,
+            timeSlot: timeSlot
+          }
+        });
+        
+        if (response.status === 200) {
+          detailedStatus.value = response.data;
+          console.log('详细打卡状态:', detailedStatus.value);
+          
+          // 根据详细状态更新UI状态
+          updateUIBasedOnStatus(detailedStatus.value);
+        }
+      } catch (error) {
+        console.error('获取详细打卡状态失败:', error);
+      }
+    };
+    
+    // 根据详细状态更新UI
+    const updateUIBasedOnStatus = (status) => {
+      if (status.includes('已打卡上班') && !status.includes('已打卡下班')) {
+        isWorking.value = true;
+      } else if (status.includes('已完成打卡')) {
+        isWorking.value = false;
+        // 如果已经完成打卡，但clockOutTime为空，设置一个默认值
+        if (!clockOutTime.value) {
+          clockOutTime.value = new Date();
+        }
+      } else if (status.includes('未打卡上班')) {
+        isWorking.value = false;
+      } else if (status.includes('缺勤')) {
+        isWorking.value = false;
+      }
+      
+      // 更新迟到状态
+      if (status.includes('迟到')) {
+        const match = status.match(/迟到(\d+)分钟/);
+        if (match && match[1]) {
+          lateMinutes.value = parseInt(match[1]);
+        }
       }
     };
     
@@ -393,7 +460,8 @@ export default {
       formatTime,
       formatTimeSlot,
       calculateWorkHours,
-      handleClockInOut
+      handleClockInOut,
+      detailedStatus
     }
   }
 }
@@ -608,4 +676,36 @@ export default {
 .schedule-info li {
   margin-bottom: 5px;
 }
+
+.detailed-status {
+  margin-top: 5px;
+  padding: 5px 8px;
+  background-color: #f0f8ff;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #0066cc;
+  border-left: 3px solid #0066cc;
+}
 </style>
+
+// 在return语句中添加detailedStatus
+return {
+  username,
+  counselorId,
+  logout,
+  goTo,
+  isWorking,
+  clockInTime,
+  clockOutTime,
+  currentTime,
+  todaySchedule,
+  shouldWork,
+  canClockInOut,
+  isLate,
+  lateMinutes,
+  formatTime,
+  formatTimeSlot,
+  calculateWorkHours,
+  handleClockInOut,
+  detailedStatus
+}
