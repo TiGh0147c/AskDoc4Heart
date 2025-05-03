@@ -13,18 +13,23 @@ import java.time.LocalDateTime;
 public class SessionMessage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "message_id")
     private Long messageId;
-
+    @Column(name = "session_id")
     private Long sessionId;
 
     @Enumerated(EnumType.STRING)
     private SenderRole senderRole;
 
+    @Column(name = "sender_id")
     private Long senderId;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "message_type")
     private MessageType messageType;
 
+    @Column(name = "message_content")
     private String messageContent;
+    @Column(name = "message_sent_time")
     private LocalDateTime messageSentTime;
 }
