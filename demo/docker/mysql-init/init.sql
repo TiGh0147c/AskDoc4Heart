@@ -155,7 +155,7 @@ DROP TABLE IF EXISTS Session_Message;
 CREATE TABLE Session_Message (
     message_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '消息ID',
     session_id INT NOT NULL COMMENT '关联的会话ID',
-    sender_role ENUM('user', 'counselor') NOT NULL COMMENT '发送者角色(用户/咨询师)',
+    sender_role ENUM('user', 'counselor', 'system') NOT NULL COMMENT '发送者角色(用户/咨询师)',
     sender_id INT NOT NULL COMMENT '发送者ID(根据角色对应user_id或counselor_id)',
     message_type ENUM('text', 'image', 'file') NOT NULL DEFAULT 'text' COMMENT '消息类型',
     message_content TEXT COMMENT '消息内容(文本内容)',
@@ -184,7 +184,7 @@ CREATE TABLE Session_Summary (
 DROP TABLE IF EXISTS Help_Message;
 CREATE TABLE `Help_Message`  (
    message_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '求助消息ID',
-   sender_role ENUM('counselor', 'supervisor') NOT NULL COMMENT '发送者角色(咨询师/督导)',
+   sender_role ENUM('counselor', 'supervisor', 'system') NOT NULL COMMENT '发送者角色(咨询师/督导)',
    sender_id INT NOT NULL COMMENT '发送者ID(根据角色对应咨询师ID或督导ID)',
    message_type ENUM('text', 'image', 'file') NOT NULL DEFAULT 'text' COMMENT '消息类型',
    message_sent_time datetime NOT NULL,

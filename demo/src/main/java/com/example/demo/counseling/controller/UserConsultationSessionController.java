@@ -1,5 +1,6 @@
 package com.example.demo.counseling.controller;
 
+import com.example.demo.counseling.model.dto.SendMessageDTO;
 import com.example.demo.counseling.model.dto.WebSocketMessage;
 import com.example.demo.counseling.model.entity.ConsultationSession;
 import com.example.demo.counseling.model.entity.SessionMessage;
@@ -110,7 +111,7 @@ public class UserConsultationSessionController {
         
         List<Map<String, Object>> messages = messageEntities.stream().map(msg -> {
             Map<String, Object> messageMap = new HashMap<>();
-            messageMap.put("sender", msg.getSenderRole() == SenderRole.USER ? "user" : "counselor");
+            messageMap.put("sender", msg.getSenderRole() == SenderRole.user ? "user" : "counselor");
             messageMap.put("text", msg.getMessageContent());
             
             // 格式化时间
@@ -123,6 +124,49 @@ public class UserConsultationSessionController {
         response.put("messages", messages);
         response.put("isNewSession", isNewSession);
         
+        return ResponseEntity.ok(response);
+    }
+
+    // 发送消息
+    @PostMapping("/chats/{sessionId}/messages")
+    public ResponseEntity<?> sendMessage(
+            @PathVariable Long sessionId,
+            @RequestBody SendMessageDTO dto) {
+
+        // 获取参数
+        Long userId = dto.getUserId();
+        String content = dto.getContent();
+
+        // 检查会话是否存在
+        ConsultationSession session = sessionService.getSessionById(sessionId);
+        if (session == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 创建消息
+        SessionMessage message = new SessionMessage();
+        message.setSessionId(sessionId);
+        message.setSenderRole(SenderRole.user);
+        message.setSenderId(userId);
+        message.setMessageType(MessageType.text);
+        message.setMessageContent(content);
+        message.setMessageSentTime(LocalDateTime.now());
+
+        // 保存消息
+        messageService.saveMessage(message);
+
+        // 更新会话的最后消息时间
+        sessionService.updateLastMessageTime(sessionId);
+
+        // 格式化时间为 HH:mm
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        String formattedTime = message.getMessageSentTime().format(formatter);
+
+        // 构建响应
+        Map<String, Object> response = new HashMap<>();
+        response.put("messageId", message.getMessageId());
+        response.put("time", formattedTime);
+
         return ResponseEntity.ok(response);
     }
 }
