@@ -398,10 +398,44 @@ export default {
       }
     };
     
+    // 检查并获取JWT令牌
+    const checkAndGetJwtToken = async () => {
+      // 如果localStorage中已经有JWT令牌，则不需要重新获取
+      if (localStorage.getItem('jwt_token')) {
+        console.log('JWT令牌已存在，无需重新获取')
+        return
+      }
+
+      try {
+        // 获取咨询师ID和角色
+        if (!counselorId.value) {
+          console.error('咨询师ID不存在，无法获取JWT令牌')
+          return
+        }
+
+        // 调用后端API获取JWT令牌
+        const response = await axios.post('/api/auth/token', null, {
+          params: {
+            username: counselorId.value,
+            role: 'counselor'
+          }
+        })
+
+        if (response.data) {
+          // 将JWT令牌存储在localStorage中
+          localStorage.setItem('jwt_token', response.data)
+          console.log('JWT令牌已获取并存储')
+        }
+      } catch (error) {
+        console.error('获取JWT令牌失败:', error)
+      }
+    }
+    
     onMounted(() => {
       fetchTodaySchedule();
       fetchAttendanceStatus();
       startTimer();
+      checkAndGetJwtToken(); // 添加获取JWT令牌的调用
     });
     
     onUnmounted(() => {
@@ -411,6 +445,8 @@ export default {
     })
 
     const logout = () => {
+      // 在退出登录时清除JWT令牌
+      localStorage.removeItem('jwt_token')
       store.dispatch('logout')
       router.push('/login')
     }
@@ -688,24 +724,3 @@ export default {
 }
 </style>
 
-// 在return语句中添加detailedStatus
-return {
-  username,
-  counselorId,
-  logout,
-  goTo,
-  isWorking,
-  clockInTime,
-  clockOutTime,
-  currentTime,
-  todaySchedule,
-  shouldWork,
-  canClockInOut,
-  isLate,
-  lateMinutes,
-  formatTime,
-  formatTimeSlot,
-  calculateWorkHours,
-  handleClockInOut,
-  detailedStatus
-}

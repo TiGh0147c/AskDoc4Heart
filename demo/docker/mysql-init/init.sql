@@ -133,7 +133,7 @@ CREATE TABLE Consultation_Session (
     session_status ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress' COMMENT '会话状态(进行中/已完成)',
     counselor_id INT NOT NULL COMMENT '咨询师ID',
     user_id INT NOT NULL COMMENT '用户ID',
-    supervisor_id INT NOT NULL COMMENT '督导ID',
+    supervisor_id INT  COMMENT '督导ID',
     last_message_sent_time DATETIME COMMENT '最后消息发送时间',
     user_has_evaluated BOOLEAN DEFAULT FALSE COMMENT '用户是否已评价',
     counselor_has_evaluated BOOLEAN DEFAULT FALSE COMMENT '咨询师是否已评价',

@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
@@ -121,20 +121,130 @@ export default {
     const confirmAppointment = async (appointmentId) => {
       if (confirm('确认接受此预约吗？')) {
         try {
+          // 首先更新预约状态
           const response = await axios.post(
             `http://localhost:8080/api/appointments/update/${appointmentId}`,
-            { newStatus: 'completed' }  // 确保发送的是'completed'
+            { newStatus: 'completed' }
           )
           
           if (response.status === 200) {
-            await loadAppointments()
+            // 获取当前预约的详细信息
+            const appointment = requests.value.find(req => req.id === appointmentId);
+            
+            if (appointment) {
+              // 创建咨询会话
+              const sessionResponse = await axios.post(
+                'http://localhost:8080/api/counselor/consultation/sessions/create',
+                null,
+                {
+                  params: {
+                    counselorId: counselorId,
+                    userId: appointment.userId
+                  }
+                }
+              );
+              
+              if (sessionResponse.data && sessionResponse.data.sessionId) {
+                const sessionId = sessionResponse.data.sessionId;
+                // 存储会话ID，以便在聊天页面使用
+                localStorage.setItem('currentSessionId', sessionId);
+                
+                // 检查并获取JWT令牌 - 保留这部分，但不建立WebSocket连接
+                await checkAndGetJwtToken();
+                
+                // 移除WebSocket连接创建代码
+                // const token = localStorage.getItem('jwt_token');
+                // if (token) {
+                //   // 建立WebSocket连接
+                //   connectWebSocket(sessionId, token);
+                // }
+                
+                // 跳转到聊天页面
+                router.push('/counselor/chat');
+              }
+            }
+            
+            await loadAppointments();
+            alert('预约已确认，并创建了咨询会话');
           }
         } catch (error) {
-          console.error('确认预约失败:', error)
-          errorMessage.value = '确认预约失败，请重试'
+          console.error('确认预约失败:', error);
+          errorMessage.value = '确认预约失败，请重试';
         }
       }
     }
+    
+    // 检查并获取JWT令牌
+    const checkAndGetJwtToken = async () => {
+      // 如果localStorage中已经有JWT令牌，则不需要重新获取
+      if (localStorage.getItem('jwt_token')) {
+        console.log('JWT令牌已存在，无需重新获取')
+        return
+      }
+    
+      try {
+        // 获取咨询师ID和角色
+        if (!counselorId) {
+          console.error('咨询师ID不存在，无法获取JWT令牌')
+          return
+        }
+    
+        // 调用后端API获取JWT令牌
+        const response = await axios.post('/api/auth/token', null, {
+          params: {
+            username: counselorId,
+            role: 'counselor'
+          }
+        })
+    
+        if (response.data) {
+          // 将JWT令牌存储在localStorage中
+          localStorage.setItem('jwt_token', response.data)
+          console.log('JWT令牌已获取并存储')
+        }
+      } catch (error) {
+        console.error('获取JWT令牌失败:', error)
+      }
+    }
+    
+    // 建立WebSocket连接 - 可以注释或移除此方法
+    // const connectWebSocket = (sessionId, token) => {
+    //   try {
+    //     // 创建WebSocket连接
+    //     const socket = new WebSocket(`ws://localhost:8080/ws/consultation/${sessionId}?token=${token}`);
+    //     
+    //     // 连接建立时的处理
+    //     socket.onopen = () => {
+    //       console.log('WebSocket连接已建立');
+    //     };
+    //     
+    //     // 接收消息的处理
+    //     socket.onmessage = (event) => {
+    //       console.log('收到消息:', event.data);
+    //     };
+    //     
+    //     // 连接关闭的处理
+    //     socket.onclose = () => {
+    //       console.log('WebSocket连接已关闭');
+    //     };
+    //     
+    //     // 连接错误的处理
+    //     socket.onerror = (error) => {
+    //       console.error('WebSocket连接错误:', error);
+    //     };
+    //   } catch (error) {
+    //     console.error('建立WebSocket连接失败:', error);
+    //   }
+    // }
+    
+    // 在组件卸载时关闭WebSocket连接
+    onUnmounted(() => {
+      // 获取WebSocket实例并关闭连接
+      // 例如：const socket = store.state.webSocket;
+      // if (socket) {
+      //   socket.close();
+      // }
+    });
     
     // 修改拒绝预约方法
     const rejectAppointment = async (appointmentId) => {
@@ -192,7 +302,9 @@ export default {
       confirmAppointment,
       rejectAppointment,
       logout,
-      goTo
+      goTo,
+      checkAndGetJwtToken  // 保留这个方法
+      // connectWebSocket  // 移除这个方法
     }
   }
 }

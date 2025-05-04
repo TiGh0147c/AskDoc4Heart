@@ -5,18 +5,30 @@ import com.example.demo.counseling.model.enums.SessionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface ConsultationSessionRepository extends JpaRepository<ConsultationSession, Long> {
-
+    
     @Modifying
-    @Query("UPDATE ConsultationSession cs SET cs.sessionStatus = :status WHERE cs.sessionId = :sessionId")
-    void updateStatus(Long sessionId, SessionStatus status);
-
+    @Transactional
+    @Query("UPDATE ConsultationSession s SET s.sessionStatus = :status WHERE s.sessionId = :sessionId")
+    void updateSessionStatus(@Param("sessionId") Long sessionId, @Param("status") SessionStatus status);
+    
     @Modifying
-    @Query("UPDATE ConsultationSession cs SET cs.lastMessageSentTime = :time WHERE cs.sessionId = :sessionId")
-    void updateLastMessageTime(Long sessionId, LocalDateTime time);
+    @Transactional
+    @Query("UPDATE ConsultationSession s SET s.lastMessageSentTime = :time WHERE s.sessionId = :sessionId")
+    void updateLastMessageTime(@Param("sessionId") Long sessionId, @Param("time") LocalDateTime time);
+    
+    List<ConsultationSession> findByCounselorIdAndSessionStatusNot(Long counselorId, SessionStatus status);
+    
+    // 新增方法
+    List<ConsultationSession> findByUserIdAndSessionStatusNot(Long userId, SessionStatus status);
+    
+    List<ConsultationSession> findByUserIdAndCounselorIdAndSessionStatusNot(Long userId, Long counselorId, SessionStatus status);
 }

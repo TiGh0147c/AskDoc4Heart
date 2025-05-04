@@ -48,7 +48,6 @@
             </div>
             <div class="chat-time">
               <p>{{ chat.lastMessageTime }}</p>
-              <span v-if="chat.unreadCount > 0" class="unread-badge">{{ chat.unreadCount }}</span>
             </div>
           </div>
         </div>
@@ -167,9 +166,10 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
   name: 'UserCurrentChat',
@@ -189,91 +189,101 @@ export default {
     // 当前选中的咨询师，初始为 null
     const currentCounselor = ref(null)
     
+    // WebSocket连接
+    const socket = ref(null)
+    const userId = computed(() => localStorage.getItem('user_id') || 
+                       JSON.parse(localStorage.getItem('user'))?.userId || 
+                       1) // 默认值
+    
     // 所有进行中的聊天
-    const activeChats = ref([
-      {
-        id: 102,
-        counselorId: 1,
-        counselorName: '李明',
-        counselorAvatar: 'data:image/svg+xml;base64,',
-        type: '焦虑症咨询',
-        lastMessage: '您好，请问有什么可以帮助您的？',
-        lastMessageTime: '11:20',
-        unreadCount: 2
-      }
-    ])
+    const activeChats = ref([])
     
     // 当前聊天的消息列表
     const messages = ref([])
     
-    // 模拟消息数据
-    const mockMessages = {
-      1: [ // 咨询师ID = 1 的消息历史
-        {
-          sender: 'counselor',
-          text: '您好，我是李明，很高兴今天能和您交流。您最近感到焦虑的主要原因是什么？',
-          time: '11:02'
-        },
-        {
-          sender: 'user',
-          text: '最近工作压力很大，经常失眠，感觉很难放松下来。',
-          time: '11:05'
-        },
-        {
-          sender: 'counselor',
-          text: '理解您的感受。失眠和压力确实会形成恶性循环。我们可以先尝试一些放松技巧。您平时有什么放松的方式吗？',
-          time: '11:08'
-        },
-        {
-          sender: 'user',
-          text: '以前喜欢跑步，但最近太忙了，没时间去。',
-          time: '11:10'
-        },
-        {
-          sender: 'counselor',
-          text: '运动确实是缓解焦虑的好方法。即使很忙，我们也可以找到一些小的时间窗口来活动。您觉得每天抽15分钟做些简单的运动可行吗？',
-          time: '11:15'
-        },
-        {
-          sender: 'counselor',
-          text: '此外，我还建议您尝试深呼吸练习，每天早晚各5分钟，这在科学上已被证明能有效降低焦虑水平。您能在工作间隙试试吗？',
-          time: '11:20'
+    // 当前会话ID
+    const currentSessionId = ref(null)
+    
+    // 从后端加载活跃会话列表
+    const loadActiveChats = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/api/user/chats?userId=${userId.value}`)
+        
+        if (response.data) {
+          activeChats.value = response.data
         }
-      ]
+      } catch (error) {
+        console.error('加载活跃会话失败:', error)
+        // 保留模拟数据作为备用
+      }
     }
     
-    // 检查并加载预约过来的咨询师信息
+    // 在组件挂载时加载数据
     onMounted(() => {
+      loadActiveChats()
+      checkAndGetJwtToken()
+      
+      // 检查是否有从预约页面传递过来的咨询师信息
       const savedCounselor = localStorage.getItem('currentCounselor')
       
       if (savedCounselor) {
         const counselorData = JSON.parse(savedCounselor)
         
-        // 在实际应用中，这些数据应该从API获取
-        // 如果是从预约页面过来，设置当前咨询师
-        const counselorInfo = {
+        // 设置当前咨询师
+        currentCounselor.value = {
           id: counselorData.id,
           name: counselorData.name,
           type: counselorData.type,
           avatar: 'data:image/svg+xml;base64,'
         }
         
-        // 设置当前咨询师
-        currentCounselor.value = counselorInfo
-        
-        // 加载聊天记录
-        loadMessages(counselorInfo.id)
+        // 加载聊天记录并初始化WebSocket
+        loadChatSession(counselorData.id)
         
         // 清除localStorage
         localStorage.removeItem('currentCounselor')
-        
-        /* 
-        后端需要实现：
-        1. GET /api/chats/{counselorId}/messages
-        2. 返回与该咨询师的聊天记录
-        */
       }
     })
+    
+    // 在组件卸载时关闭WebSocket连接
+    onUnmounted(() => {
+      if (socket.value && socket.value.readyState !== WebSocket.CLOSED) {
+        socket.value.close()
+      }
+    })
+    
+    // 检查并获取JWT令牌
+    const checkAndGetJwtToken = async () => {
+      // 如果localStorage中已经有JWT令牌，则不需要重新获取
+      if (localStorage.getItem('jwt_token')) {
+        console.log('JWT令牌已存在，无需重新获取')
+        return
+      }
+    
+      try {
+        // 获取用户ID和角色
+        if (!userId.value) {
+          console.error('用户ID不存在，无法获取JWT令牌')
+          return
+        }
+    
+        // 调用后端API获取JWT令牌
+        const response = await axios.post('/api/auth/token', null, {
+          params: {
+            username: userId.value,
+            role: 'user'
+          }
+        })
+    
+        if (response.data) {
+          // 将JWT令牌存储在localStorage中
+          localStorage.setItem('jwt_token', response.data)
+          console.log('JWT令牌已获取并存储')
+        }
+      } catch (error) {
+        console.error('获取JWT令牌失败:', error)
+      }
+    }
 
     // 监听消息变化，自动滚动到底部
     watch(messages, () => {
@@ -284,17 +294,29 @@ export default {
       })
     })
     
-    // 从模拟数据加载消息
-    const loadMessages = (counselorId) => {
-      if (mockMessages[counselorId]) {
-        messages.value = [...mockMessages[counselorId]]
-      } else {
+    // 加载聊天会话
+    const loadChatSession = async (counselorId) => {
+      try {
+        // 获取或创建会话
+        const response = await axios.get(`http://localhost:8080/api/user/chats/counselor/${counselorId}?userId=${userId.value}`)
+        
+        if (response.data) {
+          currentSessionId.value = response.data.sessionId
+          
+          // 加载消息历史
+          messages.value = response.data.messages || []
+          
+          // 初始化WebSocket连接
+          initWebSocket(response.data.sessionId)
+        }
+      } catch (error) {
+        console.error('加载会话失败:', error)
         messages.value = []
       }
     }
     
     // 选择一个会话
-    const selectChat = (chat) => {
+    const selectChat = async (chat) => {
       currentCounselor.value = {
         id: chat.counselorId,
         name: chat.counselorName,
@@ -302,8 +324,8 @@ export default {
         avatar: chat.counselorAvatar
       }
       
-      // 加载聊天记录
-      loadMessages(chat.counselorId)
+      // 加载聊天会话
+      await loadChatSession(chat.counselorId)
       
       // 清除未读标记
       const chatIndex = activeChats.value.findIndex(c => c.id === chat.id)
@@ -314,7 +336,87 @@ export default {
     
     // 离开当前会话
     const leaveChat = () => {
+      // 关闭WebSocket连接
+      if (socket.value && socket.value.readyState !== WebSocket.CLOSED) {
+        socket.value.close()
+      }
+      
       currentCounselor.value = null
+      currentSessionId.value = null
+      messages.value = []
+    }
+    
+    // 初始化WebSocket连接
+    const initWebSocket = (sessionId) => {
+      const token = localStorage.getItem('jwt_token')
+      if (!token) {
+        console.error('未找到JWT令牌，无法建立WebSocket连接')
+        return
+      }
+      
+      try {
+        // 关闭之前的连接
+        if (socket.value && socket.value.readyState !== WebSocket.CLOSED) {
+          socket.value.close()
+        }
+        
+        // 创建新连接
+        socket.value = new WebSocket(`ws://localhost:8080/ws/consultation/${sessionId}?token=${token}`)
+        
+        // 连接建立时的处理
+        socket.value.onopen = () => {
+          console.log('WebSocket连接已建立')
+        }
+        
+        // 接收消息的处理
+        socket.value.onmessage = (event) => {
+          console.log('收到消息:', event.data)
+          const message = JSON.parse(event.data)
+          
+          // 处理接收到的消息
+          if (message.type === 'MESSAGE') {
+            // 添加新消息到消息列表
+            const formattedTime = formatTimeFromDateTime(message.sentTime)
+            
+            messages.value.push({
+              sender: message.senderRole.toLowerCase(),
+              text: message.content,
+              time: formattedTime
+            })
+            
+            // 更新最后一条消息
+            if (currentCounselor.value) {
+              const chatIndex = activeChats.value.findIndex(c => c.counselorId === currentCounselor.value.id)
+              if (chatIndex !== -1) {
+                activeChats.value[chatIndex].lastMessage = message.content
+                activeChats.value[chatIndex].lastMessageTime = formattedTime
+              }
+            }
+          } else if (message.type === 'TYPING') {
+            // 处理咨询师正在输入状态
+            isTyping.value = message.isTyping
+          }
+        }
+        
+        // 连接关闭的处理
+        socket.value.onclose = () => {
+          console.log('WebSocket连接已关闭')
+        }
+        
+        // 连接错误的处理
+        socket.value.onerror = (error) => {
+          console.error('WebSocket连接错误:', error)
+        }
+      } catch (error) {
+        console.error('建立WebSocket连接失败:', error)
+      }
+    }
+    
+    // 格式化日期时间为HH:mm格式
+    const formatTimeFromDateTime = (dateTimeStr) => {
+      if (!dateTimeStr) return ''
+      const date = new Date(dateTimeStr)
+      return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
     }
     
     // 结束咨询
@@ -402,34 +504,62 @@ export default {
     }
     
     // 发送消息
-    const sendMessage = () => {
+    const sendMessage = async () => {
       if (!newMessage.value.trim()) return
+      
       const now = new Date()
       const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`
+      
+      // 先在UI上显示消息
       messages.value.push({
         sender: 'user',
         text: newMessage.value,
         time: timeStr
       })
-      const sentMessage = newMessage.value
-      newMessage.value = ''
-      isTyping.value = true
-      setTimeout(() => {
-        isTyping.value = false
-        const responses = [
-          "我理解您的感受，请继续分享更多细节。",
-          "这个情况听起来确实很困扰，让我们一起分析一下原因。",
-          "您的感受是很正常的，我们可以尝试一些方法来改善这种状况。",
-          "谢谢您的分享。在这种情况下，我建议您可以尝试以下几种方法...",
-          "您描述的情况很常见，许多人都有类似的经历。我们可以一起探索解决方案。"
-        ]
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)]
-        messages.value.push({
-          sender: 'counselor',
-          text: randomResponse,
-          time: `${now.getHours()}:${(now.getMinutes() + 1).toString().padStart(2, '0')}`
-        })
-      }, 2000)
+      
+      try {
+        if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+          // 通过WebSocket发送消息
+          const message = {
+            type: 'MESSAGE',
+            content: newMessage.value,
+            senderRole: 'USER',
+            senderId: userId.value,
+            timestamp: new Date().toISOString()
+          }
+          
+          socket.value.send(JSON.stringify(message))
+          
+          // 更新最后一条消息
+          const chatIndex = activeChats.value.findIndex(c => c.counselorId === currentCounselor.value.id)
+          if (chatIndex !== -1) {
+            activeChats.value[chatIndex].lastMessage = newMessage.value
+            activeChats.value[chatIndex].lastMessageTime = timeStr
+          }
+          
+          // 清空输入框
+          newMessage.value = ''
+        } else {
+          // 如果WebSocket连接未建立，尝试重新获取令牌并重新连接
+          await checkAndGetJwtToken()
+          if (currentSessionId.value) {
+            initWebSocket(currentSessionId.value)
+            // 延迟发送消息，等待连接建立
+            setTimeout(() => {
+              if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+                sendMessage()
+              } else {
+                throw new Error('WebSocket连接未建立')
+              }
+            }, 1000)
+          } else {
+            throw new Error('WebSocket连接未建立')
+          }
+        }
+      } catch (error) {
+        console.error('发送消息失败:', error)
+        alert('发送消息失败，请重试')
+      }
     }
     
     // 触发文件上传
@@ -464,6 +594,11 @@ export default {
 
     // 页面导航
     const goTo = (path) => {
+      // 如果当前有活跃聊天，先执行离开聊天的操作
+      if (currentCounselor.value && path !== 'currentChat') {
+        leaveChat()
+      }
+      
       const paths = {
         home: '/user/home',
         tutorial: '/user/tutorial',
@@ -504,7 +639,9 @@ export default {
       handleFileUpload,
       formatMessage,
       logout,
-      goTo
+      goTo,
+      initWebSocket,
+      checkAndGetJwtToken
     }
   }
 }
