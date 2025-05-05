@@ -3,12 +3,14 @@ package com.example.demo.Queue.service.impl;
 import com.example.demo.Queue.dto.QueueDTO;
 import com.example.demo.Queue.dto.QueuePositionDTO;
 import com.example.demo.Queue.entity.Queue;
+import com.example.demo.Queue.mapper.AppointmentQueueMapper;
 import com.example.demo.Queue.mapper.QueueMapper;
 import com.example.demo.Queue.service.QueueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -25,26 +27,39 @@ public class QueueServiceImpl implements QueueService {
     @Autowired
     private QueueMapper queueMapper;
 
+    @Autowired
+    private AppointmentQueueMapper appointmentMapper;
+
     @Override
     @Transactional
     public QueueDTO joinQueue(QueueDTO queueDTO) throws IllegalStateException {
-
-        // 检查当前时间是否在允许的排队时间内
+        LocalTime currentTime = LocalTime.of(10,0);
         //LocalTime currentTime = LocalTime.now();
-        LocalTime currentTime = LocalTime.of(9, 30);
         if (currentTime.isBefore(START_TIME) || currentTime.isAfter(END_TIME)) {
             throw new IllegalStateException(
                     String.format("当前时间%s不在排队时间内(9:00-16:40)", currentTime.toString())
             );
         }
-        // 检查等待队列是否已满
+
+        // 获取今天的有效预约数
+        LocalDate today = LocalDate.now();
+        int appointmentCount = appointmentMapper.countValidAppointments(
+                queueDTO.getCounselorId(),
+                today,
+                "scheduled");
+
+        // 获取当前等待队列人数
         int waitingCount = getWaitingCount(queueDTO.getCounselorId());
-        if (waitingCount >= MAX_WAITING) {
-            throw new IllegalStateException("等待队列已满，最多允许" + MAX_WAITING + "人等待");
+
+        // 检查总人数是否超过上限
+        if ((appointmentCount + waitingCount) >= MAX_WAITING) {
+            throw new IllegalStateException(
+                    String.format("当前预约数(%d)加等待队列(%d)已达上限(%d)",
+                            appointmentCount, waitingCount, MAX_WAITING)
+            );
         }
-        
-        //每天第一个患者加入时，lastNumber 为 null，队列号会重置为 1，实现每日队列的独立性。
-        // 获取并锁定当前最大队列号
+
+        // 原队列号生成逻辑保持不变
         Integer lastNumber = queueMapper.selectLastQueueNumberForUpdate(queueDTO.getCounselorId());
         int newNumber = (lastNumber != null) ? lastNumber + 1 : 1;
 
