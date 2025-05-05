@@ -19,147 +19,158 @@
         <button class="logout-btn" @click="logout">退出登录</button>
       </div>
 
-      <!-- 如果没有选择会话，显示会话列表 -->
-      <div v-if="!currentChat" class="card no-chat">
-        <h1>咨询窗口</h1>
-        <p>您有 {{ activeChats.length }} 个进行中的咨询会话</p>
-        
-        <div v-if="activeChats.length === 0" class="no-chat-message">
-          <div class="empty-icon">
-            <img src="/basic_avatar/basic_male.jpg" alt="无会话">
-          </div>
-          <p>您目前没有进行中的咨询会话</p>
-          <p class="sub-message">请等待用户发起咨询或查看排班表</p>
-          <button class="primary-btn" @click="goTo('schedule')">查看排班表</button>
-        </div>
-        
-        <!-- 活跃会话列表 -->
-        <div v-else class="active-chats">
-          <div 
-            v-for="chat in activeChats" 
-            :key="chat.id" 
-            class="chat-preview"
-            @click="selectChat(chat)"
-          >
-            <div class="chat-avatar">
-              <img src="/basic_avatar/basic_male.jpg" alt="用户头像">
+        <!-- 并排显示会话列表和会话窗口 -->
+      <div class="chat-layout">
+        <!-- 会话列表 -->
+        <div class="chat-list">
+          <h1>咨询窗口</h1>
+          <p>您有 {{ activeChats.length }} 个进行中的咨询会话</p>
+          
+          <div v-if="activeChats.length === 0" class="no-chat-message">
+            <div class="empty-icon">
+              <img src="/basic_avatar/basic_male.jpg" alt="无会话">
             </div>
-            <div class="chat-brief">
-              <h3>{{ chat.userName }}</h3>
-              <p class="chat-type">{{ chat.type }}</p>
-              <p class="last-message">{{ chat.lastMessage }}</p>
-            </div>
-            <div class="chat-time">
-              <p>{{ chat.lastMessageTime }}</p>
-              <span class="status-indicator" :class="chat.status"></span>
-            </div>
+            <p>您目前没有进行中的咨询会话</p>
+            <p class="sub-message">请等待用户发起咨询或查看排班表</p>
+            <button class="primary-btn" @click="goTo('schedule')">查看排班表</button>
           </div>
-        </div>
-      </div>
-
-      <!-- 如果选择了会话，显示聊天界面 -->
-      <div v-else class="chat-container">
-        <!-- 聊天头部信息 -->
-        <div class="chat-header">
-          <button class="back-btn" @click="leaveChat">
-            &larr; 返回
-          </button>
-          <div class="user-info">
-            <h2>{{ currentChat.userName }}</h2>
-            <p>{{ currentChat.type }}</p>
-          </div>
-          <div class="chat-actions">
-            <button class="action-btn notes-btn" title="用户笔记" @click="showNotes = true">
-              笔记
-            </button>
-            <button 
-              class="action-btn"
-              :class="{'pause-btn': !isPaused, 'resume-btn': isPaused}" 
-              title="暂停/继续咨询" 
-              @click="togglePause"
+          
+          <!-- 活跃会话列表 -->
+          <div v-else class="active-chats">
+            <div 
+              v-for="chat in activeChats" 
+              :key="chat.id" 
+              class="chat-preview"
+              @click="selectChat(chat)"
             >
-              {{ isPaused ? '继续' : '暂停' }}
-            </button>
-            <button class="action-btn end-btn" title="结束咨询" @click="endConsultation">
-              结束
-            </button>
+              <div class="chat-avatar">
+                <img src="/basic_avatar/basic_male.jpg" alt="用户头像">
+              </div>
+              <div class="chat-brief">
+                <h3>{{ chat.userName }}</h3>
+                <p class="chat-type">{{ chat.type }}</p>
+                <p class="last-message">{{ chat.lastMessage }}</p>
+              </div>
+              <div class="chat-time">
+                <p>{{ chat.lastMessageTime }}</p>
+                <span class="status-indicator" :class="chat.status"></span>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- 会话窗口 -->
+        <div class="chat-container" :class="{'empty': !currentChat}">
+          <!-- 当没有选择会话时，显示一个固定大小的空白方框 -->
+          <div v-if="!currentChat" class="placeholder-box">
+            <p>请选择一个会话开始聊天</p>
+          </div>
+
+          <!-- 如果选择了会话，显示聊天界面 -->
+          <template v-else>
+            <!-- 聊天头部信息 -->
+            <div class="chat-header">
+              <button class="back-btn" @click="leaveChat">
+                &larr; 返回
+              </button>
+              <div class="user-info">
+                <h2>{{ currentChat.userName }}</h2>
+                <p>{{ currentChat.type }}</p>
+              </div>
+              <div class="chat-actions">
+                <button class="action-btn notes-btn" title="用户笔记" @click="showNotes = true">
+                  笔记
+                </button>
+                <button 
+                  class="action-btn"
+                  :class="{'pause-btn': !isPaused, 'resume-btn': isPaused}" 
+                  title="暂停/继续咨询" 
+                  @click="togglePause"
+                >
+                  {{ isPaused ? '继续' : '暂停' }}
+                </button>
+                <button class="action-btn end-btn" title="结束咨询" @click="endConsultation">
+                  结束
+                </button>
+              </div>
+            </div>
         
         <!-- 聊天消息区域 -->
         <div class="messages-container" ref="messagesContainer">
-          <div v-if="messages.length === 0" class="chat-start-info">
-            <p>咨询已开始，等待用户发送消息</p>
-          </div>
-          
-          <div 
-            v-for="(message, index) in messages" 
-            :key="index"
-            :class="['message', message.sender === 'counselor' ? 'counselor-message' : 'user-message']"
-          >
-            <div class="message-avatar">
-              <img 
-                :src="message.sender === 'counselor' ? counselorAvatar : '/basic_avatar/user_default.jpg'" 
-                :alt="message.sender === 'counselor' ? '我' : currentChat.userName"
+              <div v-if="messages.length === 0" class="chat-start-info">
+                <p>咨询已开始，等待用户发送消息</p>
+              </div>
+              
+              <div 
+                v-for="(message, index) in messages" 
+                :key="index"
+                :class="['message', message.sender === 'counselor' ? 'counselor-message' : 'user-message']"
               >
+                <div class="message-avatar">
+                  <img 
+                    :src="message.sender === 'counselor' ? counselorAvatar : '/basic_avatar/user_default.jpg'" 
+                    :alt="message.sender === 'counselor' ? '我' : currentChat.userName"
+                  >
+                </div>
+                <div class="message-content">
+                  <div class="message-text" v-html="formatMessage(message.text)"></div>
+                  <div class="message-time">{{ message.time }}</div>
+                </div>
+              </div>
+              
+              <div v-if="isUserTyping" class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
             </div>
-            <div class="message-content">
-              <div class="message-text" v-html="formatMessage(message.text)"></div>
-              <div class="message-time">{{ message.time }}</div>
+            
+            <!-- 聊天输入区域 -->
+            <div class="chat-input-area">
+              <div v-if="isPaused" class="pause-notice">
+                <p>咨询已暂停，用户无法看到您的新消息</p>
+                <button class="resume-btn" @click="togglePause">继续咨询</button>
+              </div>
+              <textarea 
+                v-else
+                v-model="newMessage" 
+                @keydown.enter.prevent="sendMessage"
+                placeholder="输入您的回复..." 
+                rows="3"
+              ></textarea>
+              <div class="input-actions" v-if="!isPaused">
+                <div class="quick-responses">
+                  <button 
+                    v-for="(response, index) in quickResponses" 
+                    :key="index" 
+                    class="quick-response-btn"
+                    @click="insertQuickResponse(response)"
+                  >
+                    {{ response.label }}
+                  </button>
+                </div>
+                <div class="send-actions">
+                  <button class="upload-btn" @click="triggerFileUpload" title="上传图片">
+                    <span>📎</span>
+                  </button>
+                  <input 
+                    type="file" 
+                    ref="fileInput" 
+                    style="display: none" 
+                    accept="image/*" 
+                    @change="handleFileUpload"
+                  >
+                  <button 
+                    class="send-btn" 
+                    :disabled="!newMessage.trim()" 
+                    @click="sendMessage"
+                  >
+                    发送
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div v-if="isUserTyping" class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-        
-        <!-- 聊天输入区域 -->
-        <div class="chat-input-area">
-          <div v-if="isPaused" class="pause-notice">
-            <p>咨询已暂停，用户无法看到您的新消息</p>
-            <button class="resume-btn" @click="togglePause">继续咨询</button>
-          </div>
-          <textarea 
-            v-else
-            v-model="newMessage" 
-            @keydown.enter.prevent="sendMessage"
-            placeholder="输入您的回复..." 
-            rows="3"
-          ></textarea>
-          <div class="input-actions" v-if="!isPaused">
-            <div class="quick-responses">
-              <button 
-                v-for="(response, index) in quickResponses" 
-                :key="index" 
-                class="quick-response-btn"
-                @click="insertQuickResponse(response)"
-              >
-                {{ response.label }}
-              </button>
-            </div>
-            <div class="send-actions">
-              <button class="upload-btn" @click="triggerFileUpload" title="上传图片">
-                <span>📎</span>
-              </button>
-              <input 
-                type="file" 
-                ref="fileInput" 
-                style="display: none" 
-                accept="image/*" 
-                @change="handleFileUpload"
-              >
-              <button 
-                class="send-btn" 
-                :disabled="!newMessage.trim()" 
-                @click="sendMessage"
-              >
-                发送
-              </button>
-            </div>
-          </div>
+          </template>
         </div>
       </div>
     </div>
@@ -898,6 +909,7 @@ export default {
 
 .chat-preview {
   display: flex;
+  width: 230px;
   align-items: center;
   padding: 15px;
   border-bottom: 1px solid #eee;
@@ -988,11 +1000,34 @@ export default {
   background-color: #dc3545;
 }
 
+.chat-layout {
+  display: flex;
+  flex-grow: 1;
+}
+
+.chat-list {
+  width: 300px;
+  padding-right: 10px;
+}
+
 .chat-container {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 40px);
+  width: 630px;
   margin-top: 60px;
+}
+
+.chat-container.empty .placeholder-box {
+  height: calc(100vh - 60px);
+  width: 630px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: #999;
+  background: #f4f4f4;
+  border-left: 1px solid #ddd;
 }
 
 .chat-header {

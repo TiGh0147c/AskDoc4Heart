@@ -257,40 +257,45 @@ Page({
 
   // 获取未来七天的值班数据
   fetchSchedules() {
-      const today = new Date(); // 当前日期
-      const futureSchedules = []; // 存储未来七天的值班表数据
-    
-      for (let i = 1; i <= 7; i++) { // 从明天开始，未来七天
-        const day = new Date(today);
-        day.setDate(today.getDate() + i);
-        const dateStr = this.getTodayDate(day);
-    
-        wx.request({
-          url: `http://localhost:8081/api/schedules/date/${dateStr}`,
-          method: 'GET',
-          success: (res) => {
-            if (res.statusCode === 200) {
-              //console.log(`${dateStr} 查询排班成功：`, res.data);
-              futureSchedules.push({ date: dateStr, schedules: res.data }); // 存储当天的值班表数据
-            } else {
-              console.log(`${dateStr} 查询排班失败：`, res);
-            }
-          },
-          fail: (err) => {
-            console.error(`${dateStr} 请求失败:`, err);
-            wx.showToast({
-              title: `${dateStr} 网络错误，请稍后再试`,
-              icon: 'none'
-            });
-          },
-          complete: () => {
+    const today = new Date(); // 当前日期
+    const futureSchedules = []; // 存储未来七天的值班表数据
+  
+    for (let i = 1; i <= 7; i++) { // 从明天开始，未来七天
+      const day = new Date(today);
+      day.setDate(today.getDate() + i);
+      const dateStr = this.getTodayDate(day);
+  
+      wx.request({
+        url: `http://localhost:8081/api/schedules/date/${dateStr}`,
+        method: 'GET',
+        success: async (res) => {
+          if (res.statusCode === 200) {
+            const schedulesWithNames = await Promise.all(res.data.map(async schedule => {
+              const counselor = await this.getCounselor(schedule.counselorId);
+              return {
+                ...schedule,
+                counselorName: counselor.name
+              };
+            }));
+  
+            futureSchedules.push({ date: dateStr, schedules: schedulesWithNames }); // 存储当天的值班表数据
             if (futureSchedules.length === 7) {
               console.log("未来七天的值班表数据：", futureSchedules);
               this.setData({ schedule: futureSchedules });
             }
+          } else {
+            console.log(`${dateStr} 查询排班失败：`, res);
           }
-        });
-      }
+        },
+        fail: (err) => {
+          console.error(`${dateStr} 请求失败:`, err);
+          wx.showToast({
+            title: `${dateStr} 网络错误，请稍后再试`,
+            icon: 'none'
+          });
+        }
+      });
+    }
   },
 
   // 获取预约数据
@@ -441,12 +446,11 @@ Page({
         },
         success(res) {
           if (res.statusCode === 200) {
-            console.log(`查询咨询师 ${id} 信息成功：`, res.data);
             const counselor = {
               id: res.data.counselorId,
               name: res.data.name,
             }
-            console.log(`查询咨询师 ${id} 信息成功：`, counselor);
+            //console.log(`查询咨询师 ${id} 信息成功：`, counselor);
             resolve(counselor); // 返回提取的数据
           } else {
             console.log(`查询咨询师 ${id} 信息失败：`, res);

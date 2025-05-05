@@ -43,10 +43,10 @@ Page({
     //测试用
     const currentDate = new Date();
     const recordData = [{
-      _id: "001",
+      _id: 1,
       date: currentDate
     }, {
-      _id: "002",
+      _id: 2,
       date: currentDate
     }]; 
     //测试用
