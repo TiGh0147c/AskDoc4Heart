@@ -25,8 +25,6 @@ public class ConsultationSession {
     private Long counselorId;
     @Column(name = "user_id")
     private Long userId;
-    @Column(name = "supervisor_id")
-    private Long supervisorId;
     @Column(name = "last_message_sent_time")
     private LocalDateTime lastMessageSentTime;
     @Column(name = "user_has_evaluated")

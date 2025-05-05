@@ -137,8 +137,7 @@ CREATE TABLE Consultation_Session (
     user_has_evaluated BOOLEAN DEFAULT FALSE COMMENT '用户是否已评价',
     counselor_has_evaluated BOOLEAN DEFAULT FALSE COMMENT '咨询师是否已评价',
     FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id),
-    FOREIGN KEY (user_id) REFERENCES User(user_id),
-    FOREIGN KEY (supervisor_id) REFERENCES Supervisor(supervisor_id)
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -304,7 +303,7 @@ DROP TABLE IF EXISTS Average_Evaluation;
 CREATE TABLE Average_Evaluation (
     average_evaluation_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '平均分ID',
     counselor_id INT NOT NULL COMMENT '咨询师ID',
-    average_rating DECIMAL(2,1) NOT NULL COMMENT '平均评分(2位小数)',
+    average_rating DECIMAL(3,1) NOT NULL COMMENT '平均评分(1位小数)',
     evaluation_count INT NOT NULL COMMENT '评估次数',
     FOREIGN KEY (counselor_id) REFERENCES Counselor(counselor_id)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;

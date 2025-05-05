@@ -9,6 +9,7 @@ Page({
     queue_number: '',
     queue_counselor_id: '',
     queue_counselor_name: '',
+    progressnum: '',
     counselorIds: [],
     counselors: [],
     description: '',
@@ -248,20 +249,14 @@ Page({
         url: `/pages/ai-dialogue/ai-dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
       });
     } else {
-      const enterdata = {
-        userId: userid,
-        counselorId: counselorId,
-        counselorName: counselorName,
-        description: description
-      };
-      console.log('尝试进入咨询会话:', enterdata);
-      this.enterDialogue(enterdata);
+      this.addToQueue(e);
     }
   },
 
   // 进入咨询会话
   enterDialogue: function(data) {
     const url = `http://localhost:8081/api/user/chats/counselor/${data.counselorId}`;
+    const that = this;
     wx.request({
       url: url,
       method: 'GET',
@@ -272,8 +267,9 @@ Page({
       success(res) {
         if (res.statusCode === 200) {
           console.log("进入咨询会话成功：", res.data);
+          that.clearTimers(); 
           wx.reLaunch({
-            url: `/pages/dialogue/dialogue?sessionId=${res.data.sessionId}&counselorId=${data.counselorId}&counselorName=${data.counselorName}&description=${data.description}`
+            url: `/pages/dialogue/dialogue?sessionId=${res.data.sessionId}&counselorId=${data.counselorId}&counselorName=${data.counselorName}&description=${data.description}&queue_id=${data.queue_id}`
           });
         } else {
           console.log("进入咨询会话失败：",res);
@@ -341,6 +337,40 @@ Page({
     });
   },
 
+  // 更新队伍状态
+  updateQueue(queueId) {
+    const url = `http://localhost:8081/api/queues/${queueId}/status?status=in_progress`;
+    const that = this;
+    wx.request({
+      url: url,
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("更新队伍状态成功：", res.data);
+          const enterdata = {
+            userId: that.data.userid,
+            counselorId: that.data.queue_counselor_id,
+            counselorName: that.data.queue_counselor_name,
+            description: that.data.description,
+            queue_id: that.data.queue_id
+          };
+          console.log('尝试进入咨询会话:', enterdata);
+          that.enterDialogue(enterdata);
+        } else {
+          console.log("更新队伍状态失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    });
+  },
+
   leaveQueue: function(data) {
     const url = `http://localhost:8081/api/queues/${data}/cancel`;
     wx.request({
@@ -394,14 +424,59 @@ Page({
     });
   },
 
+  fetchQueuedata(counselorId) {
+    return new Promise((resolve, reject) => {
+      const url = `http://localhost:8081/api/queues/${counselorId}/stats`;
+      wx.request({
+        url: url,
+        method: 'GET',
+        success:(res) => {
+          if (res.statusCode === 200) {
+            console.log("获取队伍信息成功：", res.data);
+            let data = res.data;
+            let progressRegex = /咨询中:\s*(\d+)\/\d+/;
+            let progressmatch = data.match(progressRegex);
+            let progressnum = progressmatch[1];
+            this.setData({ progressnum: progressnum });
+            this.fetchData(this.data.queue_id)
+              .then(data => {
+                const waitingnum = data.aheadCount;
+                const queuedata = {
+                  waitingnum: waitingnum,
+                  waitingtime: waitingnum * 5
+                }
+                if (progressnum < 3 && waitingnum === 0) {
+                  this.updateQueue(this.data.queue_id);
+                }
+                // 将数据传递给调用者
+                resolve(queuedata);
+              })
+          } else {
+            console.log("获取队伍信息失败：", res);
+            reject(new Error("获取队伍信息失败"));
+          }
+        },
+        fail(err) {
+          console.error('请求失败:', err);
+          wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+          });
+          reject(err);
+        }
+      });
+    });
+  },
+
   // 获取队伍状态数据
   handleFetchAndSetData(queueId) {
     const that = this;
-    that.fetchData(queueId)
+    that.fetchQueuedata(that.data.queue_counselor_id)
       .then(data => {
         const modalData = {
-          queueCount: data.aheadCount,
-          waitingTime: data.estimatedMinutes
+          queueCount: data.waitingnum,
+          waitingTime: data.waitingtime
+          //data.estimatedMinutes
         };
         that.setData({
           modalData: modalData,
@@ -409,7 +484,7 @@ Page({
         });
         const modal = that.selectComponent("#modal"); 
         modal.show();
-        that.checkQueue(queueId);
+        // that.checkQueue(queueId);
       })
       .catch(err => {
         console.error("获取数据失败：", err);
@@ -508,32 +583,6 @@ Page({
           icon: 'none'
         });
       });
-  },
-
-  // 模拟更新排队状态
-  updateQueue(data) {
-    const url = `http://localhost:8081/api/queues/${data.queueId}/status`;
-    wx.request({
-      url: url,
-      method: 'POST',
-      data: {
-        status: data.status,
-      },
-      success(res) {
-        if (res.statusCode === 200) {
-          console.log("更新排队状态成功：", res.data);
-        } else {
-          console.log("更新排队状态失败：",res);
-        }
-      },
-      fail(err) {
-        console.error('请求失败:', err);
-        wx.showToast({
-            title: '网络错误，请稍后再试',
-            icon: 'none'
-        });
-      }
-    });
   },
 
   checkQueue: function(data) {
