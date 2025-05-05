@@ -8,9 +8,10 @@
     <navigator url="/pages/alter/alter" hover-class="navigator-hover">
       <text>修改个人信息</text>
     </navigator>
+    <!--
     <navigator url="/pages/report/report" hover-class="navigator-hover">
       <text>评估报告</text>
-    </navigator>
+    </navigator>-->
     <navigator url="/pages/record/record" hover-class="navigator-hover">
       <text>历史记录</text>
     </navigator>

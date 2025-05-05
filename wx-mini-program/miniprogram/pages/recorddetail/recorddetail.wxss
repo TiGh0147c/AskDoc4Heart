@@ -1,35 +1,68 @@
 /* pages/recorddetail/recorddetail.wxss */
-
-page {
+.container {
   display: flex;
   flex-direction: column;
-  /*justify-content: space-between;  确保内容在顶部和底部标签栏之间均匀分布 */
-  height: 100vh; /* 让页面占据整个视窗高度 */
+  height: 100vh;
+  background-color: rgb(28, 29, 33);
 }
 
-.container{
-  flex: 1; 
+.message-container {
   display: flex;
   flex-direction: column;
-  justify-content: center·; /* 竖直居中 */
-  align-items: center; /* 水平居中 */
-  padding-bottom: constant(safe-area-inset-bottom); /* iOS 底部安全区适配 */
-  padding-bottom: env(safe-area-inset-bottom); /* iOS 底部安全区适配 */
-  background-color: rgb(28, 29, 33); /* #2a2b2c; 设置背景颜色 */
+  padding-left: 23px;
+  padding-right: 23px;
 }
 
-/* 外部框的样式 */
-.form-outer-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 90%; /* 根据需要调整宽度 */
-  height: 89%; /* 根据需要调整高度 */
-  max-width: 400px; /* 最大宽度限制 */
-  overflow: hidden; /* 确保内部元素不会超出边界 */
-  padding: 0px; /* 内边距 */
-  margin-top: 70rpx;
-  background-color: rgb(235, 236, 243); /* 背景颜色 */
+.message {
+  padding: 10px;
+  margin-top: 35px;
+  border-radius: 13px;
+  max-width: 80%;
+  position: relative; /* 确保伪元素可以绝对定位 */
+  display: inline-block; /* 让元素根据内容大小调整宽度 */
+  color: rgb(28, 29, 33);
+  font-size: 14px;
+  line-height: 1.5; /* 可选：设置行高 */
+  z-index: 10;
+}
+
+.my-message {
+  background-color: rgb(146, 205, 207);
+  align-self: flex-end;
+}
+
+.my-message::after {
+  content: '';
+  position: absolute;
+  top: 0px; 
+  right: 0px; 
+  width: 20px; /* 正方形的宽度 */
+  height: 20px; /* 正方形的高度 */
+  background-color: rgb(146, 205, 207);
+  z-index: -1;
+}
+
+.other-message {
+  background-color: rgb(238, 239, 247);
+  align-self: flex-start;
+}
+
+.other-message::after {
+  content: '';
+  position: absolute;
+  top: 0px; 
+  left: 0px; 
+  width: 20px; /* 正方形的宽度 */
+  height: 20px; /* 正方形的高度 */
+  background-color: rgb(238, 239, 247);
+  z-index: -1;
+}
+
+.sys-message{
+  background-color: rgb(28, 29, 33);
+  color: rgb(68, 88, 120);
+  font-size: 14px;
+  margin-top: 35px;
+  margin-left: auto;
+  margin-right: auto;
 }

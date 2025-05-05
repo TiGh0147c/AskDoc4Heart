@@ -3,10 +3,10 @@
   <scroll-view scroll-y="true" style="height: {{scrollViewHeight}}px">
     <view class="message-container">
       <view class="sys-message">-- 开始咨询 --</view>
-      <block wx:for="{{messages}}" wx:key="timestamp">
-        <view class="message {{item.message_type === 'user-message' ? 'my-message' : item.message_type === 'counselor-message' ? 'other-message' : 'sys-message'}}"
-          wx:key="timestamp">
-            {{item.content}}
+      <block wx:for="{{messages}}" wx:key="time">
+        <view class="message {{item.sender === 'user' ? 'my-message' : item.message_type === 'counselor' ? 'other-message' : 'sys-message'}}"
+          wx:key="time">
+            {{item.text}}
         </view>
       </block>
       <view class="message-margin"></view>

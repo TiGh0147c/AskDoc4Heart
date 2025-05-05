@@ -19,7 +19,7 @@
         <button class="logout-btn" @click="logout">退出登录</button>
       </div>
 
-      <!-- 并排显示会话列表和会话窗口 -->
+        <!-- 并排显示会话列表和会话窗口 -->
       <div class="chat-layout">
         <!-- 会话列表 -->
         <div class="chat-list">
@@ -78,14 +78,25 @@
                 <p>{{ currentChat.type }}</p>
               </div>
               <div class="chat-actions">
+                <button class="action-btn notes-btn" title="用户笔记" @click="showNotes = true">
+                  笔记
+                </button>
+                <button 
+                  class="action-btn"
+                  :class="{'pause-btn': !isPaused, 'resume-btn': isPaused}" 
+                  title="暂停/继续咨询" 
+                  @click="togglePause"
+                >
+                  {{ isPaused ? '继续' : '暂停' }}
+                </button>
                 <button class="action-btn end-btn" title="结束咨询" @click="endConsultation">
                   结束
                 </button>
               </div>
             </div>
-          
-            <!-- 聊天消息区域 -->
-            <div class="messages-container" ref="messagesContainer">
+        
+        <!-- 聊天消息区域 -->
+        <div class="messages-container" ref="messagesContainer">
               <div v-if="messages.length === 0" class="chat-start-info">
                 <p>咨询已开始，等待用户发送消息</p>
               </div>
@@ -116,13 +127,18 @@
             
             <!-- 聊天输入区域 -->
             <div class="chat-input-area">
+              <div v-if="isPaused" class="pause-notice">
+                <p>咨询已暂停，用户无法看到您的新消息</p>
+                <button class="resume-btn" @click="togglePause">继续咨询</button>
+              </div>
               <textarea 
+                v-else
                 v-model="newMessage" 
                 @keydown.enter.prevent="sendMessage"
                 placeholder="输入您的回复..." 
                 rows="3"
               ></textarea>
-              <div class="input-actions">
+              <div class="input-actions" v-if="!isPaused">
                 <div class="quick-responses">
                   <button 
                     v-for="(response, index) in quickResponses" 
@@ -155,6 +171,39 @@
               </div>
             </div>
           </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- 用户笔记弹窗 -->
+    <div v-if="showNotes" class="modal-overlay" @click="showNotes = false">
+      <div class="modal-content" @click.stop>
+        <h2>用户笔记</h2>
+        <p>{{ currentChat?.userName }} - {{ currentChat?.type }}</p>
+        
+        <div class="notes-content">
+          <textarea 
+            v-model="userNotes" 
+            placeholder="在这里记录用户的咨询笔记..." 
+            rows="8"
+          ></textarea>
+        </div>
+        
+        <div class="previous-notes" v-if="previousNotes.length > 0">
+          <h3>历史笔记</h3>
+          <div 
+            v-for="(note, index) in previousNotes" 
+            :key="index"
+            class="note-item"
+          >
+            <div class="note-date">{{ note.date }}</div>
+            <div class="note-text">{{ note.text }}</div>
+          </div>
+        </div>
+        
+        <div class="notes-actions">
+          <button @click="saveNotes" class="save-notes-btn">保存笔记</button>
+          <button @click="showNotes = false" class="close-btn">关闭</button>
         </div>
       </div>
     </div>
@@ -748,6 +797,7 @@ export default {
 
 .chat-preview {
   display: flex;
+  width: 230px;
   align-items: center;
   padding: 15px;
   border-bottom: 1px solid #eee;
@@ -838,11 +888,34 @@ export default {
   background-color: #dc3545;
 }
 
+.chat-layout {
+  display: flex;
+  flex-grow: 1;
+}
+
+.chat-list {
+  width: 300px;
+  padding-right: 10px;
+}
+
 .chat-container {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 40px);
+  width: 630px;
   margin-top: 60px;
+}
+
+.chat-container.empty .placeholder-box {
+  height: calc(100vh - 60px);
+  width: 630px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: #999;
+  background: #f4f4f4;
+  border-left: 1px solid #ddd;
 }
 
 .chat-header {

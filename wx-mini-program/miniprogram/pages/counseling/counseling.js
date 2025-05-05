@@ -55,10 +55,10 @@ Page({
 
     if (hours >= 9 && hours < 11) {
       return "morning";
-    } else if (hours >= 14 && hours < 24) {
+    } else if (hours >= 14 && hours < 17) {
       return "afternoon";
     } else {
-      return null;
+      return "afternoon";
     }
   },
 
@@ -235,10 +235,12 @@ Page({
     });
   },
 
+  // 进入咨询会话
   navigateToDialogue(e) {
     const dataset = e.currentTarget.dataset;
     const counselorId = dataset.id;
     const counselorName = dataset.name;
+    const userid = this.data.userid;
     const description = this.data.description;
     if(dataset.type == "ai"){
       console.log('选择了ai咨询师');
@@ -246,10 +248,49 @@ Page({
         url: `/pages/ai-dialogue/ai-dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
       });
     } else {
-      wx.reLaunch({
-        url: `/pages/dialogue/dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
-      });
+      const enterdata = {
+        userId: userid,
+        counselorId: counselorId,
+        counselorName: counselorName,
+        description: description
+      };
+      console.log('尝试进入咨询会话:', enterdata);
+      this.enterDialogue(enterdata);
     }
+  },
+
+  // 进入咨询会话
+  enterDialogue: function(data) {
+    const url = `http://localhost:8081/api/user/chats/counselor/${data.counselorId}`;
+    wx.request({
+      url: url,
+      method: 'GET',
+      data: {
+        userId: data.userId,
+        counselorId: data.counselorId
+      },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("进入咨询会话成功：", res.data);
+          wx.reLaunch({
+            url: `/pages/dialogue/dialogue?sessionId=${res.data.sessionId}&counselorId=${data.counselorId}&counselorName=${data.counselorName}&description=${data.description}`
+          });
+        } else {
+          console.log("进入咨询会话失败：",res);
+          wx.showToast({
+            title: '进入咨询会话失败，请稍后再试',
+            icon: 'none'
+        });
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    });
   },
 
   queueToDialogue() {
@@ -625,7 +666,8 @@ Page({
       date: Thedate,
       timeSlot: "afternoon",
       //timeSlot: "morning",
-      counselorId: 1
+      counselorId: 1,
+      status: 'working'
     }
 
     wx.request({

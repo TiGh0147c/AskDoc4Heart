@@ -133,7 +133,6 @@ CREATE TABLE Consultation_Session (
     session_status ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress' COMMENT '会话状态(进行中/已完成)',
     counselor_id INT NOT NULL COMMENT '咨询师ID',
     user_id INT NOT NULL COMMENT '用户ID',
-    supervisor_id INT  COMMENT '督导ID',
     last_message_sent_time DATETIME COMMENT '最后消息发送时间',
     user_has_evaluated BOOLEAN DEFAULT FALSE COMMENT '用户是否已评价',
     counselor_has_evaluated BOOLEAN DEFAULT FALSE COMMENT '咨询师是否已评价',
@@ -155,7 +154,7 @@ DROP TABLE IF EXISTS Session_Message;
 CREATE TABLE Session_Message (
     message_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '消息ID',
     session_id INT NOT NULL COMMENT '关联的会话ID',
-    sender_role ENUM('user', 'counselor') NOT NULL COMMENT '发送者角色(用户/咨询师)',
+    sender_role ENUM('user', 'counselor', 'system') NOT NULL COMMENT '发送者角色(用户/咨询师)',
     sender_id INT NOT NULL COMMENT '发送者ID(根据角色对应user_id或counselor_id)',
     message_type ENUM('text', 'image', 'file') NOT NULL DEFAULT 'text' COMMENT '消息类型',
     message_content TEXT COMMENT '消息内容(文本内容)',
@@ -184,7 +183,7 @@ CREATE TABLE Session_Summary (
 DROP TABLE IF EXISTS Help_Message;
 CREATE TABLE `Help_Message`  (
    message_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '求助消息ID',
-   sender_role ENUM('counselor', 'supervisor') NOT NULL COMMENT '发送者角色(咨询师/督导)',
+   sender_role ENUM('counselor', 'supervisor', 'system') NOT NULL COMMENT '发送者角色(咨询师/督导)',
    sender_id INT NOT NULL COMMENT '发送者ID(根据角色对应咨询师ID或督导ID)',
    message_type ENUM('text', 'image', 'file') NOT NULL DEFAULT 'text' COMMENT '消息类型',
    message_sent_time datetime NOT NULL,

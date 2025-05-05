@@ -81,4 +81,5 @@
         SET status = #{status}
         WHERE schedule_id = #{scheduleId}
     </update>
+
 </mapper>

@@ -18,6 +18,7 @@ Page({
     isMenuVisible: false, // 控制下拉菜单的显示状态
     isEmojiListVisible: false, // 控制表情列表的显示状态
     inputAreaBottom: 0, // 默认 bottom 值
+    timer: null, // 用于存储定时器ID
     menuItems: [
       { label: "拍照", action: "takePhoto", icon: "/images/icons/拍摄.png" },
       { label: "照片", action: "choosePhoto", icon: "/images/icons/图片.png" },
@@ -31,37 +32,26 @@ Page({
     const counselorId = options.counselorId;
     const counselorName = options.counselorName;
     const description = options.description;
+    const sessionId = options.sessionId;
     console.log('Counselor ID:', counselorId);
     console.log('Counselor name:', counselorName);
     console.log('问题简述:', description);
     app.setGlobalData('counseling', 1); 
     const userid = app.getGlobalData('userid');
-    this.setData({userid: userid});
-    this.setData({counselorid: counselorId});
+    this.setData({
+      userid: userid,
+      counselorid: counselorId,
+      session_id: sessionId
+    });
 
-    /* 模拟创建咨询会话 */
-    const now = new Date();
-    const data = {
-      user_id: this.data.userid,
-      counselor_id: this.data.counselorid,
-      Session_Start_Time: now,
-      Last_Message_Sent_Time: now,
-      Session_Status: "in_progress"
-    }
-    console.log("创建了会话:", data);
-    const getdata={
-      Session_Id: 1
-    }
-    this.setData({session_id: getdata.Session_Id});
-    console.log("获取会话id", getdata);
-
+    this.startTimer();
+    this.getAllmessages();
     this.addMessage(description);
+
     this.animation = wx.createAnimation({
       duration: 300,
       timingFunction: 'ease-out',
     });
-
-    this.listenForNewMessages(this.data.session_id);
 
     // 动态计算scroll-view的高度，例如减去顶部导航栏和底部输入框的高度
     const that = this;
@@ -77,33 +67,116 @@ Page({
 
   },
 
+  onUnload() {
+    this.clearTimer();
+  },
+
+  startTimer() {
+    const that = this;
+    // 设置定时器，每2秒执行一次getMessages
+    const timer = setInterval(() => {
+      that.getAllmessages();
+    }, 2000);
+    that.setData({ timer: timer });
+  },
+
+  clearTimer() {
+    const { timer } = this.data;
+
+    if (timer) {
+      clearInterval(timer); // 清除定时器
+      console.log('计时器 已清除');
+    };
+
+    this.setData({ timer: null })
+  },
+
+  // 请求发送消息
   addMessage(message) {
     // 模拟插入消息数据
     const time = new Date(); // 获取当前时间
     const data = {
-      message_content: message,
-      session_id: this.data.session_id,
-      sender_role: 'user',
-      sender_id: this.data.userid, 
-      message_type: 'user-message', 
-      message_sent_time: time
+      sessionId: this.data.session_id,
+      userId: this.data.userid.toString(),
+      content: message
     };
     console.log("发送了消息：", data);
 
-    const Message = {
-      content: data.message_content,
-      message_type: data.message_type, 
-      timestamp: data.message_sent_time
-    };
-
-    // 更新messages数组并将新消息添加进去
-    this.setData({
-      messages: this.data.messages.concat([Message])
-    }, () => {
-      // 可选：滚动到底部确保最新消息可见
-      this.scrollToBottom();
+    const that = this;
+    wx.request({
+      url: `http://localhost:8081/api/user/chats/${data.sessionId}/messages`,
+      method: 'POST',
+      data: data,
+      header: {'content-type': 'application/json'},
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("发送消息成功：", res.data);
+          that.getAllmessages();
+        } else {
+          console.log("发送消息失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
     });
   },
+
+  // 请求获取历史消息
+  getAllmessages() {
+    const url = `http://localhost:8081/api/counselor/chats/${this.data.session_id}`;
+    wx.request({
+      url: url,
+      method: 'GET',
+      header: {'content-type': 'application/json'},
+      success: (res) => {
+        if (res.statusCode === 200) {
+          console.log("查询历史消息成功：", res.data);
+          this.setData({
+            messages: res.data.messages
+          });
+          if(res.data.status === "completed"){
+            this.clearTimer();
+            this.onConfirmEndConsultation();
+          }
+        } else {
+          console.log("查询历史消息失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+      }
+    });
+  },
+
+    // 请求结束会话
+    leave() {
+      const url = `http://localhost:8081/api/counselor/chats/${this.data.session_id}/end`;
+      wx.request({
+        url: url,
+        method: 'PUT',
+        header: {'content-type': 'application/json'},
+        success: (res) => {
+          if (res.statusCode === 200) {
+            this.clearTimer();
+            console.log("结束会话成功", res.data);
+          } else {
+            console.log("结束会话失败：",res);
+          }
+        },
+        fail(err) {
+          console.error('请求失败:', err);
+          wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+          });
+        }
+      });
+    },
 
   bindMessageInput: function(e) {
     // 更新messageContent
@@ -112,28 +185,7 @@ Page({
     });
   },
 
-  listenForNewMessages(id) {
-    // 模拟监听消息
-    const data = {
-      message_content: "你好",
-      message_type: 'counselor-message', 
-      message_sent_time: new Date()
-    };
-    console.log("监听到消息：", data)
-
-    const Message = {
-      content: data.message_content,
-      message_type: data.message_type, 
-      timestamp: data.message_sent_time
-    };
-    // 更新messages数组并将新消息添加进去
-    this.setData({
-      messages: this.data.messages.concat([Message])
-    }, () => {
-      // 可选：滚动到底部确保最新消息可见
-      this.scrollToBottom();
-    });
-  },
+  
 
   onUnload: function() {
   },
@@ -290,29 +342,23 @@ Page({
      // 获取当前评分和评价内容
     const rating = this.data.currentRating; // 当前评分
     const evaluationContent = this.data.evaluationContent || "无"; // 评价内容，默认值为 "无"
-    const sessionId = this.data.session_id; // 会话 ID
+    const session_id = Number(this.data.session_id); // 会话 ID
 
     const ratingdata = {
       evaluation_content: evaluationContent,
       evaluation_time: new Date().toISOString().split('T')[0], // 当前日期，格式为 YYYY-MM-DD
       rating: rating,
-      session_id: sessionId
+      session_id: session_id
     };
     console.log("提交的评价数据：", ratingdata);
     this.rating(ratingdata);
 
-    /* 模拟结束咨询会话 */
-    const now = new Date();
-    const leavedata = {
-      session_id: this.data.session_id,
-      Session_End_Time: now
-    }
-    console.log("结束了会话:", leavedata);
-    /*this.hideRatingModal();
+    this.leave();
+    this.hideRatingModal();
     app.setGlobalData('counseling', 0); 
     wx.reLaunch({ 
       url: '/pages/index/index', 
-    })*/
+    })
   },
   rating(data) {
     wx.request({

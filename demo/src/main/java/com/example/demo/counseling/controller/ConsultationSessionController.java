@@ -151,9 +151,9 @@ public class ConsultationSessionController {
         // 创建消息
         SessionMessage message = new SessionMessage();
         message.setSessionId(sessionId);
-        message.setSenderRole(SenderRole.COUNSELOR);
+        message.setSenderRole(SenderRole.counselor);
         message.setSenderId(counselorId);
-        message.setMessageType(MessageType.TEXT);
+        message.setMessageType(MessageType.text);
         message.setMessageContent(content);
         message.setMessageSentTime(LocalDateTime.now());
         
@@ -219,9 +219,9 @@ public class ConsultationSessionController {
         if (reason != null && !reason.trim().isEmpty()) {
             SessionMessage message = new SessionMessage();
             message.setSessionId(sessionId);
-            message.setSenderRole(SenderRole.SYSTEM);
+            message.setSenderRole(SenderRole.system);
             message.setSenderId(0L); // 系统消息发送者ID为0
-            message.setMessageType(MessageType.SYSTEM);
+            message.setMessageType(MessageType.text);
             message.setMessageContent("会话已结束，原因：" + reason);
             message.setMessageSentTime(LocalDateTime.now());
             
