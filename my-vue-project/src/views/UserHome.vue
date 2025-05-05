@@ -110,50 +110,17 @@ export default {
     const username = ref(userData?.username || '用户')
     const userId = computed(() => userData?.id || null)  // 添加用户ID
 
-    // 检查并获取JWT令牌
-    const checkAndGetJwtToken = async () => {
-      // 如果localStorage中已经有JWT令牌，则不需要重新获取
-      if (localStorage.getItem('jwt_token')) {
-        console.log('JWT令牌已存在，无需重新获取')
-        return
-      }
-
-      try {
-        // 获取用户ID和角色
-        if (!userId.value) {
-          console.error('用户ID不存在，无法获取JWT令牌')
-          return
-        }
-
-        // 调用后端API获取JWT令牌
-        const response = await axios.post('/api/auth/token', null, {
-          params: {
-            username: userId.value,
-            role: 'user'
-          }
-        })
-
-        if (response.data) {
-          // 将JWT令牌存储在localStorage中
-          localStorage.setItem('jwt_token', response.data)
-          console.log('JWT令牌已获取并存储')
-        }
-      } catch (error) {
-        console.error('获取JWT令牌失败:', error)
-      }
-    }
+    // 删除 checkAndGetJwtToken 函数
 
     const logout = () => {
-      // 在退出登录时清除JWT令牌
-      localStorage.removeItem('jwt_token')
+      // 删除清除JWT令牌的代码
       store.dispatch('logout')
       router.push('/login')
     }
 
-    // 在组件挂载时检查并获取JWT令牌
+    // 在组件挂载时只加载预约信息，删除对 checkAndGetJwtToken 的调用
     onMounted(async () => {
       await loadAppointments()
-      await checkAndGetJwtToken()
     })
 
     const goTo = (path) => {
@@ -176,7 +143,6 @@ export default {
     const pendingAppointments = ref([])
     const upcomingAppointments = ref([])
 
-    // 加载预约信息
     // 加载预约信息
     const loadAppointments = async () => {
       if (!userId.value) {

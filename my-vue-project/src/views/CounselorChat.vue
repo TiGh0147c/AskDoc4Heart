@@ -19,180 +19,142 @@
         <button class="logout-btn" @click="logout">退出登录</button>
       </div>
 
-      <!-- 如果没有选择会话，显示会话列表 -->
-      <div v-if="!currentChat" class="card no-chat">
-        <h1>咨询窗口</h1>
-        <p>您有 {{ activeChats.length }} 个进行中的咨询会话</p>
-        
-        <div v-if="activeChats.length === 0" class="no-chat-message">
-          <div class="empty-icon">
-            <img src="/basic_avatar/basic_male.jpg" alt="无会话">
-          </div>
-          <p>您目前没有进行中的咨询会话</p>
-          <p class="sub-message">请等待用户发起咨询或查看排班表</p>
-          <button class="primary-btn" @click="goTo('schedule')">查看排班表</button>
-        </div>
-        
-        <!-- 活跃会话列表 -->
-        <div v-else class="active-chats">
-          <div 
-            v-for="chat in activeChats" 
-            :key="chat.id" 
-            class="chat-preview"
-            @click="selectChat(chat)"
-          >
-            <div class="chat-avatar">
-              <img src="/basic_avatar/basic_male.jpg" alt="用户头像">
+      <!-- 并排显示会话列表和会话窗口 -->
+      <div class="chat-layout">
+        <!-- 会话列表 -->
+        <div class="chat-list">
+          <h1>咨询窗口</h1>
+          <p>您有 {{ activeChats.length }} 个进行中的咨询会话</p>
+          
+          <div v-if="activeChats.length === 0" class="no-chat-message">
+            <div class="empty-icon">
+              <img src="/basic_avatar/basic_male.jpg" alt="无会话">
             </div>
-            <div class="chat-brief">
-              <h3>{{ chat.userName }}</h3>
-              <p class="chat-type">{{ chat.type }}</p>
-              <p class="last-message">{{ chat.lastMessage }}</p>
-            </div>
-            <div class="chat-time">
-              <p>{{ chat.lastMessageTime }}</p>
-              <span class="status-indicator" :class="chat.status"></span>
-            </div>
+            <p>您目前没有进行中的咨询会话</p>
+            <p class="sub-message">请等待用户发起咨询或查看排班表</p>
+            <button class="primary-btn" @click="goTo('schedule')">查看排班表</button>
           </div>
-        </div>
-      </div>
-
-      <!-- 如果选择了会话，显示聊天界面 -->
-      <div v-else class="chat-container">
-        <!-- 聊天头部信息 -->
-        <div class="chat-header">
-          <button class="back-btn" @click="leaveChat">
-            &larr; 返回
-          </button>
-          <div class="user-info">
-            <h2>{{ currentChat.userName }}</h2>
-            <p>{{ currentChat.type }}</p>
-          </div>
-          <div class="chat-actions">
-            <button class="action-btn notes-btn" title="用户笔记" @click="showNotes = true">
-              笔记
-            </button>
-            <button 
-              class="action-btn"
-              :class="{'pause-btn': !isPaused, 'resume-btn': isPaused}" 
-              title="暂停/继续咨询" 
-              @click="togglePause"
+          
+          <!-- 活跃会话列表 -->
+          <div v-else class="active-chats">
+            <div 
+              v-for="chat in activeChats" 
+              :key="chat.id" 
+              class="chat-preview"
+              @click="selectChat(chat)"
             >
-              {{ isPaused ? '继续' : '暂停' }}
-            </button>
-            <button class="action-btn end-btn" title="结束咨询" @click="endConsultation">
-              结束
-            </button>
-          </div>
-        </div>
-        
-        <!-- 聊天消息区域 -->
-        <div class="messages-container" ref="messagesContainer">
-          <div v-if="messages.length === 0" class="chat-start-info">
-            <p>咨询已开始，等待用户发送消息</p>
-          </div>
-          
-          <div 
-            v-for="(message, index) in messages" 
-            :key="index"
-            :class="['message', message.sender === 'counselor' ? 'counselor-message' : 'user-message']"
-          >
-            <div class="message-avatar">
-              <img 
-                :src="message.sender === 'counselor' ? counselorAvatar : '/basic_avatar/user_default.jpg'" 
-                :alt="message.sender === 'counselor' ? '我' : currentChat.userName"
-              >
-            </div>
-            <div class="message-content">
-              <div class="message-text" v-html="formatMessage(message.text)"></div>
-              <div class="message-time">{{ message.time }}</div>
-            </div>
-          </div>
-          
-          <div v-if="isUserTyping" class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-        
-        <!-- 聊天输入区域 -->
-        <div class="chat-input-area">
-          <div v-if="isPaused" class="pause-notice">
-            <p>咨询已暂停，用户无法看到您的新消息</p>
-            <button class="resume-btn" @click="togglePause">继续咨询</button>
-          </div>
-          <textarea 
-            v-else
-            v-model="newMessage" 
-            @keydown.enter.prevent="sendMessage"
-            placeholder="输入您的回复..." 
-            rows="3"
-          ></textarea>
-          <div class="input-actions" v-if="!isPaused">
-            <div class="quick-responses">
-              <button 
-                v-for="(response, index) in quickResponses" 
-                :key="index" 
-                class="quick-response-btn"
-                @click="insertQuickResponse(response)"
-              >
-                {{ response.label }}
-              </button>
-            </div>
-            <div class="send-actions">
-              <button class="upload-btn" @click="triggerFileUpload" title="上传图片">
-                <span>📎</span>
-              </button>
-              <input 
-                type="file" 
-                ref="fileInput" 
-                style="display: none" 
-                accept="image/*" 
-                @change="handleFileUpload"
-              >
-              <button 
-                class="send-btn" 
-                :disabled="!newMessage.trim()" 
-                @click="sendMessage"
-              >
-                发送
-              </button>
+              <div class="chat-avatar">
+                <img src="/basic_avatar/basic_male.jpg" alt="用户头像">
+              </div>
+              <div class="chat-brief">
+                <h3>{{ chat.userName }}</h3>
+                <p class="chat-type">{{ chat.type }}</p>
+                <p class="last-message">{{ chat.lastMessage }}</p>
+              </div>
+              <div class="chat-time">
+                <p>{{ chat.lastMessageTime }}</p>
+                <span class="status-indicator" :class="chat.status"></span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 用户笔记弹窗 -->
-    <div v-if="showNotes" class="modal-overlay" @click="showNotes = false">
-      <div class="modal-content" @click.stop>
-        <h2>用户笔记</h2>
-        <p>{{ currentChat?.userName }} - {{ currentChat?.type }}</p>
-        
-        <div class="notes-content">
-          <textarea 
-            v-model="userNotes" 
-            placeholder="在这里记录用户的咨询笔记..." 
-            rows="8"
-          ></textarea>
-        </div>
-        
-        <div class="previous-notes" v-if="previousNotes.length > 0">
-          <h3>历史笔记</h3>
-          <div 
-            v-for="(note, index) in previousNotes" 
-            :key="index"
-            class="note-item"
-          >
-            <div class="note-date">{{ note.date }}</div>
-            <div class="note-text">{{ note.text }}</div>
+        <!-- 会话窗口 -->
+        <div class="chat-container" :class="{'empty': !currentChat}">
+          <!-- 当没有选择会话时，显示一个固定大小的空白方框 -->
+          <div v-if="!currentChat" class="placeholder-box">
+            <p>请选择一个会话开始聊天</p>
           </div>
-        </div>
-        
-        <div class="notes-actions">
-          <button @click="saveNotes" class="save-notes-btn">保存笔记</button>
-          <button @click="showNotes = false" class="close-btn">关闭</button>
+
+          <!-- 如果选择了会话，显示聊天界面 -->
+          <template v-else>
+            <!-- 聊天头部信息 -->
+            <div class="chat-header">
+              <button class="back-btn" @click="leaveChat">
+                &larr; 返回
+              </button>
+              <div class="user-info">
+                <h2>{{ currentChat.userName }}</h2>
+                <p>{{ currentChat.type }}</p>
+              </div>
+              <div class="chat-actions">
+                <button class="action-btn end-btn" title="结束咨询" @click="endConsultation">
+                  结束
+                </button>
+              </div>
+            </div>
+          
+            <!-- 聊天消息区域 -->
+            <div class="messages-container" ref="messagesContainer">
+              <div v-if="messages.length === 0" class="chat-start-info">
+                <p>咨询已开始，等待用户发送消息</p>
+              </div>
+              
+              <div 
+                v-for="(message, index) in messages" 
+                :key="index"
+                :class="['message', message.sender === 'counselor' ? 'counselor-message' : 'user-message']"
+              >
+                <div class="message-avatar">
+                  <img 
+                    :src="message.sender === 'counselor' ? counselorAvatar : '/basic_avatar/user_default.jpg'" 
+                    :alt="message.sender === 'counselor' ? '我' : currentChat.userName"
+                  >
+                </div>
+                <div class="message-content">
+                  <div class="message-text" v-html="formatMessage(message.text)"></div>
+                  <div class="message-time">{{ message.time }}</div>
+                </div>
+              </div>
+              
+              <div v-if="isUserTyping" class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            
+            <!-- 聊天输入区域 -->
+            <div class="chat-input-area">
+              <textarea 
+                v-model="newMessage" 
+                @keydown.enter.prevent="sendMessage"
+                placeholder="输入您的回复..." 
+                rows="3"
+              ></textarea>
+              <div class="input-actions">
+                <div class="quick-responses">
+                  <button 
+                    v-for="(response, index) in quickResponses" 
+                    :key="index" 
+                    class="quick-response-btn"
+                    @click="insertQuickResponse(response)"
+                  >
+                    {{ response.label }}
+                  </button>
+                </div>
+                <div class="send-actions">
+                  <button class="upload-btn" @click="triggerFileUpload" title="上传图片">
+                    <span>📎</span>
+                  </button>
+                  <input 
+                    type="file" 
+                    ref="fileInput" 
+                    style="display: none" 
+                    accept="image/*" 
+                    @change="handleFileUpload"
+                  >
+                  <button 
+                    class="send-btn" 
+                    :disabled="!newMessage.trim()" 
+                    @click="sendMessage"
+                  >
+                    发送
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -219,7 +181,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useStore } from 'vuex'
@@ -236,16 +197,10 @@ export default {
 
     const username = computed(() => store.getters.username)
     const counselorAvatar = 'data:image/svg+xml;base64,'
-    const showNotes = ref(false)
-    const userNotes = ref('')
-    const previousNotes = ref([])
     const showEndConfirm = ref(false)
     const endReason = ref('')
-    const isPaused = ref(false)
     const isUserTyping = ref(false)
     
-    // WebSocket连接
-    const socket = ref(null)
     const counselorId = computed(() => localStorage.getItem('counselor_id') || 
                        JSON.parse(localStorage.getItem('user'))?.counselorId || 
                        1) // 默认值
@@ -269,7 +224,13 @@ export default {
     // 当前聊天的消息列表
     const messages = ref([])
     
-
+    // 添加轮询相关变量
+    const pollingInterval = ref(null)
+    const lastMessageId = ref(0)
+    const lastActivityTime = ref(Date.now())
+    const isActive = ref(true)
+    const basePollingRate = 3000 // 活跃状态下3秒轮询一次
+    const inactivePollingRate = 10000 // 不活跃状态下10秒轮询一次
     
     // 监听消息变化，自动滚动到底部
     watch(messages, () => {
@@ -297,50 +258,113 @@ export default {
     // 在组件挂载时加载数据
     onMounted(() => {
       loadActiveChats()
-      checkAndGetJwtToken()  // 添加这一行
+      
+      // 添加用户活动监听器
+      window.addEventListener('mousemove', updateActivityStatus)
+      window.addEventListener('keydown', updateActivityStatus)
+      window.addEventListener('click', updateActivityStatus)
     })
     
-    // 在组件卸载时关闭WebSocket连接
+    // 在组件卸载时清理
     onUnmounted(() => {
-      if (socket.value && socket.value.readyState !== WebSocket.CLOSED) {
-        socket.value.close()
+      // 清除轮询定时器
+      if (pollingInterval.value) {
+        clearInterval(pollingInterval.value)
       }
+      
+      // 移除事件监听器
+      window.removeEventListener('mousemove', updateActivityStatus)
+      window.removeEventListener('keydown', updateActivityStatus)
+      window.removeEventListener('click', updateActivityStatus)
     })
     
-    // 检查并获取JWT令牌
-    const checkAndGetJwtToken = async () => {
-      // 如果localStorage中已经有JWT令牌，则不需要重新获取
-      if (localStorage.getItem('jwt_token')) {
-        console.log('JWT令牌已存在，无需重新获取')
-        return
-      }
-    
-      try {
-        // 获取咨询师ID和角色
-        if (!counselorId.value) {
-          console.error('咨询师ID不存在，无法获取JWT令牌')
-          return
+    // 更新用户活动状态
+    const updateActivityStatus = () => {
+      lastActivityTime.value = Date.now()
+      
+      if (!isActive.value) {
+        isActive.value = true
+        // 如果当前有会话且正在轮询，调整轮询频率
+        if (currentChat.value && pollingInterval.value) {
+          clearInterval(pollingInterval.value)
+          startMessagePolling()
         }
-    
-        // 调用后端API获取JWT令牌
-        const response = await axios.post('/api/auth/token', null, {
-          params: {
-            username: counselorId.value,
-            role: 'counselor'
-          }
-        })
-    
-        if (response.data) {
-          // 将JWT令牌存储在localStorage中
-          localStorage.setItem('jwt_token', response.data)
-          console.log('JWT令牌已获取并存储')
-        }
-      } catch (error) {
-        console.error('获取JWT令牌失败:', error)
       }
     }
     
-
+    // 检查用户是否不活跃
+    const checkInactivity = () => {
+      const now = Date.now()
+      // 如果超过2分钟没有活动，标记为不活跃
+      if (now - lastActivityTime.value > 120000) {
+        isActive.value = false
+        // 如果当前有会话且正在轮询，调整轮询频率
+        if (currentChat.value && pollingInterval.value) {
+          clearInterval(pollingInterval.value)
+          startMessagePolling()
+        }
+      }
+    }
+    
+    // 开始轮询获取新消息
+    const startMessagePolling = () => {
+      // 先清除可能存在的轮询
+      if (pollingInterval.value) {
+        clearInterval(pollingInterval.value)
+      }
+      
+      // 根据用户活跃状态设置轮询频率
+      const pollingRate = isActive.value ? basePollingRate : inactivePollingRate
+      
+      // 设置定时器，定期获取新消息
+      pollingInterval.value = setInterval(() => {
+        pollNewMessages()
+        checkInactivity() // 每次轮询时检查用户活跃状态
+      }, pollingRate)
+      
+      // 立即执行一次轮询
+      pollNewMessages()
+    }
+    
+    // 轮询获取新消息
+    const pollNewMessages = async () => {
+      if (!currentChat.value) return
+      
+      try {
+        // 使用GET请求获取所有消息，然后在前端过滤
+        const response = await axios.get(
+          `http://localhost:8080/api/counselor/chats/${currentChat.value.id}`
+        )
+        
+        if (response.data && response.data.messages) {
+          // 过滤出新消息（ID大于lastMessageId的消息）
+          const newMessages = response.data.messages.filter(msg => {
+            // 如果消息没有ID，可以使用其他方式判断是否为新消息
+            // 这里假设后端返回的消息有id字段
+            return !messages.value.some(existingMsg => 
+              existingMsg.text === msg.text && 
+              existingMsg.time === msg.time && 
+              existingMsg.sender === msg.sender
+            )
+          })
+          
+          // 添加新消息到消息列表
+          if (newMessages.length > 0) {
+            messages.value = [...messages.value, ...newMessages]
+            
+            // 更新最后一条消息
+            const chatIndex = activeChats.value.findIndex(c => c.id === currentChat.value.id)
+            if (chatIndex !== -1 && newMessages.length > 0) {
+              const lastMsg = newMessages[newMessages.length - 1]
+              activeChats.value[chatIndex].lastMessage = lastMsg.text
+              activeChats.value[chatIndex].lastMessageTime = lastMsg.time
+            }
+          }
+        }
+      } catch (error) {
+        console.error('轮询新消息失败:', error)
+      }
+    }
     
     // 选择一个会话
     const selectChat = async (chat) => {
@@ -359,66 +383,36 @@ export default {
           // 加载消息历史
           messages.value = response.data.messages || []
           
-          // 初始化WebSocket连接
-          initWebSocket(chat.id)
+          // 设置最后消息ID
+          if (messages.value.length > 0) {
+            const lastMsg = messages.value[messages.value.length - 1]
+            lastMessageId.value = lastMsg.id || 0
+          }
           
-          // 根据会话状态设置暂停状态
-          isPaused.value = response.data.status === 'PAUSED'
+          // 开始轮询获取新消息
+          startMessagePolling()
         }
       } catch (error) {
         console.error('加载会话详情失败:', error)
-        // 修改回退逻辑，不再使用模拟数据
         alert('加载会话详情失败，请重试')
         return // 加载失败时直接返回，不选择聊天
       }
       
       // 清除未读标记
       const chatIndex = activeChats.value.findIndex(c => c.id === chat.id)
-      
-      /* 
-      后端需要实现：
-      1. GET /api/counselor/chats/{chatId}
-      2. 返回与该用户的聊天详情和历史消息
-      3. 将未读消息标记为已读
-      */
     }
     
     // 离开当前会话
     const leaveChat = () => {
-      // 关闭WebSocket连接
-      if (socket.value && socket.value.readyState !== WebSocket.CLOSED) {
-        socket.value.close()
+      // 清除轮询定时器
+      if (pollingInterval.value) {
+        clearInterval(pollingInterval.value)
+        pollingInterval.value = null
       }
       
       currentChat.value = null
       messages.value = []
-      showNotes.value = false
-      userNotes.value = ''
-      previousNotes.value = []
-      isPaused.value = false
-    }
-    
-    // 暂停/继续会话
-    const togglePause = async () => {
-      const newStatus = isPaused.value ? 'IN_PROGRESS' : 'PAUSED'
-      
-      try {
-        const response = await axios.put(
-          `http://localhost:8080/api/counselor/chats/${currentChat.value.id}/status`,
-          null,
-          {
-            params: {
-              status: newStatus
-            }
-          }
-        )
-        
-        // 更新状态
-        isPaused.value = !isPaused.value
-      } catch (error) {
-        console.error('更新会话状态失败:', error)
-        alert('更新会话状态失败，请重试')
-      }
+      lastMessageId.value = 0
     }
     
     // 结束咨询
@@ -458,39 +452,6 @@ export default {
       }
     }
     
-    // 保存用户笔记
-    const saveNotes = async () => {
-      if (!userNotes.value.trim()) return
-      
-      try {
-        const response = await axios.post(
-          `http://localhost:8080/api/counselor/users/${currentChat.value.userId}/notes`,
-          null,
-          {
-            params: {
-              counselorId: counselorId.value,
-              noteContent: userNotes.value.trim()
-            }
-          }
-        )
-        
-        const now = new Date()
-        const dateStr = now.toISOString().split('T')[0]
-        
-        // 添加到历史笔记中
-        previousNotes.value.unshift({
-          date: dateStr,
-          text: userNotes.value.trim()
-        })
-        
-        alert('笔记已保存')
-        userNotes.value = ''
-      } catch (error) {
-        console.error('保存笔记失败:', error)
-        alert('保存笔记失败，请重试')
-      }
-    }
-    
     // 快速回复
     const insertQuickResponse = (response) => {
       newMessage.value = response.text
@@ -498,129 +459,51 @@ export default {
     
     // 发送消息
     const sendMessage = async () => {
-      if (!newMessage.value.trim() || isPaused.value) return
+      if (!newMessage.value.trim()) return
       
-      const now = new Date()
-      const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`
-      
-      // 先在UI上显示消息
-      messages.value.push({
+      // 创建消息对象
+      const message = {
         sender: 'counselor',
         text: newMessage.value,
-        time: timeStr
-      })
+        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      }
+      
+      // 添加到本地消息列表
+      messages.value.push(message)
       
       try {
-        if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-          // 通过WebSocket发送消息 - 修改消息格式以匹配后端期望
-          const message = {
-            type: 'TEXT', // 修改为后端枚举值 MessageType.TEXT
-            content: newMessage.value,
-            senderRole: 'COUNSELOR', // 保持大写字符串格式，后端会映射到枚举
-            senderId: counselorId.value,
-            timestamp: new Date().toISOString()
+        // 通过HTTP API发送消息 - 修改为使用URL参数
+        const response = await axios.post(
+          `http://localhost:8080/api/counselor/chats/${currentChat.value.id}/messages`,
+          null,  // 请求体为空
+          {
+            params: {  // 使用params传递URL参数
+              counselorId: counselorId.value,
+              content: newMessage.value
+            }
           }
-          
-          socket.value.send(JSON.stringify(message))
+        )
+        
+        if (response.data && response.data.messageId) {
+          // 更新最后消息ID
+          lastMessageId.value = response.data.messageId
           
           // 更新最后一条消息
           const chatIndex = activeChats.value.findIndex(c => c.id === currentChat.value.id)
           if (chatIndex !== -1) {
             activeChats.value[chatIndex].lastMessage = newMessage.value
-            activeChats.value[chatIndex].lastMessageTime = timeStr
-          }
-          
-          // 清空输入框
-          newMessage.value = ''
-        } else {
-          // 如果WebSocket连接未建立，尝试重新获取令牌并重新连接
-          await checkAndGetJwtToken()
-          if (currentChat.value && currentChat.value.id) {
-            initWebSocket(currentChat.value.id)
-            // 延迟发送消息，等待连接建立
-            setTimeout(() => {
-              if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-                sendMessage()
-              } else {
-                throw new Error('WebSocket连接未建立')
-              }
-            }, 1000)
-          } else {
-            throw new Error('WebSocket连接未建立')
+            activeChats.value[chatIndex].lastMessageTime = message.time
           }
         }
+        
+        // 清空输入框
+        newMessage.value = ''
+        
+        // 更新活动时间
+        updateActivityStatus()
       } catch (error) {
         console.error('发送消息失败:', error)
         alert('发送消息失败，请重试')
-      }
-    }
-    
-    // 初始化WebSocket连接
-    const initWebSocket = async (sessionId) => {
-      // 确保有JWT令牌
-      await checkAndGetJwtToken()
-      
-      const token = localStorage.getItem('jwt_token')
-      if (!token) {
-        console.error('未找到JWT令牌，无法建立WebSocket连接')
-        return
-      }
-      
-      try {
-        // 关闭之前的连接
-        if (socket.value && socket.value.readyState !== WebSocket.CLOSED) {
-          socket.value.close()
-        }
-        
-        // 创建新连接
-        socket.value = new WebSocket(`ws://localhost:8080/ws/consultation/${sessionId}?token=${token}`)
-        
-        // 连接建立时的处理
-        socket.value.onopen = () => {
-          console.log('WebSocket连接已建立')
-        }
-        
-        // 接收消息的处理
-        socket.value.onmessage = (event) => {
-          console.log('收到消息:', event.data)
-          const message = JSON.parse(event.data)
-          
-          // 处理接收到的消息
-          if (message.type === 'MESSAGE') {
-            // 添加新消息到消息列表
-            const formattedTime = formatTimeFromDateTime(message.sentTime || message.timestamp)
-            
-            messages.value.push({
-              sender: message.senderRole.toLowerCase(),
-              text: message.content,
-              time: formattedTime
-            })
-            
-            // 更新最后一条消息
-            if (currentChat.value) {
-              const chatIndex = activeChats.value.findIndex(c => c.id === currentChat.value.id)
-              if (chatIndex !== -1) {
-                activeChats.value[chatIndex].lastMessage = message.content
-                activeChats.value[chatIndex].lastMessageTime = formattedTime
-              }
-            }
-          } else if (message.type === 'TYPING') {
-            // 处理用户正在输入状态
-            isUserTyping.value = message.isTyping
-          }
-        }
-        
-        // 连接关闭的处理
-        socket.value.onclose = () => {
-          console.log('WebSocket连接已关闭')
-        }
-        
-        // 连接错误的处理
-        socket.value.onerror = (error) => {
-          console.error('WebSocket连接错误:', error)
-        }
-      } catch (error) {
-        console.error('建立WebSocket连接失败:', error)
       }
     }
     
@@ -642,13 +525,6 @@ export default {
       if (!file) return
       alert('图片上传功能需要后端支持，这里仅做界面展示')
       event.target.value = ''
-      
-      /* 
-      后端需要实现：
-      1. POST /api/counselor/chats/{chatId}/messages/attachment
-      2. 上传图片附件
-      3. 文件处理和存储
-      */
     }
     
     // 消息格式化，支持换行和链接
@@ -708,25 +584,6 @@ export default {
           console.error('Invalid path')
       }
     }
-    
-    // 加载笔记
-    const showUserNotes = async (chatId) => {
-      try {
-        // 从后端加载笔记
-        const response = await axios.get(`http://localhost:8080/api/counselor/users/${currentChat.value.userId}/notes?counselorId=${counselorId.value}`)
-        
-        if (response.data) {
-          previousNotes.value = response.data || []
-          userNotes.value = '' // 清空当前笔记输入框
-        }
-      } catch (error) {
-        console.error('加载笔记失败:', error)
-        previousNotes.value = []
-        userNotes.value = ''
-      }
-      
-      showNotes.value = true
-    }
 
     return {
       username,
@@ -738,19 +595,13 @@ export default {
       isUserTyping,
       messagesContainer,
       fileInput,
-      showNotes,
-      userNotes,
-      previousNotes,
       showEndConfirm,
       endReason,
-      isPaused,
       quickResponses,
       selectChat,
       leaveChat,
-      togglePause,
       endConsultation,
       confirmEndConsultation,
-      saveNotes,
       insertQuickResponse,
       sendMessage,
       triggerFileUpload,
@@ -758,14 +609,13 @@ export default {
       formatMessage,
       logout,
       goTo,
-      initWebSocket,
       loadActiveChats,
-      checkAndGetJwtToken
+      pollNewMessages,
+      startMessagePolling
     }
   }
 }
 </script>
-
 <style scoped>
 .container {
   display: flex;
@@ -1042,33 +892,6 @@ export default {
   font-size: 0.9rem;
 }
 
-.notes-btn {
-  background-color: #17a2b8;
-  color: white;
-}
-
-.notes-btn:hover {
-  background-color: #138496;
-}
-
-.pause-btn {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-.pause-btn:hover {
-  background-color: #e0a800;
-}
-
-.resume-btn {
-  background-color: #28a745;
-  color: white;
-}
-
-.resume-btn:hover {
-  background-color: #218838;
-}
-
 .end-btn {
   background-color: #dc3545;
   color: white;
@@ -1208,15 +1031,6 @@ export default {
   flex-direction: column;
 }
 
-.pause-notice {
-  background-color: #f8d7da;
-  color: #721c24;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
 .chat-input-area textarea {
   width: 100%;
   border: 1px solid #ddd;
@@ -1335,11 +1149,11 @@ export default {
   color: #666;
 }
 
-.notes-content, .end-reason {
+.end-reason {
   margin: 15px 0;
 }
 
-.notes-content textarea, .end-reason textarea {
+.end-reason textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -1348,46 +1162,14 @@ export default {
   resize: vertical;
 }
 
-.previous-notes {
-  margin-top: 20px;
-  max-height: 200px;
-  overflow-y: auto;
-  border-top: 1px solid #eee;
-  padding-top: 10px;
-}
-
-.previous-notes h3 {
-  font-size: 1.1rem;
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-.note-item {
-  background-color: #f8f9fa;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.note-date {
-  font-size: 0.8rem;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-.note-text {
-  font-size: 0.9rem;
-  white-space: pre-wrap;
-}
-
-.notes-actions, .end-actions {
+.end-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 15px;
 }
 
-.save-notes-btn, .confirm-end-btn {
+.confirm-end-btn {
   background-color: #007bff;
   color: white;
   border: none;
@@ -1396,11 +1178,11 @@ export default {
   cursor: pointer;
 }
 
-.save-notes-btn:hover, .confirm-end-btn:hover {
+.confirm-end-btn:hover {
   background-color: #0056b3;
 }
 
-.close-btn, .cancel-btn {
+.cancel-btn {
   background-color: #6c757d;
   color: white;
   border: none;
@@ -1409,7 +1191,58 @@ export default {
   cursor: pointer;
 }
 
-.close-btn:hover, .cancel-btn:hover {
+.cancel-btn:hover {
   background-color: #5a6268;
+}
+
+/* 添加并排布局样式 */
+.chat-layout {
+  display: flex;
+  gap: 20px;
+  margin-top: 60px;
+  height: calc(100vh - 120px);
+}
+
+.chat-list {
+  flex: 0 0 300px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.chat-container {
+  flex: 1;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-container.empty .placeholder-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #f8f9fa;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* 修改原有样式以适应新布局 */
+.card {
+  margin-top: 0;
+}
+
+.no-chat {
+  margin-top: 60px;
+}
+
+.chat-container {
+  margin-top: 0;
+  height: 100%;
 }
 </style>

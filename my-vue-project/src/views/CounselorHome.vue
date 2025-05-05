@@ -92,7 +92,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import axios from 'axios' // 添加axios导入
+import axios from 'axios'
 
 export default {
   name: 'CounselorHome',
@@ -114,18 +114,9 @@ export default {
     const currentTime = ref(new Date())
     const timerInterval = ref(null)
     const lateMinutes = ref(0)
+    const detailedStatus = ref('')
     
-    // 模拟后端数据 - 实际应用中应从后端获取
-    /* 
-      后端数据结构示例:
-      {
-        schedules: [
-          { day: 'Monday', slots: [{start: '09:00', end: '11:00'}, {start: '14:00', end: '16:00'}] },
-          { day: 'Wednesday', slots: [{start: '14:00', end: '17:00'}] },
-          ...
-        ]
-      }
-    */
+    // 排班数据
     const todaySchedule = ref([])
     
     // 获取当前是否应该在工作
@@ -206,305 +197,169 @@ export default {
     
     // 处理打卡
     const handleClockInOut = async () => {
-      try {
-        if (!counselorId.value) {
-          console.error('咨询师ID不存在，无法打卡');
-          return;
-        }
+      if (isWorking.value) {
+        // 打卡下班
+        clockOutTime.value = new Date()
+        isWorking.value = false
+        detailedStatus.value = '今日工作已完成'
         
-        if (!isWorking.value) {
-          // 打卡上班
-          const response = await axios.post('/api/attendance/check-in', null, {
-            params: {
-              userId: counselorId.value,
-              role: 'counselor'
-            }
-          });
-          
-          if (response.status === 200) {
-            clockInTime.value = new Date();
-            isWorking.value = true;
-            console.log('打卡上班成功');
-          }
-        } else {
-          // 打卡下班
-          const response = await axios.post('/api/attendance/check-out', null, {
-            params: {
-              userId: counselorId.value,
-              role: 'counselor'
-            }
-          });
-          
-          if (response.status === 200) {
-            clockOutTime.value = new Date();
-            isWorking.value = false;
-            console.log('打卡下班成功');
-          }
+        // 向后端发送打卡下班请求
+        try {
+          await axios.post(`http://localhost:8080/api/counselor/clock-out`, {
+            counselorId: counselorId.value,
+            clockOutTime: formatTime(clockOutTime.value)
+          })
+        } catch (error) {
+          console.error('打卡下班失败:', error)
         }
-      } catch (error) {
-        console.error('打卡失败:', error);
-        alert(error.response?.data || '打卡失败，请重试');
+      } else {
+        // 打卡上班
+        clockInTime.value = new Date()
+        isWorking.value = true
+        detailedStatus.value = ''
+        
+        // 向后端发送打卡上班请求
+        try {
+          await axios.post(`http://localhost:8080/api/counselor/clock-in`, {
+            counselorId: counselorId.value,
+            clockInTime: formatTime(clockInTime.value)
+          })
+        } catch (error) {
+          console.error('打卡上班失败:', error)
+        }
       }
-    };
-    
-    // 获取今日排班信息
-    const fetchTodaySchedule = async () => {
-      try {
-        if (!counselorId.value) {
-          console.error('咨询师ID不存在，无法获取排班数据');
-          return;
-        }
-        
-        // 调用后端API获取排班数据
-        const response = await axios.get(`/api/schedules/counselor/${counselorId.value}`);
-        console.log('获取到排班数据:', response.data);
-        
-        // 处理后端返回的数据
-        if (response.data && Array.isArray(response.data)) {
-          // 清空当前排班
-          todaySchedule.value = [];
-          
-          // 获取今天的日期
-          const today = new Date();
-          const todayStr = formatDate(today);
-          
-          // 遍历后端返回的排班数据，找出今天的排班
-          response.data.forEach(schedule => {
-            // 将后端返回的日期字符串转换为Date对象
-            const scheduleDate = new Date(schedule.date);
-            const scheduleDateStr = formatDate(scheduleDate);
-            
-            // 如果是今天的排班
-            if (scheduleDateStr === todayStr) {
-              // 根据timeSlot添加对应的时间段
-              if (schedule.timeSlot === 'morning' && schedule.status === 'working') {
-                todaySchedule.value.push({ start: '09:00', end: '11:00' });
-              } else if (schedule.timeSlot === 'afternoon' && schedule.status === 'working') {
-                todaySchedule.value.push({ start: '14:00', end: '17:00' });
-              }
-            }
-          });
-        }
-      } catch (error) {
-        console.error('获取排班数据失败:', error);
-      }
-    };
-    
-    // 格式化日期为 YYYY-MM-DD
-    const formatDate = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
     }
     
-    // 启动定时器，每分钟更新一次
-    const startTimer = () => {
-      timerInterval.value = setInterval(() => {
-        currentTime.value = new Date()
-      }, 60000) // 每分钟更新一次
+    // 加载排班数据
+    const loadSchedule = async () => {
+      try {
+        // 获取当前日期
+        const today = new Date()
+        const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()]
+        
+        // 从后端获取排班数据
+        const response = await axios.get(`http://localhost:8080/api/schedules/counselor/${counselorId.value}`)
+        
+        if (response.data && Array.isArray(response.data.schedules)) {
+          // 找到今天的排班
+          const todayScheduleData = response.data.schedules.find(schedule => schedule.day === dayOfWeek)
+          
+          if (todayScheduleData && Array.isArray(todayScheduleData.slots)) {
+            todaySchedule.value = todayScheduleData.slots
+          } else {
+            todaySchedule.value = []
+          }
+        }
+      } catch (error) {
+        console.error('加载排班数据失败:', error)
+        todaySchedule.value = []
+      }
     }
     
-    // 获取当前打卡状态
-    const fetchAttendanceStatus = async () => {
+    // 加载打卡状态
+    /*const loadClockStatus = async () => {
       try {
-        if (!counselorId.value) {
-          console.error('咨询师ID不存在，无法获取打卡状态');
-          return;
-        }
+        const response = await axios.get(`http://localhost:8080/api/counselor/clock-status/${counselorId.value}`)
         
-        const response = await axios.get('/api/attendance/status', {
-          params: {
-            userId: counselorId.value,
-            role: 'counselor'
-          }
-        });
-        
-        if (response.status === 200 && response.data) {
-          isWorking.value = response.data.isWorking;
-          if (response.data.checkInTime) {
-            clockInTime.value = new Date(response.data.checkInTime);
-          }
-          if (response.data.checkOutTime) {
-            clockOutTime.value = new Date(response.data.checkOutTime);
-          }
-        }
-        
-        // 获取今天的详细打卡状态
-        await fetchDetailedStatus();
-      } catch (error) {
-        console.error('获取打卡状态失败:', error);
-      }
-    };
-    
-    // 获取详细打卡状态
-    const detailedStatus = ref('');
-    const fetchDetailedStatus = async () => {
-      try {
-        if (!counselorId.value) return;
-        
-        // 获取今天的日期
-        const today = new Date();
-        const formattedDate = formatDate(today);
-        
-        // 获取当前时间段
-        const currentHour = today.getHours();
-        const timeSlot = currentHour < 12 ? 'morning' : 'afternoon';
-        
-        // 调用新接口获取详细状态
-        const response = await axios.get('/api/attendance/now-status', {
-          params: {
-            userId: counselorId.value,
-            role: 'counselor',
-            date: formattedDate,
-            timeSlot: timeSlot
-          }
-        });
-        
-        if (response.status === 200) {
-          detailedStatus.value = response.data;
-          console.log('详细打卡状态:', detailedStatus.value);
-          
-          // 根据详细状态更新UI状态
-          updateUIBasedOnStatus(detailedStatus.value);
-        }
-      } catch (error) {
-        console.error('获取详细打卡状态失败:', error);
-      }
-    };
-    
-    // 根据详细状态更新UI
-    const updateUIBasedOnStatus = (status) => {
-      if (status.includes('已打卡上班') && !status.includes('已打卡下班')) {
-        isWorking.value = true;
-      } else if (status.includes('已完成打卡')) {
-        isWorking.value = false;
-        // 如果已经完成打卡，但clockOutTime为空，设置一个默认值
-        if (!clockOutTime.value) {
-          clockOutTime.value = new Date();
-        }
-      } else if (status.includes('未打卡上班')) {
-        isWorking.value = false;
-      } else if (status.includes('缺勤')) {
-        isWorking.value = false;
-      }
-      
-      // 更新迟到状态
-      if (status.includes('迟到')) {
-        const match = status.match(/迟到(\d+)分钟/);
-        if (match && match[1]) {
-          lateMinutes.value = parseInt(match[1]);
-        }
-      }
-    };
-    
-    // 检查并获取JWT令牌
-    const checkAndGetJwtToken = async () => {
-      // 如果localStorage中已经有JWT令牌，则不需要重新获取
-      if (localStorage.getItem('jwt_token')) {
-        console.log('JWT令牌已存在，无需重新获取')
-        return
-      }
-
-      try {
-        // 获取咨询师ID和角色
-        if (!counselorId.value) {
-          console.error('咨询师ID不存在，无法获取JWT令牌')
-          return
-        }
-
-        // 调用后端API获取JWT令牌
-        const response = await axios.post('/api/auth/token', null, {
-          params: {
-            username: counselorId.value,
-            role: 'counselor'
-          }
-        })
-
         if (response.data) {
-          // 将JWT令牌存储在localStorage中
-          localStorage.setItem('jwt_token', response.data)
-          console.log('JWT令牌已获取并存储')
+          if (response.data.clockInTime) {
+            clockInTime.value = new Date(response.data.clockInTime)
+            isWorking.value = !response.data.clockOutTime
+          }
+          
+          if (response.data.clockOutTime) {
+            clockOutTime.value = new Date(response.data.clockOutTime)
+          }
         }
       } catch (error) {
-        console.error('获取JWT令牌失败:', error)
+        console.error('加载打卡状态失败:', error)
       }
+    }*/
+    
+    // 更新当前时间
+    const updateCurrentTime = () => {
+      currentTime.value = new Date()
     }
     
-    onMounted(() => {
-      fetchTodaySchedule();
-      fetchAttendanceStatus();
-      startTimer();
-      checkAndGetJwtToken(); // 添加获取JWT令牌的调用
-    });
-    
-    onUnmounted(() => {
-      if (timerInterval.value) {
-        clearInterval(timerInterval.value)
-      }
-    })
-
+    // 登出
     const logout = () => {
-      // 在退出登录时清除JWT令牌
-      localStorage.removeItem('jwt_token')
       store.dispatch('logout')
       router.push('/login')
     }
-
+    
+    // 页面导航
     const goTo = (path) => {
-      switch (path) {
-        case 'counselorSettings':
-          router.push('/counselor/settings')
-          break
-        case 'requests':
-          router.push('/counselor/requests')
-          break
-        case 'chat':
-          router.push('/counselor/chat')
-          break
-        case 'schedule':
-          router.push('/counselor/schedule')
-          break
-        case 'history':
-          router.push('/counselor/history')
-          break
-        case 'evaluation':
-          router.push('/counselor/evaluation')
-          break
-        case 'help':
-          router.push('/counselor/help')
-          break
-        default:
-          console.error('Invalid path')
+      const paths = {
+        counselorSettings: '/counselor/settings',
+        requests: '/counselor/requests',
+        chat: '/counselor/chat',
+        schedule: '/counselor/schedule',
+        history: '/counselor/history',
+        evaluation: '/counselor/evaluation',
+        help: '/counselor/help'
+      }
+      
+      const targetPath = paths[path]
+      if (targetPath) {
+        router.push(targetPath)
+      } else {
+        console.error('Invalid path')
       }
     }
-
+    
+    // 组件挂载时
+    onMounted(async () => {
+      // 加载排班和打卡状态
+      await loadSchedule()
+      await loadClockStatus()
+      
+      // 设置定时器，每分钟更新一次当前时间
+      updateCurrentTime()
+      timerInterval.value = setInterval(() => {
+        updateCurrentTime()
+      }, 60000)
+      
+      // 设置定时器，每5分钟刷新一次排班和打卡状态
+      const dataRefreshInterval = setInterval(async () => {
+        await loadSchedule()
+        await loadClockStatus()
+      }, 300000)
+      
+      // 组件卸载时清除定时器
+      onUnmounted(() => {
+        if (timerInterval.value) {
+          clearInterval(timerInterval.value)
+        }
+        if (dataRefreshInterval) {
+          clearInterval(dataRefreshInterval)
+        }
+      })
+    })
+    
     return {
       username,
-      counselorId,
-      logout,
-      goTo,
+      todaySchedule,
       isWorking,
       clockInTime,
       clockOutTime,
-      currentTime,
-      todaySchedule,
       shouldWork,
       canClockInOut,
       isLate,
       lateMinutes,
+      detailedStatus,
       formatTime,
       formatTimeSlot,
       calculateWorkHours,
       handleClockInOut,
-      detailedStatus
+      logout,
+      goTo
     }
   }
 }
 </script>
 
 <style scoped>
-/* 基础样式保持与之前一致 */
+/* 样式保持不变 */
 .container {
   display: flex;
   height: 100vh;

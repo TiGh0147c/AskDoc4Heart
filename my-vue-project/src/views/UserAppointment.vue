@@ -88,13 +88,58 @@
                 <span :class="['status-badge', counselor.status === '空闲' ? 'available' : 'busy']">
                   {{ counselor.status }}
                 </span>
-                <button 
-                  class="appointment-btn" 
-                  :disabled="counselor.status === '繁忙' || !canMakeAppointment"
-                  @click="bookAppointment(counselor)"
-                >
-                  预约
-                </button>
+                <!-- 修改预约按钮部分，添加下拉菜单 -->
+                <div class="appointment-options">
+                  <button 
+                    class="appointment-btn" 
+                    :disabled="counselor.status === '繁忙' || !canMakeAppointment"
+                    @click="toggleAppointmentOptions(counselor)"
+                  >
+                    预约
+                  </button>
+                  <!-- 预约选项下拉菜单 -->
+                  <div class="appointment-dropdown" v-if="selectedCounselor && selectedCounselor.id === counselor.id">
+                    <div class="appointment-type-options">
+                      <button class="option-btn" @click="bookAppointment(counselor, true)">立即预约</button>
+                      <button class="option-btn" @click="showScheduleOptions(counselor)">预约未来时间</button>
+                    </div>
+                    <!-- 排班选择界面 -->
+                    <div class="schedule-selection" v-if="showSchedule && selectedCounselor.id === counselor.id">
+                      <div v-if="loadingSchedule" class="loading-indicator">加载排班信息中...</div>
+                      <div v-else-if="counselorSchedules.length === 0" class="no-schedule">
+                        该咨询师未来七天内没有可预约的时间段
+                      </div>
+                      <div v-else class="schedule-options">
+                        <div class="schedule-date-selection">
+                          <label>选择日期:</label>
+                          <select v-model="selectedDate" @change="updateTimeOptions">
+                            <option v-for="date in availableDates" :key="date" :value="date">
+                              {{ formatDate(date) }}
+                            </option>
+                          </select>
+                        </div>
+                        <div class="schedule-time-selection" v-if="selectedDate">
+                          <label>选择时间段:</label>
+                          <select v-model="selectedTime">
+                            <option v-for="time in availableTimeSlots" :key="time" :value="time">
+                              {{ time === 'morning' ? '上午' : '下午' }}
+                            </option>
+                          </select>
+                        </div>
+                        <div class="schedule-actions">
+                          <button 
+                            class="confirm-btn" 
+                            :disabled="!selectedDate || !selectedTime"
+                            @click="confirmScheduledAppointment(counselor)"
+                          >
+                            确认预约
+                          </button>
+                          <button class="cancel-btn" @click="cancelScheduleSelection">取消</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -215,6 +260,16 @@ export default {
     const pendingAppointments = ref([])
     const activeAppointments = ref([]) // 保留变量但不使用
     const upcomingAppointments = ref([])
+    
+    // 预约选项相关状态
+    const selectedCounselor = ref(null)
+    const showSchedule = ref(false)
+    const loadingSchedule = ref(false)
+    const counselorSchedules = ref([])
+    const selectedDate = ref('')
+    const selectedTime = ref('')
+    const availableDates = ref([])
+    const availableTimeSlots = ref([])
 
     // 加载咨询师数据
     const loadCounselors = async () => {
@@ -351,8 +406,173 @@ export default {
       return currentAppointmentsCount.value < 2;
     });
 
+    // 切换预约选项显示
+    const toggleAppointmentOptions = (counselor) => {
+      if (selectedCounselor.value && selectedCounselor.value.id === counselor.id) {
+        selectedCounselor.value = null
+        showSchedule.value = false
+      } else {
+        selectedCounselor.value = counselor
+        showSchedule.value = false
+      }
+    }
+    
+    // 显示排班选择界面
+    const showScheduleOptions = async (counselor) => {
+      showSchedule.value = true
+      loadingSchedule.value = true
+      
+      try {
+        // 调用后端API获取咨询师排班信息
+        const response = await axios.get(`http://localhost:8080/api/schedules/counselor/${counselor.id}`)
+        
+        if (response.data && Array.isArray(response.data)) {
+          // 过滤未来7天内的排班
+          const today = new Date()
+          const nextWeek = new Date(today)
+          nextWeek.setDate(today.getDate() + 7)
+          
+          counselorSchedules.value = response.data.filter(schedule => {
+            // 使用 date 而不是 scheduleDate
+            const scheduleDate = new Date(schedule.date)
+            return scheduleDate >= today && scheduleDate <= nextWeek
+          })
+          
+          // 提取可用日期 - 使用 date 而不是 scheduleDate
+          availableDates.value = [...new Set(counselorSchedules.value.map(s => s.date))].sort()
+          
+          // 如果有可用日期，默认选择第一个
+          if (availableDates.value.length > 0) {
+            selectedDate.value = availableDates.value[0]
+            updateTimeOptions()
+          }
+        } else {
+          counselorSchedules.value = []
+          availableDates.value = []
+          selectedDate.value = ''
+          selectedTime.value = ''
+        }
+      } catch (error) {
+        console.error('获取排班信息失败:', error)
+        counselorSchedules.value = []
+        availableDates.value = []
+      } finally {
+        loadingSchedule.value = false
+      }
+    }
+    
+    // 更新时间段选项
+    const updateTimeOptions = () => {
+      if (!selectedDate.value) {
+        availableTimeSlots.value = []
+        selectedTime.value = ''
+        return
+      }
+      
+      // 获取选定日期的可用时间段
+      const schedulesForDate = counselorSchedules.value.filter(s => s.date === selectedDate.value)
+      availableTimeSlots.value = []
+      
+      // 根据 timeSlot 属性确定可用时间段
+      schedulesForDate.forEach(schedule => {
+        // 检查 timeSlot 是否为 "morning" 或 "afternoon"
+        if (schedule.timeSlot === 'morning' && !availableTimeSlots.value.includes('morning')) {
+          availableTimeSlots.value.push('morning')
+        }
+        if (schedule.timeSlot === 'afternoon' && !availableTimeSlots.value.includes('afternoon')) {
+          availableTimeSlots.value.push('afternoon')
+        }
+      })
+      
+      // 默认选择第一个可用时间段
+      if (availableTimeSlots.value.length > 0) {
+        selectedTime.value = availableTimeSlots.value[0]
+      } else {
+        selectedTime.value = ''
+      }
+    }
+    
+    // 格式化日期显示
+    const formatDate = (dateString) => {
+      const date = new Date(dateString)
+      const today = new Date()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(today.getDate() + 1)
+      
+      // 格式化为 YYYY-MM-DD
+      const formattedDate = date.toISOString().split('T')[0]
+      
+      // 如果是今天或明天，特殊显示
+      if (formattedDate === today.toISOString().split('T')[0]) {
+        return `今天 (${formattedDate})`
+      } else if (formattedDate === tomorrow.toISOString().split('T')[0]) {
+        return `明天 (${formattedDate})`
+      } else {
+        return formattedDate
+      }
+    }
+    
+    // 取消排班选择
+    const cancelScheduleSelection = () => {
+      showSchedule.value = false
+      selectedDate.value = ''
+      selectedTime.value = ''
+    }
+    
+    // 确认预约特定时间段
+    const confirmScheduledAppointment = async (counselor) => {
+      if (!canMakeAppointment.value) {
+        alert('您当前已有两个预约，无法创建更多预约。请先完成或取消现有预约。')
+        return
+      }
+      
+      if (!userId.value) {
+        alert('用户信息不完整，请重新登录')
+        return
+      }
+      
+      if (!selectedDate.value || !selectedTime.value) {
+        alert('请选择预约日期和时间段')
+        return
+      }
+      
+      // 创建预约对象
+      const appointmentData = {
+        userId: userId.value,
+        counselorId: counselor.id,
+        userName: username.value,
+        counselorName: counselor.name,
+        appointmentDate: selectedDate.value,
+        appointmentTime: selectedTime.value,
+        appointmentStatus: 'scheduled'
+      }
+      
+      try {
+        // 调用后端API创建预约
+        const response = await axios.post('http://localhost:8080/api/appointments/create', appointmentData)
+        
+        if (response.data && response.status === 200) {
+          alert(`预约成功！您已预约${counselor.name}咨询师，请等待确认。`)
+          // 重新加载预约数据
+          await loadAppointments()
+          // 关闭预约选项
+          selectedCounselor.value = null
+          showSchedule.value = false
+        } else {
+          alert('预约失败：' + (response.data || '未知错误'))
+        }
+      } catch (error) {
+        console.error('预约失败:', error)
+        if (error.response && error.response.data) {
+          alert('预约失败：' + error.response.data)
+        } else {
+          alert('预约失败，请稍后再试')
+        }
+      }
+    }
+    
     // 预约咨询师
-    const bookAppointment = async (counselor) => {
+    const bookAppointment = async (counselor, immediate = false) => {
       if (!canMakeAppointment.value) {
         alert('您当前已有两个预约，无法创建更多预约。请先完成或取消现有预约。');
         return;
@@ -362,6 +582,9 @@ export default {
         alert('用户信息不完整，请重新登录');
         return;
       }
+      
+      // 如果不是立即预约，则不执行后续操作
+      if (!immediate) return
       
       // 创建预约对象
       const today = new Date();
@@ -394,6 +617,8 @@ export default {
           alert(`预约成功！您已预约${counselor.name}咨询师，请等待确认。`);
           // 重新加载预约数据
           await loadAppointments();
+          // 关闭预约选项
+          selectedCounselor.value = null;
         } else {
           alert('预约失败：' + (response.data || '未知错误'));
         }
@@ -522,12 +747,25 @@ export default {
       cancelAppointment,
       startChat,
       logout,
-      goTo
+      goTo,
+      selectedCounselor,
+      showSchedule,
+      loadingSchedule,
+      counselorSchedules,
+      selectedDate,
+      selectedTime,
+      availableDates,
+      availableTimeSlots,
+      toggleAppointmentOptions,
+      showScheduleOptions,
+      updateTimeOptions,
+      formatDate,
+      cancelScheduleSelection,
+      confirmScheduledAppointment
     }
   }
 }
 </script>
-
 
 <style scoped>
 /* 基础样式保持与原有一致 */
@@ -965,5 +1203,125 @@ export default {
 
 .primary-btn:hover {
   background-color: #0a58ca;
+}
+/* 预约选项样式 */
+.appointment-options {
+  position: relative;
+  display: inline-block;
+}
+
+.appointment-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  width: 250px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  padding: 10px;
+  margin-top: 5px;
+}
+
+.appointment-type-options {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.option-btn {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.option-btn:hover {
+  background-color: #e9e9e9;
+}
+
+.schedule-selection {
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 10px;
+  color: #666;
+}
+
+.no-schedule {
+  text-align: center;
+  padding: 10px;
+  color: #666;
+  font-style: italic;
+}
+
+.schedule-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.schedule-date-selection,
+.schedule-time-selection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.schedule-date-selection label,
+.schedule-time-selection label {
+  min-width: 80px;
+}
+
+.schedule-date-selection select,
+.schedule-time-selection select {
+  flex: 1;
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.schedule-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.confirm-btn,
+.cancel-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.confirm-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #0056b3;
+}
+
+.confirm-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+}
+
+.cancel-btn:hover {
+  background-color: #e9ecef;
 }
 </style>

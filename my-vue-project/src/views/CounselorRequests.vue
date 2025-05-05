@@ -87,7 +87,6 @@ export default {
                        1 // 默认值
 
     // 加载预约数据
-    // 修改加载预约数据部分
     const loadAppointments = async () => {
       loading.value = true
       try {
@@ -117,7 +116,6 @@ export default {
     }
 
     // 确认预约
-    // 修改确认预约方法
     const confirmAppointment = async (appointmentId) => {
       if (confirm('确认接受此预约吗？')) {
         try {
@@ -149,16 +147,6 @@ export default {
                 // 存储会话ID，以便在聊天页面使用
                 localStorage.setItem('currentSessionId', sessionId);
                 
-                // 检查并获取JWT令牌 - 保留这部分，但不建立WebSocket连接
-                await checkAndGetJwtToken();
-                
-                // 移除WebSocket连接创建代码
-                // const token = localStorage.getItem('jwt_token');
-                // if (token) {
-                //   // 建立WebSocket连接
-                //   connectWebSocket(sessionId, token);
-                // }
-                
                 // 跳转到聊天页面
                 router.push('/counselor/chat');
               }
@@ -174,79 +162,7 @@ export default {
       }
     }
     
-    // 检查并获取JWT令牌
-    const checkAndGetJwtToken = async () => {
-      // 如果localStorage中已经有JWT令牌，则不需要重新获取
-      if (localStorage.getItem('jwt_token')) {
-        console.log('JWT令牌已存在，无需重新获取')
-        return
-      }
-    
-      try {
-        // 获取咨询师ID和角色
-        if (!counselorId) {
-          console.error('咨询师ID不存在，无法获取JWT令牌')
-          return
-        }
-    
-        // 调用后端API获取JWT令牌
-        const response = await axios.post('/api/auth/token', null, {
-          params: {
-            username: counselorId,
-            role: 'counselor'
-          }
-        })
-    
-        if (response.data) {
-          // 将JWT令牌存储在localStorage中
-          localStorage.setItem('jwt_token', response.data)
-          console.log('JWT令牌已获取并存储')
-        }
-      } catch (error) {
-        console.error('获取JWT令牌失败:', error)
-      }
-    }
-    
-    // 建立WebSocket连接 - 可以注释或移除此方法
-    // const connectWebSocket = (sessionId, token) => {
-    //   try {
-    //     // 创建WebSocket连接
-    //     const socket = new WebSocket(`ws://localhost:8080/ws/consultation/${sessionId}?token=${token}`);
-    //     
-    //     // 连接建立时的处理
-    //     socket.onopen = () => {
-    //       console.log('WebSocket连接已建立');
-    //     };
-    //     
-    //     // 接收消息的处理
-    //     socket.onmessage = (event) => {
-    //       console.log('收到消息:', event.data);
-    //     };
-    //     
-    //     // 连接关闭的处理
-    //     socket.onclose = () => {
-    //       console.log('WebSocket连接已关闭');
-    //     };
-    //     
-    //     // 连接错误的处理
-    //     socket.onerror = (error) => {
-    //       console.error('WebSocket连接错误:', error);
-    //     };
-    //   } catch (error) {
-    //     console.error('建立WebSocket连接失败:', error);
-    //   }
-    // }
-    
-    // 在组件卸载时关闭WebSocket连接
-    onUnmounted(() => {
-      // 获取WebSocket实例并关闭连接
-      // 例如：const socket = store.state.webSocket;
-      // if (socket) {
-      //   socket.close();
-      // }
-    });
-    
-    // 修改拒绝预约方法
+    // 拒绝预约方法
     const rejectAppointment = async (appointmentId) => {
       if (confirm('确认拒绝此预约吗？')) {
         try {
@@ -286,12 +202,22 @@ export default {
       const targetPath = paths[path]
       if (targetPath) {
         router.push(targetPath)
+      } else {
+        console.error('Invalid path')
       }
     }
 
-    // 组件挂载时加载数据
-    onMounted(() => {
-      loadAppointments()
+    // 在组件挂载时加载预约数据
+    onMounted(async () => {
+      await loadAppointments()
+      
+      // 设置定时器，每30秒刷新一次预约数据
+      const intervalId = setInterval(loadAppointments, 30000)
+      
+      // 在组件卸载时清除定时器
+      onUnmounted(() => {
+        clearInterval(intervalId)
+      })
     })
 
     return {
@@ -302,9 +228,7 @@ export default {
       confirmAppointment,
       rejectAppointment,
       logout,
-      goTo,
-      checkAndGetJwtToken  // 保留这个方法
-      // connectWebSocket  // 移除这个方法
+      goTo
     }
   }
 }
