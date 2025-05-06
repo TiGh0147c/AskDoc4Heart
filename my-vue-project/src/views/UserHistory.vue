@@ -31,28 +31,60 @@
               v-for="history in chatHistory"
               :key="history.id"
               class="history-item"
-              @click="viewHistoryDetail(history.id)"
+              @click="openSession(history)"
             >
               <div class="history-info">
                 <h3>{{ history.counselorName }} - {{ history.type }}</h3>
                 <p class="history-date">咨询日期: {{ history.date }}</p>
                 <p class="history-messages">消息数量: {{ history.messagesCount }}</p>
-                <div class="history-rating">
-                  <span>评分: </span>
-                  <span class="stars">
-                    <span
-                      v-for="i in 5"
-                      :key="i"
-                      class="star"
-                      :class="{ 'active': i <= history.rating }"
-                    >
-                      ★
-                    </span>
-                  </span>
-                </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 会话详情弹窗 -->
+    <div v-if="selectedSession" class="modal-overlay" @click="closeSessionDetail">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2>会话详情</h2>
+          <button class="close-btn" @click="closeSessionDetail">&times;</button>
+        </div>
+        
+        <div class="session-detail-header">
+          <div class="user-info">
+            <div class="user-detail-info">
+              <h3>{{ selectedSession.counselorName }}</h3>
+              <p>{{ selectedSession.type }}</p>
+              <p class="session-date-info">{{ selectedSession.date }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="messages-container">
+          <div v-if="isLoading" class="loading-indicator">
+            加载中...
+          </div>
+          <div v-else-if="messages.length === 0" class="no-messages">
+            暂无消息记录
+          </div>
+          <div 
+            v-else
+            v-for="(message, index) in messages" 
+            :key="index"
+            :class="['message', message.sender === 'user' ? 'sent' : 'received']">
+            <div class="message-content">
+              <div class="message-text" v-html="formatMessage(message.text)"></div>
+              <div class="message-time">{{ message.time }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="action-btn download-btn" @click="downloadChatHistory">
+            导出记录
+          </button>
         </div>
       </div>
     </div>
@@ -95,35 +127,148 @@ export default {
     }
 
     const chatHistory = ref([])
+    const selectedSession = ref(null)
+    const messages = ref([])
+    const isLoading = ref(false)
+    
+    // 从localStorage获取用户信息
+    const userData = JSON.parse(localStorage.getItem('user'))
+    // 使用不同的变量名来避免重复声明
+    const userDisplayName = ref(userData?.username || '用户')
+    const userId = ref(userData?.user_id || 1)
 
     // 加载历史记录
-    const loadHistory = () => {
-      // 模拟从后端获取数据
-      chatHistory.value = [
-        {
-          id: 1001,
-          counselorId: 1,
-          counselorName: '李明',
-          type: '焦虑症咨询',
-          date: '2025-03-01',
-          messagesCount: 12,
-          rating: 5
-        },
-        {
-          id: 1002,
-          counselorId: 3,
-          counselorName: '王芳',
-          type: '情绪管理咨询',
-          date: '2025-02-15',
-          messagesCount: 8,
-          rating: 4
+    const loadHistory = async () => {
+      try {
+        // 使用从localStorage获取的userId
+        const response = await fetch(`/api/user/completed?userId=${userId.value}`)
+        const sessions = await response.json()
+        
+        // 转换数据格式
+        chatHistory.value = sessions.map(session => {
+          return {
+            id: session.sessionId,
+            counselorId: session.counselorId,
+            // 咨询师姓名暂时使用ID代替
+            counselorName: `咨询师${session.counselorId}`,
+            type: '心理咨询',
+            date: formatDate(session.sessionStartTime),
+            messagesCount: 0 // 消息数量暂时设为0
+          }
+        })
+        
+        // 获取每个会话的消息数量
+        for (const session of chatHistory.value) {
+          try {
+            const messagesResponse = await fetch(`/api/counselor/chats/${session.id}`)
+            const messagesData = await messagesResponse.json()
+            session.messagesCount = messagesData.messages?.length || 0
+          } catch (error) {
+            console.error(`获取会话 ${session.id} 的消息数量失败:`, error)
+          }
         }
-      ]
+      } catch (error) {
+        console.error('加载历史会话失败:', error)
+        chatHistory.value = []
+      }
+    }
+    
+    // 格式化日期
+    const formatDate = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    }
+    
+    // 格式化消息时间
+    const formatMessageTime = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
     }
 
-    // 查看历史记录详情
+    // 打开会话详情
+    const openSession = async (session) => {
+      selectedSession.value = { ...session }
+      isLoading.value = true
+      messages.value = []
+      
+      try {
+        const response = await fetch(`/api/counselor/chats/${session.id}`)
+        const data = await response.json()
+        
+        // 确保消息数组存在并且格式正确
+        if (data.messages && Array.isArray(data.messages)) {
+          messages.value = data.messages
+          console.log('获取到的消息:', messages.value) // 添加日志以便调试
+        } else {
+          console.error('返回的消息数据格式不正确:', data)
+          messages.value = []
+        }
+      } catch (error) {
+        console.error('获取会话消息失败:', error)
+      } finally {
+        isLoading.value = false
+      }
+    }
+    
+    // 关闭会话详情
+    const closeSessionDetail = () => {
+      selectedSession.value = null
+      messages.value = []
+    }
+    
+    // 格式化消息内容，支持换行和链接
+    const formatMessage = (text) => {
+      if (!text) return ''
+      const withLineBreaks = text.replace(/\n/g, '<br>')
+      const withLinks = withLineBreaks.replace(
+        /(https?:\/\/[^\s]+)/g, 
+        '<a href="$1" target="_blank">$1</a>'
+      )
+      return withLinks
+    }
+    
+    // 下载聊天记录
+    const downloadChatHistory = () => {
+      if (!selectedSession.value) return
+      
+      try {
+        // 创建要下载的内容
+        let content = `聊天记录 - ${selectedSession.value.counselorName} - ${selectedSession.value.type}\n`
+        content += `日期: ${selectedSession.value.date}\n\n`
+        
+        messages.value.forEach(msg => {
+          const sender = msg.sender === 'user' ? userDisplayName.value : selectedSession.value.counselorName
+          content += `[${msg.time}] ${sender}: ${msg.text}\n`
+        })
+        
+        // 创建 Blob 对象和下载链接
+        const blob = new Blob([content], { type: 'text/plain' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `chat_${selectedSession.value.id}_${selectedSession.value.date}.txt`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        
+        alert('聊天记录已下载')
+      } catch (error) {
+        console.error('下载聊天记录失败', error)
+        alert('下载失败，请重试')
+      }
+    }
+
+    // 查看历史记录详情 - 保留此方法以兼容路由跳转
     const viewHistoryDetail = (historyId) => {
-      router.push(`/user/history/${historyId}`)
+      const session = chatHistory.value.find(h => h.id === historyId)
+      if (session) {
+        openSession(session)
+      } else {
+        router.push(`/user/history/${historyId}`)
+      }
     }
 
     // 在组件挂载时加载历史记录
@@ -134,7 +279,15 @@ export default {
       logout,
       goTo,
       chatHistory,
-      viewHistoryDetail
+      viewHistoryDetail,
+      selectedSession,
+      messages,
+      isLoading,
+      openSession,
+      closeSessionDetail,
+      formatMessage,
+      formatMessageTime,
+      downloadChatHistory
     }
   }
 }
@@ -261,23 +414,158 @@ export default {
   font-size: 0.9rem;
 }
 
-.history-rating {
-  margin-top: 10px;
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
+  justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
-.stars {
-  display: inline-flex;
-  margin-left: 5px;
+.modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-.star {
-  color: #ddd;
-  font-size: 1rem;
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
 }
 
-.star.active {
-  color: #ffc107;
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.session-detail-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.user-detail-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-detail-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.1rem;
+}
+
+.user-detail-info p {
+  margin: 0 0 5px 0;
+  color: #666;
+}
+
+.session-date-info {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 50vh;
+}
+
+.loading-indicator,
+.no-messages {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.message {
+  display: flex;
+  max-width: 75%;
+}
+
+.sent {
+  align-self: flex-end;
+}
+
+.received {
+  align-self: flex-start;
+}
+
+.message-content {
+  padding: 10px 15px;
+  border-radius: 18px;
+  position: relative;
+}
+
+.sent .message-content {
+  background-color: #007bff;
+  color: white;
+  border-bottom-right-radius: 5px;
+}
+
+.received .message-content {
+  background-color: #f0f0f0;
+  color: #333;
+  border-bottom-left-radius: 5px;
+}
+
+.message-text {
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  margin-top: 5px;
+  text-align: right;
+  opacity: 0.8;
+}
+
+.modal-actions {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.download-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.download-btn:hover {
+  background-color: #0056b3;
 }
 </style>

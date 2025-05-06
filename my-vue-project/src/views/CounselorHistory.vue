@@ -164,6 +164,9 @@ export default {
     const store = useStore()
     const router = useRouter()
 
+    // 从localStorage获取咨询师信息
+    const userData = JSON.parse(localStorage.getItem('user'))
+    const counselorId = ref(userData?.user_id || 1)
     const username = computed(() => store.getters.username)
     const isLoading = ref(true)
     const chatHistory = ref([])
@@ -173,105 +176,41 @@ export default {
     const itemsPerPage = 5
     const selectedSession = ref(null)
 
-    // 模拟从后端获取历史聊天记录
-    const fetchChatHistory = () => {
-      // 实际应用中，这里应该是一个API调用
-      // GET /api/counselors/current/chat-history
-      
+    // 从后端获取历史聊天记录
+    const fetchChatHistory = async () => {
       isLoading.value = true
       
-      setTimeout(() => {
-        // 模拟数据 - 实际应用中这些数据会从后端API获取
-        chatHistory.value = [
-          {
-            id: "SESS10025",
-            userName: "张小明",
-            userAvatar: "data:image/svg+xml;base64,",
-            consultationType: "焦虑障碍治疗",
-            date: new Date(2025, 2, 15),
-            expiryDate: new Date(2025, 3, 15),
-            messages: [
-              {
-                sender: "counselor",
-                text: "您好，张先生，今天感觉怎么样？",
-                time: "14:30"
-              },
-              {
-                sender: "user",
-                text: "最近状态好很多，按照您说的方法每天做深呼吸练习，感觉焦虑有所缓解。",
-                time: "14:32"
-              },
-              {
-                sender: "counselor",
-                text: "这是个好消息！坚持练习对控制焦虑很有帮助。您的睡眠情况如何？",
-                time: "14:33"
-              },
-              {
-                sender: "user",
-                text: "睡眠还是有问题，经常半夜醒来，不过比之前好一些。",
-                time: "14:35"
-              }
-            ]
-          },
-          {
-            id: "SESS10023",
-            userName: "王红",
-            userAvatar: "data:image/svg+xml;base64,",
-            consultationType: "亲子关系咨询",
-            date: new Date(2025, 2, 10),
-            expiryDate: new Date(2025, 3, 10),
-            messages: [
-              {
-                sender: "counselor",
-                text: "王女士，上次我们讨论了您与孩子的沟通方式，您有尝试我们提到的方法吗？",
-                time: "10:15"
-              },
-              {
-                sender: "user",
-                text: "是的，我尝试了积极倾听的方法，感觉效果不错，孩子开始愿意跟我分享更多学校的事情了。",
-                time: "10:17"
-              },
-              {
-                sender: "counselor",
-                text: "这是个很好的开始！建立良好的沟通是改善亲子关系的基础。您还遇到什么具体的困难吗？",
-                time: "10:19"
-              }
-            ]
-          },
-          {
-            id: "SESS10020",
-            userName: "刘志强",
-            userAvatar: "data:image/svg+xml;base64,",
-            consultationType: "职场压力咨询",
-            date: new Date(2025, 2, 5),
-            expiryDate: new Date(2025, 3, 5),
-            messages: [
-              {
-                sender: "user",
-                text: "最近工作压力太大了，感觉快崩溃了。",
-                time: "16:05"
-              },
-              {
-                sender: "counselor",
-                text: "理解您的感受，刘先生。能具体描述一下是什么导致您感到如此大的压力吗？",
-                time: "16:07"
-              },
-              {
-                sender: "user",
-                text: "项目截止日期临近，但进度严重滞后，我的团队成员又不配合，领导还在不断施加压力。",
-                time: "16:10"
-              },
-              {
-                sender: "counselor",
-                text: "这确实是个充满挑战的情况。首先，我建议您可以尝试将大项目分解成小任务，一步步完成，这样会减轻心理负担。其次，关于团队配合问题，您是否尝试过与团队成员进行一对一沟通？",
-                time: "16:15"
-              }
-            ]
-          }
-        ]
+      try {
+        // 调用/completed接口获取已完成的会话
+        const response = await fetch(`/api/counselor/completed?counselorId=${counselorId.value}`)
+        const sessions = await response.json()
         
+        // 处理会话数据
+        const processedSessions = []
+        
+        for (const session of sessions) {
+          // 获取会话消息
+          const messagesResponse = await fetch(`/api/counselor/chats/${session.sessionId}`)
+          const messagesData = await messagesResponse.json()
+          
+          processedSessions.push({
+            id: session.sessionId,
+            userName: `用户${session.userId}`, // 暂时使用userId代替用户名
+            userAvatar: "/basic_avatar/basic_male.jpg", // 使用默认头像
+            consultationType: "心理咨询",
+            date: new Date(session.sessionStartTime),
+            expiryDate: new Date(new Date(session.sessionEndTime).setMonth(new Date(session.sessionEndTime).getMonth() + 1)),
+            messages: messagesData.messages || []
+          })
+        }
+        
+        chatHistory.value = processedSessions
+      } catch (error) {
+        console.error('获取历史会话失败:', error)
+        chatHistory.value = []
+      } finally {
         isLoading.value = false
-      }, 800)
+      }
     }
     
     // 根据筛选条件过滤历史记录
