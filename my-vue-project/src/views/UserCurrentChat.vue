@@ -336,9 +336,14 @@ export default {
       // 根据用户活跃状态设置轮询频率
       const pollingRate = isActive.value ? basePollingRate : inactivePollingRate
       
+      // 设置定时器，定期获取新消息
       pollingInterval.value = setInterval(() => {
         pollNewMessages()
+        checkInactivity() // 每次轮询时检查用户活跃状态
       }, pollingRate)
+      
+      // 立即执行一次轮询
+      pollNewMessages()
     }
     
     // 轮询获取新消息
@@ -346,26 +351,37 @@ export default {
       if (!currentSessionId.value) return
       
       try {
+        // 修改为使用 counselor 接口而不是 user 接口
         const response = await axios.get(
-          `http://localhost:8080/api/messages?sessionId=${currentSessionId.value}&after=${lastMessageId.value}`
+          `http://localhost:8080/api/counselor/chats/${currentSessionId.value}`
         )
         
-        if (response.data && response.data.length > 0) {
-          // 更新最后消息ID
-          lastMessageId.value = Math.max(...response.data.map(msg => msg.id))
-          
-          // 添加新消息到列表
-          response.data.forEach(msg => {
-            messages.value.push({
-              id: msg.id,
-              sender: msg.senderId === userId.value ? 'user' : 'counselor',
-              text: msg.content,
-              time: formatTime(new Date(msg.timestamp))
-            })
+        if (response.data && response.data.messages) {
+          // 过滤出新消息
+          const newMessages = response.data.messages.filter(msg => {
+            // 检查消息是否已存在
+            return !messages.value.some(existingMsg => 
+              existingMsg.text === msg.text && 
+              existingMsg.time === msg.time && 
+              existingMsg.sender === msg.sender
+            )
           })
           
-          // 如果有新消息，更新活跃状态
-          updateActivityStatus()
+          if (newMessages.length > 0) {
+            // 添加新消息到列表
+            messages.value = [...messages.value, ...newMessages]
+            
+            // 更新最后一条消息在活跃会话列表中的显示
+            const chatIndex = activeChats.value.findIndex(c => c.id === currentSessionId.value)
+            if (chatIndex !== -1 && newMessages.length > 0) {
+              const lastMsg = newMessages[newMessages.length - 1]
+              activeChats.value[chatIndex].lastMessage = lastMsg.text
+              activeChats.value[chatIndex].lastMessageTime = lastMsg.time
+            }
+            
+            // 如果有新消息，更新活跃状态
+            updateActivityStatus()
+          }
         }
       } catch (error) {
         console.error('获取新消息失败:', error)
@@ -376,30 +392,27 @@ export default {
     const loadChatSession = async (counselorId) => {
       try {
         // 获取或创建会话
-        const response = await axios.post('http://localhost:8080/api/session/get-or-create', {
-          userId: userId.value,
-          counselorId: counselorId
+        const response = await axios.get(`http://localhost:8080/api/user/chats/counselor/${counselorId}`, {
+          params: {
+            userId: userId.value
+          }
         })
         
         if (response.data) {
           currentSessionId.value = response.data.sessionId
           
           // 加载历史消息
-          const messagesResponse = await axios.get(
-            `http://localhost:8080/api/messages?sessionId=${currentSessionId.value}`
-          )
-          
-          if (messagesResponse.data) {
-            messages.value = messagesResponse.data.map(msg => ({
-              id: msg.id,
-              sender: msg.senderId === userId.value ? 'user' : 'counselor',
-              text: msg.content,
-              time: formatTime(new Date(msg.timestamp))
+          if (response.data.messages && response.data.messages.length > 0) {
+            messages.value = response.data.messages.map(msg => ({
+              id: msg.id || Date.now() + Math.random(),
+              sender: msg.sender,
+              text: msg.text,
+              time: msg.time
             }))
             
             // 更新最后消息ID
-            if (messagesResponse.data.length > 0) {
-              lastMessageId.value = Math.max(...messagesResponse.data.map(msg => msg.id))
+            if (messages.value.length > 0) {
+              lastMessageId.value = Math.max(...messages.value.map(msg => msg.id || 0))
             }
           }
           
@@ -458,23 +471,18 @@ export default {
       
       try {
         // 发送到后端
-        const response = await axios.post('http://localhost:8080/api/messages/send', {
-          sessionId: currentSessionId.value,
-          senderId: userId.value,
-          receiverId: currentCounselor.value.id,
-          content: messageText,
-          timestamp: new Date().toISOString()
+        const response = await axios.post(`http://localhost:8080/api/user/chats/${currentSessionId.value}/messages`, {
+          userId: userId.value,
+          content: messageText
         })
         
         if (response.data) {
           // 更新临时消息的ID
           const index = messages.value.findIndex(msg => msg.id === tempMessage.id)
           if (index !== -1) {
-            messages.value[index].id = response.data.id
+            messages.value[index].id = response.data.messageId || tempMessage.id
+            messages.value[index].time = response.data.time || tempMessage.time
           }
-          
-          // 更新最后消息ID
-          lastMessageId.value = Math.max(lastMessageId.value, response.data.id)
         }
       } catch (error) {
         console.error('发送消息失败:', error)
@@ -483,14 +491,26 @@ export default {
     }
     
     // 结束咨询
-    const endConsultation = () => {
+    const endConsultation = async () => {
       if (!currentCounselor.value || !currentSessionId.value) return
       
-      // 保存当前咨询师信息用于评价
-      endedCounselor.value = { ...currentCounselor.value }
-      
-      // 显示评价弹窗
-      showRatingModal.value = true
+      try {
+        // 调用后端结束会话接口
+        await axios.put(`http://localhost:8080/api/user/chats/${currentSessionId.value}/end`, {
+          userId: userId.value
+        })
+        
+        // 保存当前咨询师信息用于评价
+        endedCounselor.value = { ...currentCounselor.value }
+        
+        // 显示评价弹窗
+        showRatingModal.value = true
+      } catch (error) {
+        console.error('结束会话失败:', error)
+        // 即使API调用失败，也显示评价弹窗
+        endedCounselor.value = { ...currentCounselor.value }
+        showRatingModal.value = true
+      }
     }
     
     // 提交评价
@@ -498,10 +518,15 @@ export default {
       if (!endedCounselor.value || !currentSessionId.value) return
       
       try {
-        await axios.post('http://localhost:8080/api/session/end', {
-          sessionId: currentSessionId.value,
+        // 获取当前日期，格式为 YYYY-MM-DD
+        const currentDate = new Date().toISOString().split('T')[0];
+        
+        // 使用正确的API路径和参数格式
+        await axios.post(`http://localhost:8080/evaluation/user`, {
+          evaluation_content: reviewComment.value || "无评价内容",
           rating: rating.value,
-          comment: reviewComment.value
+          session_id: currentSessionId.value,
+          evaluation_time: currentDate
         })
         
         // 关闭评价弹窗
@@ -514,6 +539,10 @@ export default {
         loadActiveChats()
       } catch (error) {
         console.error('提交评价失败:', error)
+        // 即使评价失败，也关闭弹窗并返回列表
+        closeRatingModal()
+        leaveChat()
+        loadActiveChats()
       }
     }
     

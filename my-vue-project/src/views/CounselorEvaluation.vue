@@ -125,6 +125,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
   name: 'CounselorEvaluation',
@@ -133,6 +134,7 @@ export default {
     const router = useRouter()
 
     const username = computed(() => store.getters.username)
+    const counselorId = computed(() => store.getters.userId) // 获取当前咨询师ID
     const isLoading = ref(true)
     const allReviews = ref([])
     const ratingFilter = ref('all')
@@ -140,82 +142,45 @@ export default {
     const searchTerm = ref('')
     const currentPage = ref(1)
     const itemsPerPage = 5
+    const averageRatingValue = ref(0)
+    const totalReviewsCount = ref(0)
 
-    // 模拟从后端获取评价数据
-    const fetchReviews = () => {
-      // 实际应用中，这里应该是一个API调用
-      // GET /api/counselors/current/reviews
-      
+    // 从后端获取评价数据
+    const fetchReviews = async () => {
       isLoading.value = true
       
-      // 模拟延迟加载
-      setTimeout(() => {
-        // 模拟数据 - 实际应用中这些数据会从后端API获取
-        allReviews.value = [
-          {
-            id: 1,
-            userName: "张小明",
-            userAvatar: "data:image/svg+xml;base64,",//后期添加图片
-            rating: 5,
-            comment: "李医生非常专业，也很有耐心，帮我解决了很多困扰我多年的问题。感谢！",
-            date: new Date(2025, 2, 15),
-            consultationType: "焦虑障碍治疗",
-            sessionId: "SESS10025"
-          },
-          {
-            id: 2,
-            userName: "王红",
-            userAvatar: "data:image/svg+xml;base64,",
-            rating: 4,
-            comment: "咨询过程很顺利，给了我很多实用的建议，希望下次还能有机会咨询。",
-            date: new Date(2025, 2, 10),
-            consultationType: "亲子关系咨询",
-            sessionId: "SESS10023"
-          },
-          {
-            id: 3,
-            userName: "刘志强",
-            userAvatar: "data:image/svg+xml;base64,",
-            rating: 5,
-            comment: "李医生提供的方法帮我走出了职场压力的困境，非常感谢！",
-            date: new Date(2025, 2, 5),
-            consultationType: "职场压力咨询",
-            sessionId: "SESS10020"
-          },
-          {
-            id: 4,
-            userName: "周琳",
-            userAvatar: "data:image/svg+xml;base64,",
-            rating: 3,
-            comment: "咨询过程中有些问题没有得到很好的解决，希望下次能更有针对性。",
-            date: new Date(2025, 1, 28),
-            consultationType: "睡眠障碍咨询",
-            sessionId: "SESS10018"
-          },
-          {
-            id: 5,
-            userName: "张晓华",
-            userAvatar: "data:image/svg+xml;base64,",
-            rating: 5,
-            comment: "",
-            date: new Date(2025, 1, 20),
-            consultationType: "人际关系咨询",
-            sessionId: "SESS10015"
-          },
-          {
-            id: 6,
-            userName: "李强",
-            userAvatar: "data:image/svg+xml;base64,",
-            rating: 4,
-            comment: "医生很专业，但是咨询时间有点短，希望能延长一些。",
-            date: new Date(2025, 1, 15),
-            consultationType: "抑郁症咨询",
-            sessionId: "SESS10012"
-          }
-        ]
+      try {
+        // 获取平均评分和评价总数
+        const averageResponse = await axios.get(`/evaluation/average?counselorId=${counselorId.value}`)
+        if (averageResponse.data && averageResponse.data.data) {
+          averageRatingValue.value = averageResponse.data.data.average || 0
+          totalReviewsCount.value = averageResponse.data.data.count || 0
+        }
         
+        // 获取用户评价列表
+        // 注意：这里假设后端提供了获取特定咨询师的评价列表的接口
+        // 如果没有，可能需要后端添加这个功能
+        const reviewsResponse = await axios.get(`/evaluation/counselor/reviews?counselorId=${counselorId.value}`)
+        
+        if (reviewsResponse.data && reviewsResponse.data.data) {
+          // 转换后端数据格式为前端需要的格式
+          allReviews.value = reviewsResponse.data.data.map(item => ({
+            id: item.evaluationId,
+            userName: item.userName || `用户${item.userId}`, // 假设后端返回了用户名
+            userAvatar: item.userAvatar || "/basic_avatar/basic_user.jpg", // 默认头像
+            rating: item.rating,
+            comment: item.evaluation_content,
+            date: new Date(item.evaluation_time),
+            consultationType: item.consultationType || "心理咨询",
+            sessionId: item.session_id
+          }))
+        }
+      } catch (error) {
+        console.error('获取评价数据失败', error)
+        // 如果API调用失败，可以显示错误信息
+      } finally {
         isLoading.value = false
-      }, 500)
+      }
     }
     
     // 过滤评价
@@ -276,16 +241,14 @@ export default {
       return Math.ceil(filteredReviews.value.length / itemsPerPage) || 1
     })
     
-    // 计算平均评分
+    // 计算平均评分 - 使用后端返回的数据
     const averageRating = computed(() => {
-      if (allReviews.value.length === 0) return 0
-      const sum = allReviews.value.reduce((acc, review) => acc + review.rating, 0)
-      return sum / allReviews.value.length
+      return averageRatingValue.value
     })
     
-    // 总评价数
+    // 总评价数 - 使用后端返回的数据
     const totalReviews = computed(() => {
-      return allReviews.value.length
+      return totalReviewsCount.value
     })
     
     // 格式化日期
@@ -301,30 +264,6 @@ export default {
     
     onMounted(() => {
       fetchReviews()
-      
-      // 这里可以添加从LocalStorage或者API获取最新评价的逻辑
-      const newReview = localStorage.getItem('newCounselorReview')
-      if (newReview) {
-        try {
-          const reviewData = JSON.parse(newReview)
-          // 将新评价添加到评价列表开头
-          allReviews.value.unshift({
-            id: Date.now(), // 使用时间戳作为临时ID
-            userName: reviewData.userName,
-            userAvatar: reviewData.userAvatar || "data:image/svg+xml;base64,",//后期添加图片
-            rating: reviewData.rating,
-            comment: reviewData.comment,
-            date: new Date(),
-            consultationType: reviewData.consultationType || "常规咨询",
-            sessionId: reviewData.sessionId || `SESS${Date.now().toString().slice(-5)}`
-          })
-          
-          // 清除本地存储
-          localStorage.removeItem('newCounselorReview')
-        } catch (error) {
-          console.error('解析新评价数据出错', error)
-        }
-      }
     })
 
     const logout = () => {
