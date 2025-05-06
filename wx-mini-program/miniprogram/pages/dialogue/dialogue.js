@@ -11,6 +11,7 @@ Page({
     messageTableName: '',
     evaluationContent: '',
     session_id: '',
+    queue_id: '',
     isButtonVisible: true,
     isConfirmModalVisible: false,
     isRatingModalVisible: false,
@@ -33,6 +34,7 @@ Page({
     const counselorName = options.counselorName;
     const description = options.description;
     const sessionId = options.sessionId;
+    const queue_id = options.queue_id;
     console.log('Counselor ID:', counselorId);
     console.log('Counselor name:', counselorName);
     console.log('问题简述:', description);
@@ -41,8 +43,10 @@ Page({
     this.setData({
       userid: userid,
       counselorid: counselorId,
-      session_id: sessionId
+      session_id: sessionId,
+      queue_id: queue_id
     });
+    console.log("当前的排队序号：", this.data.queue_id);
 
     this.startTimer();
     this.getAllmessages();
@@ -76,7 +80,7 @@ Page({
     // 设置定时器，每2秒执行一次getMessages
     const timer = setInterval(() => {
       that.getAllmessages();
-    }, 2000);
+    }, 100000);
     that.setData({ timer: timer });
   },
 
@@ -141,7 +145,13 @@ Page({
           });
           if(res.data.status === "completed"){
             this.clearTimer();
+            this.setData({ isButtonVisible: false });
             this.onConfirmEndConsultation();
+            wx.showToast({
+              title: '咨询师结束了此次咨询',
+              icon: 'none',
+              duration: 2000
+            });
           }
         } else {
           console.log("查询历史消息失败：",res);
@@ -153,30 +163,55 @@ Page({
     });
   },
 
-    // 请求结束会话
-    leave() {
-      const url = `http://localhost:8081/api/counselor/chats/${this.data.session_id}/end`;
-      wx.request({
-        url: url,
-        method: 'PUT',
-        header: {'content-type': 'application/json'},
-        success: (res) => {
-          if (res.statusCode === 200) {
-            this.clearTimer();
-            console.log("结束会话成功", res.data);
-          } else {
-            console.log("结束会话失败：",res);
-          }
-        },
-        fail(err) {
-          console.error('请求失败:', err);
-          wx.showToast({
+  // 请求结束会话
+  leave() {
+    const url = `http://localhost:8081/api/counselor/chats/${this.data.session_id}/end`;
+    wx.request({
+      url: url,
+      method: 'PUT',
+      header: {'content-type': 'application/json'},
+      success: (res) => {
+        if (res.statusCode === 200) {
+          this.clearTimer();
+          console.log("结束会话成功", res.data);
+        } else {
+          console.log("结束会话失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+          title: '网络错误，请稍后再试',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
+  // 更新队伍状态
+  updateQueue(queueId) {
+    const url = `http://localhost:8081/api/queues/${queueId}/status?status=completed`;
+    const that = this;
+    wx.request({
+      url: url,
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("更新队伍状态成功：", res.data);
+        } else {
+          console.log("更新队伍状态失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
             title: '网络错误，请稍后再试',
             icon: 'none'
-          });
-        }
-      });
-    },
+        });
+      }
+    });
+  },
 
   bindMessageInput: function(e) {
     // 更新messageContent
@@ -316,20 +351,25 @@ Page({
   },
   // 显示结束咨询的模态框
   showConfirmModal() {
-    wx.showModal({
-      title: '提示',
-      content: '确定要结束咨询吗？',
-      success: (res) => {
-        if (res.confirm) {
-          // 用户点击了确认按钮
-          this.setData({ isButtonVisible: false });
-          this.onConfirmEndConsultation();
-        } else if (res.cancel) {
-          // 用户点击了取消按钮
-          console.log('用户取消了操作');
-        }
-      },
-    });
+    if(!this.data.timer){
+      this.setData({ isButtonVisible: false });
+      this.onConfirmEndConsultation();
+    } else {
+      wx.showModal({
+        title: '提示',
+        content: '确定要结束咨询吗？',
+        success: (res) => {
+          if (res.confirm) {
+            // 用户点击了确认按钮
+            this.setData({ isButtonVisible: false });
+            this.onConfirmEndConsultation();
+          } else if (res.cancel) {
+            // 用户点击了取消按钮
+            console.log('用户取消了操作');
+          }
+        },
+      });
+    }
   },
   // 监听评价输入框内容变化
   onCommentInput(e) {
@@ -352,8 +392,8 @@ Page({
     };
     console.log("提交的评价数据：", ratingdata);
     this.rating(ratingdata);
-
     this.leave();
+    this.updateQueue(this.data.queue_id);
     this.hideRatingModal();
     app.setGlobalData('counseling', 0); 
     wx.reLaunch({ 

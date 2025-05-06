@@ -17,4 +17,8 @@ public interface ConsultationSessionService {
     // 新增方法
     List<ConsultationSession> getActiveSessionsByUserId(Long userId);
     List<ConsultationSession> getActiveSessionsByUserIdAndCounselorId(Long userId, Long counselorId);
+
+    List<ConsultationSession> getCompletedSessionsByCounselorId(Long counselorId);
+    List<ConsultationSession> getCompletedSessionsByUserId(Long userId);
+
 }

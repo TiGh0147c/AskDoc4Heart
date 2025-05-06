@@ -169,4 +169,11 @@ public class UserConsultationSessionController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/completed")
+    public ResponseEntity<List<ConsultationSession>> getCompletedSessions(
+            @RequestParam("userId") Long userId) {
+        List<ConsultationSession> sessions = sessionService.getCompletedSessionsByUserId(userId);
+        return ResponseEntity.ok(sessions);
+    }
 }

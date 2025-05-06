@@ -5,7 +5,12 @@ import com.example.demo.counseling.model.enums.SessionStatus;
 import com.example.demo.counseling.repository.ConsultationSessionRepository;
 import com.example.demo.counseling.service.ConsultationSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -61,5 +66,15 @@ public class ConsultationSessionServiceImpl implements ConsultationSessionServic
     @Override
     public List<ConsultationSession> getActiveSessionsByUserIdAndCounselorId(Long userId, Long counselorId) {
         return sessionRepository.findByUserIdAndCounselorIdAndSessionStatusNot(userId, counselorId, SessionStatus.COMPLETED);
+    }
+
+    @Override
+    public List<ConsultationSession> getCompletedSessionsByCounselorId(Long counselorId) {
+        return sessionRepository.findByCounselorIdAndSessionStatus(counselorId, SessionStatus.completed);
+    }
+
+    @Override
+    public List<ConsultationSession> getCompletedSessionsByUserId(Long userId) {
+        return sessionRepository.findByUserIdAndSessionStatus(userId, SessionStatus.completed);
     }
 }

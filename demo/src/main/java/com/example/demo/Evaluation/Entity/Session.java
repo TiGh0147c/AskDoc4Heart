@@ -13,8 +13,6 @@ public class Session {
     private int userId;
     @Column(name="counselor_id")
     private int counselorId;
-    @Column(name="supervisor_id")
-    private int supervisorId;
 
     public int getSessionId() {
         return sessionId;
@@ -40,21 +38,12 @@ public class Session {
         this.counselorId = counselorId;
     }
 
-    public int getSupervisorId() {
-        return supervisorId;
-    }
-
-    public void setSupervisorId(int supervisorId) {
-        this.supervisorId = supervisorId;
-    }
-
     @Override
     public String toString() {
         return "Session{" +
                 "sessionId=" + sessionId +
                 ", userId=" + userId +
                 ", counselorId=" + counselorId +
-                ", supervisorId=" + supervisorId +
                 '}';
     }
 }

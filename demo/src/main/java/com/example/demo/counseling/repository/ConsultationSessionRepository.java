@@ -26,6 +26,10 @@ public interface ConsultationSessionRepository extends JpaRepository<Consultatio
     void updateLastMessageTime(@Param("sessionId") Long sessionId, @Param("time") LocalDateTime time);
     
     List<ConsultationSession> findByCounselorIdAndSessionStatusNot(Long counselorId, SessionStatus status);
+
+    List<ConsultationSession> findByCounselorIdAndSessionStatus(Long counselorId, SessionStatus sessionStatus);
+
+    List<ConsultationSession> findByUserIdAndSessionStatus(Long userId, SessionStatus sessionStatus);
     
     // 新增方法
     List<ConsultationSession> findByUserIdAndSessionStatusNot(Long userId, SessionStatus status);

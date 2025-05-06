@@ -242,4 +242,12 @@ public class ConsultationSessionController {
         // 暂时返回成功
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/completed")
+    public ResponseEntity<List<ConsultationSession>> getCompletedSessions(
+            @RequestParam("counselorId") Long counselorId) {
+        List<ConsultationSession> sessions = sessionService.getCompletedSessionsByCounselorId(counselorId);
+        return ResponseEntity.ok(sessions);
+    }
+
 }
