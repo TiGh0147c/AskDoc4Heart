@@ -27,8 +27,8 @@
         <div v-else-if="errorMessage" class="no-data">{{ errorMessage }}</div>
         
         <!-- 预约申请列表 -->
-        <div v-else-if="requests.length > 0" class="requests-list">
-          <div v-for="request in requests" :key="request.id" class="request-item">
+        <div v-else-if="sortedAndPaginatedRequests.length > 0" class="requests-list">
+          <div v-for="request in sortedAndPaginatedRequests" :key="request.id" class="request-item">
             <div class="request-info">
               <h3>{{ request.username }} - {{ request.type }}</h3>
               <p>预约时间: {{ request.dateTime }}</p>
@@ -55,6 +55,12 @@
               </button>
             </div>
           </div>
+          <!-- 分页控制 -->
+          <div class="pagination-controls">
+            <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
+            <span>第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+          </div>
         </div>
         <div v-else class="no-data">
           没有新的预约申请
@@ -80,6 +86,8 @@ export default {
     const requests = ref([])
     const loading = ref(false)
     const errorMessage = ref('')
+    const currentPage = ref(1)
+    const itemsPerPage = 5
 
     // 从localStorage获取咨询师ID
     const counselorId = localStorage.getItem('counselor_id') || 
@@ -98,22 +106,60 @@ export default {
           requests.value = response.data.map(app => ({
             id: app.appointmentId,
             userId: app.userId,
-            username: app.userName || '未知用户',
+            username: app.userName || '用户', // 修改此处
             counselorId: app.counselorId,
             counselorName: app.counselorName || '未知咨询师',
             type: '心理咨询',
-            dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`,
+            dateTime: `${app.appointmentDate} ${app.appointmentTime === 'morning' ? '上午' : '下午'}`, 
             status: app.appointmentStatus === 'scheduled' ? 'pending' : 
                    app.appointmentStatus === 'completed' ? 'completed' : 'rejected'
           }))
+        } else {
+          requests.value = [] // 确保在没有数据时清空
         }
       } catch (error) {
         console.error('加载预约数据失败:', error)
         errorMessage.value = '您当前没有预约'
+        requests.value = [] // 出错时也清空
       } finally {
         loading.value = false
       }
     }
+
+    const sortedAndPaginatedRequests = computed(() => {
+      // 排序逻辑
+      const sorted = [...requests.value].sort((a, b) => {
+        // 等待确认的排最前面
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (a.status !== 'pending' && b.status === 'pending') return 1;
+        
+        // 按时间排序，越晚越靠后 (需要将dateTime转换为可比较的格式)
+        const dateA = new Date(a.dateTime.replace('上午', '09:00').replace('下午', '14:00'));
+        const dateB = new Date(b.dateTime.replace('上午', '09:00').replace('下午', '14:00'));
+        return dateA - dateB; // 升序
+      });
+
+      // 分页逻辑
+      const startIndex = (currentPage.value - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return sorted.slice(startIndex, endIndex);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(requests.value.length / itemsPerPage);
+    });
+
+    const nextPage = () => {
+      if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+      }
+    };
+
+    const prevPage = () => {
+      if (currentPage.value > 1) {
+        currentPage.value--;
+      }
+    };
 
     // 确认预约
     const confirmAppointment = async (appointmentId) => {
@@ -152,7 +198,7 @@ export default {
               }
             }
             
-            await loadAppointments();
+            await loadAppointments(); // 重新加载数据以更新列表和分页
             alert('预约已确认，并创建了咨询会话');
           }
         } catch (error) {
@@ -171,7 +217,7 @@ export default {
           )
           
           if (response.status === 200) {
-            await loadAppointments()
+            await loadAppointments() // 重新加载数据以更新列表和分页
             alert('预约已成功拒绝')
           }
         } catch (error) {
@@ -222,13 +268,18 @@ export default {
 
     return {
       username,
-      requests,
+      requests, // 仍然返回原始数据，因为分页和排序是基于它的
       loading,
       errorMessage,
       confirmAppointment,
       rejectAppointment,
       logout,
-      goTo
+      goTo,
+      sortedAndPaginatedRequests, // 返回排序和分页后的数据
+      currentPage,
+      totalPages,
+      nextPage,
+      prevPage
     }
   }
 }

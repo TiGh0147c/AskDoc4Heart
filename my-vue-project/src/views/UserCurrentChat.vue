@@ -522,7 +522,7 @@ export default {
         const currentDate = new Date().toISOString().split('T')[0];
         
         // 使用正确的API路径和参数格式
-        await axios.post(`/evaluation/user`, {
+        await axios.post(`/api/evaluation/user`, {
           evaluation_content: reviewComment.value || "无评价内容",
           rating: rating.value,
           session_id: currentSessionId.value,
