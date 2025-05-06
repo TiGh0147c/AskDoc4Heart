@@ -2,8 +2,10 @@ package com.example.demo.Evaluation.Service;
 
 import com.example.demo.Evaluation.Entity.Average;
 import com.example.demo.Evaluation.Entity.CounselorEvaluation;
+import com.example.demo.Evaluation.Entity.Session;
 import com.example.demo.Evaluation.Entity.UserEvaluation;
 import com.example.demo.Evaluation.Entity.dto.CounselorEvaluationDTO;
+import com.example.demo.Evaluation.Entity.dto.CounselorEvaluationResultDTO;
 import com.example.demo.Evaluation.Entity.dto.UserEvaluationDTO;
 import com.example.demo.Evaluation.Mapper.AverageRepository;
 import com.example.demo.Evaluation.Mapper.CounselorEvaluationRepository;
@@ -17,7 +19,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class EvaluationService implements IEvaluationService {
@@ -58,7 +64,7 @@ public class EvaluationService implements IEvaluationService {
         average.setCount();
         averageRepository.save(average);
 
-        return  userEvaluationRepository.save(evaluation);
+        return userEvaluationRepository.save(evaluation);
     }
 
     @Override
@@ -69,5 +75,51 @@ public class EvaluationService implements IEvaluationService {
     @Override
     public Average getAverage (int counselorId){
         return averageRepository.findAverageByCounselorId(counselorId);
+    }
+    
+    @Override
+    public CounselorEvaluationResultDTO getEvaluationsByCounselorId(int counselorId) {
+        // 1. 查找该咨询师的所有会话
+        List<Session> sessions = StreamSupport.stream(sessionRepository.findAll().spliterator(), false)
+                .filter(session -> session.getCounselorId() == counselorId)
+                .collect(Collectors.toList());
+        
+        // 2. 获取所有会话ID
+        List<Integer> sessionIds = sessions.stream()
+                .map(Session::getSessionId)
+                .collect(Collectors.toList());
+        
+        // 3. 根据会话ID列表查询所有用户评价
+        List<UserEvaluation> evaluations = new ArrayList<>();
+        if (!sessionIds.isEmpty()) {
+            evaluations = userEvaluationRepository.findBySessionIdIn(sessionIds);
+        }
+        
+        // 4. 获取平均分信息
+        Average average = averageRepository.findAverageByCounselorId(counselorId);
+        
+        // 5. 组装结果
+        CounselorEvaluationResultDTO result = new CounselorEvaluationResultDTO();
+        result.setEvaluations(evaluations);
+        
+        if (average != null) {
+            result.setAverageRating(average.getAverage());
+            result.setEvaluationCount(average.getCount());
+        } else {
+            // 如果没有平均分记录，则计算当前查询到的评价的平均分
+            if (!evaluations.isEmpty()) {
+                double avgRating = evaluations.stream()
+                        .mapToInt(UserEvaluation::getRating)
+                        .average()
+                        .orElse(0.0);
+                result.setAverageRating(avgRating);
+                result.setEvaluationCount(evaluations.size());
+            } else {
+                result.setAverageRating(0.0);
+                result.setEvaluationCount(0);
+            }
+        }
+        
+        return result;
     }
 }

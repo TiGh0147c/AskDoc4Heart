@@ -55,7 +55,7 @@
             <input 
               type="text" 
               v-model="searchTerm" 
-              placeholder="搜索用户名或评价内容..."
+              placeholder="搜索评价内容..."
               @input="applyFilters"
             >
           </div>
@@ -70,15 +70,9 @@
         </div>
         
         <div v-else class="reviews-container">
-          <div v-for="review in filteredReviews" :key="review.id" class="review-card">
+          <div v-for="review in paginatedReviews" :key="review.id" class="review-card">
             <div class="review-header">
-              <div class="user-info">
-                <div class="user-avatar">
-                  <img :src="review.userAvatar" :alt="review.userName">
-                </div>
-                <div class="user-name">{{ review.userName }}</div>
-              </div>
-              
+              <!-- 移除用户头像和名字显示 -->
               <div class="review-rating">
                 <span 
                   v-for="star in 5" 
@@ -90,12 +84,12 @@
             </div>
             
             <div class="review-content">
-              <p v-if="review.comment">{{ review.comment }}</p>
+              <p v-if="review.evaluationContent && review.evaluationContent.trim() !== '' && review.evaluationContent !== '无评价内容'">{{ review.evaluationContent }}</p>
               <p v-else class="no-comment">用户未留下具体评价</p>
             </div>
             
             <div class="session-info">
-              <span>咨询类型: {{ review.consultationType }}</span>
+              <span>咨询类型: {{ review.consultationType || "心理咨询" }}</span>
               <span>咨询ID: {{ review.sessionId }}</span>
             </div>
           </div>
@@ -134,14 +128,18 @@ export default {
     const router = useRouter()
 
     const username = computed(() => store.getters.username)
-    const counselorId = computed(() => store.getters.userId) // 获取当前咨询师ID
+    
+    // 从localStorage获取counselorId，参考CounselorHome.vue的实现方式
+    const userData = JSON.parse(localStorage.getItem('user'))
+    const counselorId = ref(localStorage.getItem('counselor_id') || userData?.counselorId || userData?.userId || null)
+    
     const isLoading = ref(true)
     const allReviews = ref([])
     const ratingFilter = ref('all')
     const dateFilter = ref('all')
     const searchTerm = ref('')
     const currentPage = ref(1)
-    const itemsPerPage = 5
+    const itemsPerPage = 5 // 每页显示5条评价
     const averageRatingValue = ref(0)
     const totalReviewsCount = ref(0)
 
@@ -150,34 +148,30 @@ export default {
       isLoading.value = true
       
       try {
-        // 获取平均评分和评价总数
-        const averageResponse = await axios.get(`/evaluation/average?counselorId=${counselorId.value}`)
-        if (averageResponse.data && averageResponse.data.data) {
-          averageRatingValue.value = averageResponse.data.data.average || 0
-          totalReviewsCount.value = averageResponse.data.data.count || 0
-        }
+        // 使用新创建的接口获取评价数据和平均分
+        const response = await axios.get(`/api/evaluation/counselor/${counselorId.value}`)
+        console.log('API返回数据:', response.data) // 添加日志查看返回数据
         
-        // 获取用户评价列表
-        // 注意：这里假设后端提供了获取特定咨询师的评价列表的接口
-        // 如果没有，可能需要后端添加这个功能
-        const reviewsResponse = await axios.get(`/evaluation/counselor/reviews?counselorId=${counselorId.value}`)
-        
-        if (reviewsResponse.data && reviewsResponse.data.data) {
-          // 转换后端数据格式为前端需要的格式
-          allReviews.value = reviewsResponse.data.data.map(item => ({
-            id: item.evaluationId,
-            userName: item.userName || `用户${item.userId}`, // 假设后端返回了用户名
-            userAvatar: item.userAvatar || "/basic_avatar/basic_user.jpg", // 默认头像
-            rating: item.rating,
-            comment: item.evaluation_content,
-            date: new Date(item.evaluation_time),
-            consultationType: item.consultationType || "心理咨询",
-            sessionId: item.session_id
-          }))
+        if (response.data) {
+          // 设置平均分和评价总数
+          averageRatingValue.value = response.data.averageRating || 0
+          totalReviewsCount.value = response.data.evaluationCount || 0 // 使用后端返回的 evaluationCount
+          
+          // 直接使用后端返回的数据格式，不做转换
+          allReviews.value = response.data.evaluations.map(item => {
+            console.log('处理评价项:', item) // 添加日志查看每个评价项
+            return {
+              id: item.evaluationId,
+              rating: item.rating,
+              evaluationContent: item.evaluation_content, // 使用后端返回的 evaluation_content
+              date: item.evaluation_time ? new Date(item.evaluation_time.replace(' ', 'T')) : new Date(), // 使用后端返回的 evaluation_time
+              consultationType: item.consultationType || "心理咨询",
+              sessionId: item.sessionId
+            }
+          })
         }
       } catch (error) {
         console.error('获取评价数据失败', error)
-        // 如果API调用失败，可以显示错误信息
       } finally {
         isLoading.value = false
       }
@@ -191,6 +185,7 @@ export default {
     // 根据筛选条件过滤评价
     const filteredReviews = computed(() => {
       let result = [...allReviews.value]
+      console.log('所有评价:', result) // 添加日志查看所有评价
       
       // 评分筛选
       if (ratingFilter.value !== 'all') {
@@ -217,12 +212,11 @@ export default {
         result = result.filter(review => new Date(review.date) >= cutoffDate)
       }
       
-      // 搜索筛选
+      // 搜索筛选 - 只搜索评价内容
       if (searchTerm.value.trim()) {
         const term = searchTerm.value.toLowerCase()
         result = result.filter(review => 
-          review.userName.toLowerCase().includes(term) || 
-          (review.comment && review.comment.toLowerCase().includes(term))
+          (review.evaluationContent && review.evaluationContent.toLowerCase().includes(term))
         )
       }
       
@@ -253,8 +247,10 @@ export default {
     
     // 格式化日期
     const formatDate = (date) => {
-      const d = new Date(date)
-      return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`
+      if (!(date instanceof Date) || isNaN(date)) {
+        return '日期未知'
+      }
+      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
     }
     
     // 监听筛选条件变化
@@ -307,7 +303,8 @@ export default {
       logout,
       goTo,
       isLoading,
-      filteredReviews,
+      paginatedReviews,
+      filteredReviews, // 确保返回filteredReviews
       ratingFilter,
       dateFilter,
       searchTerm,

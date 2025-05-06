@@ -11,6 +11,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 // 明确列出所有允许的端口，包括3000-4000范围
                 .allowedOrigins(
+                    "http://192.168.204.55:3000",
+                    "http://192.168.204.55:8080",
                     "http://192.168.1.102:8080",
                     "http://192.168.1.102:3000",
                     "http://localhost:3000", 
