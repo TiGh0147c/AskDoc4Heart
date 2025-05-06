@@ -4,7 +4,7 @@ const app = getApp(); // 获取全局应用实例
 Page({
 
   data: {
-    userid: '',
+    userid: '3',
     queue_id: '',
     queue_number: '',
     queue_counselor_id: '',
@@ -21,6 +21,7 @@ Page({
     showModal: false, // 控制模态框显示
     modalData: {}, // 模态框需要显示的数据，初始值为空对象
     intervalId: null, // 定时器 ID，用于后续清除定时器
+    intervalId2: null, // 定时器 ID，用于后续清除定时器
   },
 
   onLoad: function (options) {
@@ -32,12 +33,17 @@ Page({
       description: decodeURIComponent(options.description),
     });
     //this.addSchedules(0); this.addSchedules(1); this.addSchedules(2);
-    //this.getAllschedules();
     //this.deleteSchedules(3);
     this.fetchSchedules();
     this.refresh();
-    //this.leaveQueue(1);this.leaveQueue(10);this.leaveQueue(5);
-    //this.leaveQueue(6);this.leaveQueue(7);this.leaveQueue(8);
+
+    // 启动定时器，每 10 秒获取一次数据
+    const intervalId = setInterval(() => {
+      this.refresh();
+    }, 10000); // 每 10 秒执行一次
+
+    // 保存定时器 ID，以便后续清除
+    this.setData({ intervalId2: intervalId });
   },
 
   // 标准化日期
@@ -59,7 +65,7 @@ Page({
     } else if (hours >= 14 && hours < 17) {
       return "afternoon";
     } else {
-      return "afternoon";
+      return null;
     }
   },
 
@@ -78,7 +84,7 @@ Page({
   },
 
   refresh(){
-    this.setData({ loading: true });
+    // this.setData({ loading: true });
     const showDetails = {};
     const buttonMargins = {};
     /* 模拟获取咨询师数据 */
@@ -88,7 +94,7 @@ Page({
       intro: "这是苏东坡，他没有咨询师资格证，但你可以和他聊聊。",
       tag: "被贬",
       // tag: ["东坡肉", "出去玩", "被贬"],
-      status: "空闲",
+      queuestatus: "ai咨询师 [空闲]",
       type: "ai",
       average: 0,
       count: 0
@@ -102,15 +108,30 @@ Page({
           console.log("所有咨询师信息加载完成：", counselors);
           const dutyData = Array.isArray(counselors[0]) ? counselors[0] : counselors;
           const processedEverydayData = everydayData.map(item => ({ ...item, isActive: false }));
-          const processedDutyData = dutyData.map(item => ({ ...item, type: "counselor", isActive: false }));
-          const processedCounselors = [...processedDutyData, ...processedEverydayData];
-          this.setData({
-            counselors: processedCounselors,
-            showDetails,
-            buttonMargins,
-            loading: false
+          const promises = dutyData.map(async (item) => {
+            let queueStatus = null;
+            try {
+              queueStatus = await this.fetchEveryQueue(item._id);
+            } catch (err) {
+              console.error(`获取队列状态失败 for id=${item._id}`, err);
+            }
+            return {
+              ...item,
+              type: "counselor",
+              isActive: false,
+              queuestatus: queueStatus
+            };
           });
-          wx.stopPullDownRefresh();
+          Promise.all(promises).then(processedDutyData => {
+            const processedCounselors = [...processedDutyData, ...processedEverydayData];
+            this.setData({
+              counselors: processedCounselors,
+              showDetails,
+              buttonMargins,
+              loading: false
+            });
+            wx.stopPullDownRefresh();
+          });
         })
         .catch(error => {
           console.error("加载咨询师信息失败：", error);
@@ -217,22 +238,27 @@ Page({
         intervalId: null, // 清空定时器 ID
         showModal: false, // 隐藏模态框
       });
-      console.log("计时器2已清除");
+      console.log("计时器已清除");
     }
   },
 
   // 清空计时器
   clearTimers() {
-    const { intervalId } = this.data;
+    const { intervalId, intervalId2 } = this.data;
 
     if (intervalId) {
       clearInterval(intervalId); // 清除计时器
-      console.log('计时器 已清除');
+      console.log('计时器 1 已清除');
+    }
+    if (intervalId2) {
+      clearInterval(intervalId2); // 清除定时器
+      console.log("计时器 2 已清除");
     }
 
     // 清空计时器 ID
     this.setData({
       intervalId: null,
+      intervalId2: null
     });
   },
 
@@ -245,32 +271,47 @@ Page({
     const description = this.data.description;
     if(dataset.type == "ai"){
       console.log('选择了ai咨询师');
-      wx.reLaunch({
+      const enterdata = {
+        userId: userid,
+        counselorId: counselorId,
+        counselorName: counselorName,
+        description: description,
+        type: 'ai'
+      };
+      console.log('尝试进入咨询会话:', enterdata);
+      this.enterDialogue(enterdata);
+      /*wx.reLaunch({
         url: `/pages/ai-dialogue/ai-dialogue?counselorId=${counselorId}&counselorName=${counselorName}&description=${description}`
-      });
+      });*/
     } else {
       this.addToQueue(e);
     }
   },
 
   // 进入咨询会话
-  enterDialogue: function(data) {
-    const url = `http://localhost:8081/api/user/chats/counselor/${data.counselorId}`;
+  enterDialogue: function(inputdata) {
+    const url = `http://localhost:8081/api/user/chats/counselor/${inputdata.counselorId}`;
     const that = this;
     wx.request({
       url: url,
       method: 'GET',
       data: {
-        userId: data.userId,
-        counselorId: data.counselorId
+        userId: inputdata.userId,
+        counselorId: inputdata.counselorId
       },
       success(res) {
         if (res.statusCode === 200) {
           console.log("进入咨询会话成功：", res.data);
           that.clearTimers(); 
-          wx.reLaunch({
-            url: `/pages/dialogue/dialogue?sessionId=${res.data.sessionId}&counselorId=${data.counselorId}&counselorName=${data.counselorName}&description=${data.description}&queue_id=${data.queue_id}`
-          });
+          if(inputdata.type === 'human'){
+            wx.reLaunch({
+              url: `/pages/dialogue/dialogue?sessionId=${res.data.sessionId}&counselorId=${inputdata.counselorId}&counselorName=${inputdata.counselorName}&description=${inputdata.description}&queue_id=${inputdata.queue_id}`
+            });
+          } else {
+            wx.reLaunch({
+              url: `/pages/ai-dialogue/ai-dialogue?sessionId=${res.data.sessionId}&counselorId=${inputdata.counselorId}&counselorName=${inputdata.counselorName}&description=${inputdata.description}`
+            });
+          }
         } else {
           console.log("进入咨询会话失败：",res);
           wx.showToast({
@@ -353,7 +394,8 @@ Page({
             counselorId: that.data.queue_counselor_id,
             counselorName: that.data.queue_counselor_name,
             description: that.data.description,
-            queue_id: that.data.queue_id
+            queue_id: that.data.queue_id,
+            type: 'human'
           };
           console.log('尝试进入咨询会话:', enterdata);
           that.enterDialogue(enterdata);
@@ -443,7 +485,7 @@ Page({
                 const waitingnum = data.aheadCount;
                 const queuedata = {
                   waitingnum: waitingnum,
-                  waitingtime: waitingnum * 5
+                  waitingtime: (waitingnum + 1) * 5
                 }
                 if (progressnum < 3 && waitingnum === 0) {
                   this.updateQueue(this.data.queue_id);
@@ -451,6 +493,33 @@ Page({
                 // 将数据传递给调用者
                 resolve(queuedata);
               })
+          } else {
+            console.log("获取队伍信息失败：", res);
+            reject(new Error("获取队伍信息失败"));
+          }
+        },
+        fail(err) {
+          console.error('请求失败:', err);
+          wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+          });
+          reject(err);
+        }
+      });
+    });
+  },
+
+  fetchEveryQueue(counselorId) {
+    return new Promise((resolve, reject) => {
+      const url = `http://localhost:8081/api/queues/${counselorId}/stats`;
+      wx.request({
+        url: url,
+        method: 'GET',
+        success:(res) => {
+          if (res.statusCode === 200) {
+            console.log("获取队伍信息成功：", res.data);
+            resolve(res.data);
           } else {
             console.log("获取队伍信息失败：", res);
             reject(new Error("获取队伍信息失败"));

@@ -9,8 +9,10 @@
     <!-- 如果没有数据时显示提示信息 -->
     <view wx:elif="{{!loading && (!records || records.length == 0)}}" class="reminder">暂无数据</view>
     <view class="record-item">
-      <block wx:for="{{records}}" wx:key="_id">
-        <button bindtap="toggleDetails" data-id="{{item._id}}">{{item.date}}</button>
+      <block wx:for="{{records}}" wx:key="sessionId">
+        <button bindtap="toggleDetails" data-id="{{item.sessionId}}">
+          {{item.date + ' - ' + item.counselorName}}
+        </button>
       </block>
     </view>
   </view>

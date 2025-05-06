@@ -9,7 +9,7 @@
     <block wx:for="{{counselors}}" wx:key="_id">
       <view class="counselor-item" style="margin-bottom: {{buttonMargins[item._id] || 0}}px;">
         <button bindtap="toggleDetails" style="background-color: {{item.isActive ? 'rgb(28, 29, 33)' : 'rgb(68, 88, 120)'}}; color: {{item.isActive ? 'rgb(146, 205, 207)' : 'rgb(238, 239, 247)'}};" data-id="{{item._id}}"  wx:key="index">
-          <text space="ensp">{{item.name}}  [{{item.status}}]</text>
+          <text space="ensp">{{item.name + '\n' + [item.queuestatus]}}</text>
         </button>
         <view class="details" id="details-{{item._id}}" wx:if="{{showDetails[item._id]}}">
           <text class="tag-text">擅长:</text>
@@ -18,12 +18,7 @@
           <!-- 
           <text class="tag-text">简介:</text>
           <text class="intro-text">- {{item.intro}}</text> -->
-          <block wx:if="{{item.status === '空闲'}}">
-            <button bindtap="navigateToDialogue" data-id="{{item._id}}" data-name="{{item.name}}" data-type="{{item.type}}">咨询</button>
-          </block>
-          <block wx:elif="{{item.status === '繁忙'}}">
-            <button bindtap="addToQueue" data-id="{{item._id}}" data-name="{{item.name}}">排队取号</button>
-          </block>
+          <button bindtap="navigateToDialogue" data-id="{{item._id}}" data-name="{{item.name}}" data-type="{{item.type}}">咨询</button>
         </view>
       </view>
     </block>

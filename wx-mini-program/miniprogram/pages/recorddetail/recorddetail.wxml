@@ -4,7 +4,7 @@
     <view class="message-container">
       <view class="sys-message">-- 开始咨询 --</view>
       <block wx:for="{{messages}}" wx:key="time">
-        <view class="message {{item.sender === 'user' ? 'my-message' : item.message_type === 'counselor' ? 'other-message' : 'sys-message'}}"
+        <view class="message {{item.sender === 'user' ? 'my-message' : item.sender === 'counselor' ? 'other-message' : 'sys-message'}}"
           wx:key="time">
             {{item.text}}
         </view>
