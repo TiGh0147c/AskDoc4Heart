@@ -4,7 +4,7 @@ const app = getApp(); // 获取全局应用实例
 Page({
 
   data: {
-    userid: '3',
+    userid: '',
     queue_id: '',
     queue_number: '',
     queue_counselor_id: '',
@@ -62,7 +62,7 @@ Page({
 
     if (hours >= 9 && hours < 11) {
       return "morning";
-    } else if (hours >= 14 && hours < 17) {
+    } else if (hours >= 14 && hours < 24) {
       return "afternoon";
     } else {
       return null;
@@ -590,7 +590,7 @@ Page({
         // 获取平均评分和评价数量
         const averageResponse = await new Promise((resolve, reject) => {
           wx.request({
-            url: 'http://localhost:8081/evaluation/average',
+            url: 'http://localhost:8081/api/evaluation/average',
             method: 'GET',
             data: { counselorId: id },
             success(res) {

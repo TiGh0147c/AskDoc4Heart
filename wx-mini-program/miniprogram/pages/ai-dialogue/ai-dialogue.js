@@ -364,7 +364,7 @@ Page({
   },
   rating(data) {
     wx.request({
-      url: 'http://localhost:8081/evaluation/user', // 后端接口地址
+      url: 'http://localhost:8081/api/evaluation/user', // 后端接口地址
       method: 'POST',
       data: data,
       header: {
