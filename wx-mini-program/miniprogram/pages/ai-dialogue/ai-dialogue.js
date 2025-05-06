@@ -31,29 +31,17 @@ Page({
     const counselorId = options.counselorId;
     const counselorName = options.counselorName;
     const description = options.description;
-    const userid = app.getGlobalData('userid');
+    const sessionId = options.sessionId;
     console.log('Counselor ID:', counselorId);
     console.log('Counselor name:', counselorName);
-    //console.log('问题简述:', description);
+    console.log('问题简述:', description);
     app.setGlobalData('counseling', 1); 
-    this.setData({userid: userid});
-    this.setData({counselorid: counselorId});
-
-    /* 模拟创建咨询会话 */
-    const now = new Date();
-    const data = {
-      user_id: this.data.userid,
-      counselor_id: this.data.counselorid,
-      Session_Start_Time: now,
-      Last_Message_Sent_Time: now,
-      Session_Status: "in_progress"
-    }
-    console.log("创建了会话:", data);
-    const getdata={
-      Session_Id: "0001"
-    }
-    this.setData({session_id: getdata.Session_Id});
-    console.log("获取会话id", getdata);
+    const userid = app.getGlobalData('userid');
+    this.setData({
+      userid: userid,
+      counselorid: counselorId,
+      session_id: sessionId,
+    });
     this.addMessage(description);
     this.animation = wx.createAnimation({
       duration: 300,
@@ -78,19 +66,37 @@ Page({
     // 模拟插入消息数据
     const time = new Date(); // 获取当前时间
     const data = {
-      message_content: message,
-      session_id: this.data.session_id,
-      sender_role: 'user',
-      sender_id: this.data.userid, 
-      message_type: 'user-message', 
-      message_sent_time: time
+      sessionId: this.data.session_id,
+      userId: this.data.userid.toString(),
+      content: message
     };
     console.log("发送了消息：", data);
 
+    wx.request({
+      url: `http://localhost:8081/api/user/chats/${data.sessionId}/messages`,
+      method: 'POST',
+      data: data,
+      header: {'content-type': 'application/json'},
+      success:(res) => {
+        if (res.statusCode === 200) {
+          console.log("发送消息成功：", res.data);
+        } else {
+          console.log("发送消息失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+            title: '网络错误，请稍后再试',
+            icon: 'none'
+        });
+      }
+    });
+
     const Message = {
-      content: data.message_content,
-      message_type: data.message_type, 
-      timestamp: data.message_sent_time
+      content: message,
+      message_type: 'user-message', 
+      timestamp: time
     };
 
     // 更新messages数组并将新消息添加进去
@@ -112,20 +118,36 @@ Page({
         // 模拟插入ai消息数据
         const aimessage = res.result.data.data.choices[0].messages[0].content;
         const time = new Date(); // 获取当前时间
-        const data = {
-          message_content: aimessage,
-          session_id: this.data.session_id,
-          sender_role: 'counselor',
-          sender_id: this.data.counselorid, 
-          message_type: 'counselor-message', 
-          message_sent_time: time
+        const aidata = {
+          counselorId: this.data.counselorid.toString(),
+          content: aimessage
         };
-        console.log("接收到ai的消息：", data);
+        console.log("接收到ai的消息：", aidata);
+
+        wx.request({
+          url: `http://localhost:8081/api/counselor/chats/${this.data.session_id}/messages?counselorId=${aidata.counselorId}&content=${encodeURIComponent(aidata.content)}`,
+          method: 'POST',
+          header: {'content-type': 'application/json'},
+          success:(res) => {
+            if (res.statusCode === 200) {
+              console.log("发送消息成功：", res.data);
+            } else {
+              console.log("发送消息失败：",res);
+            }
+          },
+          fail(err) {
+            console.error('请求失败:', err);
+            wx.showToast({
+                title: '网络错误，请稍后再试',
+                icon: 'none'
+            });
+          }
+        });
 
         const aiMessage = {
-          content: data.message_content,
-          message_type: data.message_type, 
-          timestamp: data.message_sent_time
+          content: aimessage,
+          message_type: 'counselor-message', 
+          timestamp: time
         };
 
         // 更新messages数组并将新消息添加进去
@@ -140,6 +162,30 @@ Page({
         console.error(err)
       }
     })
+  },
+
+  // 请求结束会话
+  leave() {
+    const url = `http://localhost:8081/api/counselor/chats/${this.data.session_id}/end`;
+    wx.request({
+      url: url,
+      method: 'PUT',
+      header: {'content-type': 'application/json'},
+      success: (res) => {
+        if (res.statusCode === 200) {
+          console.log("结束会话成功", res.data);
+        } else {
+          console.log("结束会话失败：",res);
+        }
+      },
+      fail(err) {
+        console.error('请求失败:', err);
+        wx.showToast({
+          title: '网络错误，请稍后再试',
+          icon: 'none'
+        });
+      }
+    });
   },
 
   bindMessageInput: function(e) {
@@ -288,21 +334,67 @@ Page({
       },
     });
   },
+    // 监听评价输入框内容变化
+    onCommentInput(e) {
+      this.setData({
+        evaluationContent: e.detail.value,
+      });
+    },
   submitRating() {
     console.log(`提交的评分是：${this.data.currentRating}`);
-    // 处理评分提交逻辑...
-    
-    /* 模拟结束咨询会话 */
-    const now = new Date();
-    const data = {
-      session_id: this.data.session_id,
-      Session_End_Time: now
-    }
-    console.log("结束了会话:", data);
+    // 获取当前评分和评价内容
+    const rating = this.data.currentRating; // 当前评分
+    const evaluationContent = this.data.evaluationContent || "无"; // 评价内容，默认值为 "无"
+    const session_id = Number(this.data.session_id); // 会话 ID
+
+    const ratingdata = {
+      evaluation_content: evaluationContent,
+      evaluation_time: new Date().toISOString().split('T')[0], // 当前日期，格式为 YYYY-MM-DD
+      rating: rating,
+      session_id: session_id
+    };
+    console.log("提交的评价数据：", ratingdata);
+    this.rating(ratingdata);
     this.hideRatingModal();
+    this.leave();
     app.setGlobalData('counseling', 0); 
     wx.reLaunch({ 
       url: '/pages/index/index', 
     })
   },
+  rating(data) {
+    wx.request({
+      url: 'http://localhost:8081/evaluation/user', // 后端接口地址
+      method: 'POST',
+      data: data,
+      header: {
+        'content-type': 'application/json' // 设置请求头为 JSON 格式
+      },
+      success(res) {
+        if (res.statusCode === 200) {
+          console.log("评价提交成功：", res.data);
+          wx.showToast({
+            title: '评价提交成功',
+            icon: 'success',
+            duration: 2000
+          });
+        } else {
+          console.error("评价提交失败：", res);
+          wx.showToast({
+            title: '评价提交失败',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+      },
+      fail(err) {
+        console.error("请求失败：", err);
+        wx.showToast({
+          title: '网络错误',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    });
+  }
 })

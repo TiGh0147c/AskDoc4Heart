@@ -80,7 +80,7 @@ Page({
     // 设置定时器，每2秒执行一次getMessages
     const timer = setInterval(() => {
       that.getAllmessages();
-    }, 100000);
+    }, 2000);
     that.setData({ timer: timer });
   },
 
