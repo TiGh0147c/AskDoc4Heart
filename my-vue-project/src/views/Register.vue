@@ -277,14 +277,14 @@ export default {
           if (registerForm.proofFile) {
             const formData = new FormData()
             formData.append('file', registerForm.proofFile)
-            await axios.post('http://localhost:8080/api/upload', formData, {
+            await axios.post('/api/upload', formData, {
               headers: {
                 'Content-Type': 'multipart/form-data'
               }
             })
           }
 
-          const response = await axios.post('http://localhost:8080/counselor', counselorData, {
+          const response = await axios.post('/counselor', counselorData, {
             headers: {
               'Content-Type': 'application/json'
             },
@@ -307,7 +307,7 @@ export default {
           
         }
 
-        const response = await axios.post('http://localhost:8080/user', userData, {
+        const response = await axios.post('/user', userData, {
           headers: {
             'Content-Type': 'application/json'
           }

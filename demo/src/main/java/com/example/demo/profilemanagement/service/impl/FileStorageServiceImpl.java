@@ -20,6 +20,16 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     public String saveAvatarFile(MultipartFile avatarFile)
     {
+        // 确保目录存在
+        try {
+            Path directoryPath = Paths.get(avatarDirectory);
+            if (!Files.exists(directoryPath)) {
+                Files.createDirectories(directoryPath);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("创建目录失败", e);
+        }
+        
         // 生成文件名
         String avatarFileName = System.currentTimeMillis() + "-" + avatarFile.getOriginalFilename();
         try {

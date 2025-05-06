@@ -377,7 +377,7 @@
         try {
           loading.value = true
           const response = await axios.get(
-            'http://localhost:8080/api/profile-management/administrator/user-modification-audits',
+            '/api/profile-management/administrator/user-modification-audits',
             { params: { status: auditStatusFilter.value || null } }
           )
           
@@ -396,7 +396,7 @@
         try {
           loading.value = true
           const response = await axios.post(
-            `http://localhost:8080/api/profile-management/administrator/user-modification-audits/${auditId}/review`,
+            `/api/profile-management/administrator/user-modification-audits/${auditId}/review`,
             null,
             { params: { decision } }
           )

@@ -228,7 +228,7 @@ export default {
     // 从后端加载活跃会话列表
     const loadActiveChats = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/user/chats?userId=${userId.value}`)
+        const response = await axios.get(`/api/user/chats?userId=${userId.value}`)
         
         if (response.data) {
           activeChats.value = response.data
@@ -353,7 +353,7 @@ export default {
       try {
         // 修改为使用 counselor 接口而不是 user 接口
         const response = await axios.get(
-          `http://localhost:8080/api/counselor/chats/${currentSessionId.value}`
+          `/api/counselor/chats/${currentSessionId.value}`
         )
         
         if (response.data && response.data.messages) {
@@ -392,7 +392,7 @@ export default {
     const loadChatSession = async (counselorId) => {
       try {
         // 获取或创建会话
-        const response = await axios.get(`http://localhost:8080/api/user/chats/counselor/${counselorId}`, {
+        const response = await axios.get(`/api/user/chats/counselor/${counselorId}`, {
           params: {
             userId: userId.value
           }
@@ -471,7 +471,7 @@ export default {
       
       try {
         // 发送到后端
-        const response = await axios.post(`http://localhost:8080/api/user/chats/${currentSessionId.value}/messages`, {
+        const response = await axios.post(`/api/user/chats/${currentSessionId.value}/messages`, {
           userId: userId.value,
           content: messageText
         })
@@ -496,7 +496,7 @@ export default {
       
       try {
         // 调用后端结束会话接口
-        await axios.put(`http://localhost:8080/api/user/chats/${currentSessionId.value}/end`, {
+        await axios.put(`/api/user/chats/${currentSessionId.value}/end`, {
           userId: userId.value
         })
         
@@ -522,7 +522,7 @@ export default {
         const currentDate = new Date().toISOString().split('T')[0];
         
         // 使用正确的API路径和参数格式
-        await axios.post(`http://localhost:8080/evaluation/user`, {
+        await axios.post(`/evaluation/user`, {
           evaluation_content: reviewComment.value || "无评价内容",
           rating: rating.value,
           session_id: currentSessionId.value,
@@ -579,7 +579,7 @@ export default {
       
       try {
         // 上传图片
-        const response = await axios.post('http://localhost:8080/api/messages/upload', formData, {
+        const response = await axios.post('/api/messages/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }

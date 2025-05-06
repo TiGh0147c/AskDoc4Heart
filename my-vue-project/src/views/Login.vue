@@ -115,7 +115,7 @@ export default {
           password: loginForm.password
         }
 
-        const response = await axios.get(`http://localhost:8080${config.url}`, { params })
+        const response = await axios.get(`${config.url}`, { params })
 
         if (response.data.code === 200) {
           // 保存完整的用户信息和登录状态

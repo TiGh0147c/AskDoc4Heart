@@ -197,36 +197,40 @@ export default {
     
     // 处理打卡
     const handleClockInOut = async () => {
-      if (isWorking.value) {
-        // 打卡下班
-        clockOutTime.value = new Date()
-        isWorking.value = false
-        detailedStatus.value = '今日工作已完成'
-        
-        // 向后端发送打卡下班请求
-        try {
-          await axios.post(`http://localhost:8080/api/counselor/clock-out`, {
-            counselorId: counselorId.value,
-            clockOutTime: formatTime(clockOutTime.value)
+      try {
+        if (isWorking.value) {
+          // 打卡下班
+          await axios.post('/api/attendance/check-out', null, {
+            params: {
+              userId: counselorId.value,
+              role: 'counselor'
+            }
           })
-        } catch (error) {
-          console.error('打卡下班失败:', error)
-        }
-      } else {
-        // 打卡上班
-        clockInTime.value = new Date()
-        isWorking.value = true
-        detailedStatus.value = ''
-        
-        // 向后端发送打卡上班请求
-        try {
-          await axios.post(`http://localhost:8080/api/counselor/clock-in`, {
-            counselorId: counselorId.value,
-            clockInTime: formatTime(clockInTime.value)
+          
+          clockOutTime.value = new Date()
+          isWorking.value = false
+          detailedStatus.value = '今日工作已完成'
+          
+        } else {
+          // 打卡上班
+          await axios.post('/api/attendance/check-in', null, {
+            params: {
+              userId: counselorId.value,
+              role: 'counselor'
+            }
           })
-        } catch (error) {
-          console.error('打卡上班失败:', error)
+          
+          clockInTime.value = new Date()
+          isWorking.value = true
+          detailedStatus.value = ''
         }
+        
+        // 重新加载打卡状态
+        await loadClockStatus()
+        
+      } catch (error) {
+        console.error('打卡操作失败:', error.response?.data || error.message)
+        alert('打卡失败: ' + (error.response?.data || '请稍后重试'))
       }
     }
     
@@ -235,17 +239,25 @@ export default {
       try {
         // 获取当前日期
         const today = new Date()
-        const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()]
+        const formattedDate = formatDate(today)
         
         // 从后端获取排班数据
-        const response = await axios.get(`http://localhost:8080/api/schedules/counselor/${counselorId.value}`)
+        const response = await axios.get(`/api/schedules/counselor/${counselorId.value}`)
         
-        if (response.data && Array.isArray(response.data.schedules)) {
+        if (response.data && Array.isArray(response.data)) {
           // 找到今天的排班
-          const todayScheduleData = response.data.schedules.find(schedule => schedule.day === dayOfWeek)
+          const todayScheduleData = response.data.filter(schedule => 
+            schedule.date === formattedDate
+          )
           
-          if (todayScheduleData && Array.isArray(todayScheduleData.slots)) {
-            todaySchedule.value = todayScheduleData.slots
+          if (todayScheduleData && todayScheduleData.length > 0) {
+            todaySchedule.value = todayScheduleData.map(schedule => {
+              // 将morning/afternoon转换为具体时间段
+              const timeSlot = schedule.timeSlot
+              const start = timeSlot === 'morning' ? '09:00' : '14:00'
+              const end = timeSlot === 'morning' ? '11:00' : '17:00'
+              return { start, end, timeSlot }
+            })
           } else {
             todaySchedule.value = []
           }
@@ -256,25 +268,101 @@ export default {
       }
     }
     
+    // 格式化日期为YYYY-MM-DD
+    const formatDate = (date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+    
     // 加载打卡状态
-    /*const loadClockStatus = async () => {
+    const loadClockStatus = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/counselor/clock-status/${counselorId.value}`)
+        // 获取当前日期
+        const today = new Date()
+        const formattedDate = formatDate(today)
         
-        if (response.data) {
-          if (response.data.clockInTime) {
-            clockInTime.value = new Date(response.data.clockInTime)
-            isWorking.value = !response.data.clockOutTime
+        // 判断当前是上午还是下午
+        const currentHour = today.getHours()
+        const timeSlot = currentHour < 12 ? 'morning' : 'afternoon'
+        
+        // 获取打卡状态
+        const statusResponse = await axios.get('/api/attendance/status', {
+          params: {
+            userId: counselorId.value,
+            role: 'counselor'
+          }
+        })
+        
+        // 获取当前时间段的打卡状态
+        const nowStatusResponse = await axios.get('/api/attendance/now-status', {
+          params: {
+            userId: counselorId.value,
+            role: 'counselor',
+            date: formattedDate,
+            timeSlot: timeSlot
+          }
+        })
+        
+        if (nowStatusResponse.data) {
+          const status = nowStatusResponse.data
+          
+          // 设置详细状态
+          detailedStatus.value = status
+          
+          // 根据详细状态设置工作状态
+          if (status.includes('已打卡上班')) {
+            // 如果状态包含"已打卡上班"，则设置为上班中
+            isWorking.value = true
+            // 模拟上班时间，实际应从后端获取
+            clockInTime.value = new Date()
+            clockInTime.value.setHours(clockInTime.value.getHours() - 1) // 假设一小时前打卡
+            
+            if (status.includes('已完成打卡')) {
+              // 如果状态包含"已完成打卡"，则设置下班时间
+              clockOutTime.value = new Date()
+            } else {
+              clockOutTime.value = null
+            }
+          } else {
+            // 如果状态不包含"已打卡上班"，则设置为未上班
+            isWorking.value = false
+            clockInTime.value = null
+            clockOutTime.value = null
           }
           
-          if (response.data.clockOutTime) {
-            clockOutTime.value = new Date(response.data.clockOutTime)
+          // 设置迟到状态
+          if (status.includes('迟到')) {
+            // 计算迟到时间，这里简单设置为30分钟
+            lateMinutes.value = 30
+          } else {
+            lateMinutes.value = 0
           }
+        }
+        
+        // 根据后端返回的状态设置打卡按钮状态
+        if (statusResponse.data) {
+          const { shouldCheckIn, shouldCheckOut } = statusResponse.data
+          
+          // 设置是否可以打卡
+          canClockInOut.value = shouldCheckIn || shouldCheckOut
+          
+          // 如果应该显示打卡下班按钮，则设置为上班中
+          if (shouldCheckOut) {
+            isWorking.value = true
+          }
+          // 如果应该显示打卡上班按钮，则设置为未上班
+          else if (shouldCheckIn) {
+            isWorking.value = false
+          }
+          // 如果两个都为false，则根据详细状态判断
+          // 此时已经在上面的代码中根据详细状态设置了isWorking
         }
       } catch (error) {
         console.error('加载打卡状态失败:', error)
       }
-    }*/
+    }
     
     // 更新当前时间
     const updateCurrentTime = () => {

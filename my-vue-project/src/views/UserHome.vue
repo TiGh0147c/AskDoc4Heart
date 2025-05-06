@@ -152,7 +152,7 @@ export default {
 
       try {
         // 调用后端API获取用户的预约列表
-        const response = await axios.get(`http://localhost:8080/api/appointments/user/${userId.value}`)
+        const response = await axios.get(`/api/appointments/user/${userId.value}`)
         
         if (response.data && Array.isArray(response.data)) {
           // 处理待确认预约
@@ -169,7 +169,7 @@ export default {
           await Promise.all(
             counselorIds.map(async (counselorId) => {
               try {
-                const nameResponse = await axios.get(`http://localhost:8080/api/appointments/counselorname/${counselorId}`)
+                const nameResponse = await axios.get(`/api/appointments/counselorname/${counselorId}`)
                 if (nameResponse.data) {
                   counselorNames[counselorId] = nameResponse.data
                 }

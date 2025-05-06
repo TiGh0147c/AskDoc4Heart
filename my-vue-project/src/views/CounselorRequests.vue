@@ -91,7 +91,7 @@ export default {
       loading.value = true
       try {
         const response = await axios.get(
-          `http://localhost:8080/api/appointments/counselor/${counselorId}`
+          `/api/appointments/counselor/${counselorId}`
         )
         
         if (response.data && Array.isArray(response.data)) {
@@ -121,7 +121,7 @@ export default {
         try {
           // 首先更新预约状态
           const response = await axios.post(
-            `http://localhost:8080/api/appointments/update/${appointmentId}`,
+            `/api/appointments/update/${appointmentId}`,
             { newStatus: 'completed' }
           )
           
@@ -132,7 +132,7 @@ export default {
             if (appointment) {
               // 创建咨询会话
               const sessionResponse = await axios.post(
-                'http://localhost:8080/api/counselor/consultation/sessions/create',
+                '/api/counselor/consultation/sessions/create',
                 null,
                 {
                   params: {
@@ -167,7 +167,7 @@ export default {
       if (confirm('确认拒绝此预约吗？')) {
         try {
           const response = await axios.post(
-            `http://localhost:8080/api/appointments/cancel/${appointmentId}`
+            `/api/appointments/cancel/${appointmentId}`
           )
           
           if (response.status === 200) {

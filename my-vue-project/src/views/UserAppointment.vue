@@ -78,7 +78,7 @@
         <div class="counselors-list">
           <div v-for="counselor in displayedCounselors" :key="counselor.id" class="counselor-card">
             <div class="counselor-avatar">
-              <img :src="counselor.avatar" :alt="counselor.name + '的头像'" />
+              <img src="/basic_avatar/basic_male.jpg" :alt="counselor.name + '的头像'" />
             </div>
             <div class="counselor-info">
               <h3>{{ counselor.name }}</h3>
@@ -275,12 +275,13 @@ export default {
     const loadCounselors = async () => {
       try {
         // 调用获取咨询师列表的API
-        const response = await axios.get('http://localhost:8080/api/appointments/allCounselor')
+        const response = await axios.get('/api/appointments/allCounselor')
         // 确保数据结构一致，将counselorId映射为id以便前端使用
         counselors.value = (response.data || []).map(counselor => ({
           id: counselor.counselorId, // 将counselorId映射为id
           name: counselor.counselorName || counselor.name,
-          avatar: counselor.avatar || 'https://via.placeholder.com/80',
+          // 修改前: avatar: counselor.avatar || 'https://via.placeholder.com/80',
+          avatar: '/basic_avatar/basic_male.jpg', // 始终使用静态头像
           certification: counselor.certification || '未知',
           description: counselor.description || '暂无描述',
           status: counselor.status || '空闲'
@@ -300,7 +301,7 @@ export default {
 
       try {
         // 调用后端API获取用户的预约列表
-        const response = await axios.get(`http://localhost:8080/api/appointments/user/${userId.value}`)
+        const response = await axios.get(`/api/appointments/user/${userId.value}`)
         
         if (response.data && Array.isArray(response.data)) {
           // 根据预约状态分类
@@ -424,7 +425,7 @@ export default {
       
       try {
         // 调用后端API获取咨询师排班信息
-        const response = await axios.get(`http://localhost:8080/api/schedules/counselor/${counselor.id}`)
+        const response = await axios.get(`/api/schedules/counselor/${counselor.id}`)
         
         if (response.data && Array.isArray(response.data)) {
           // 过滤未来7天内的排班
@@ -549,7 +550,7 @@ export default {
       
       try {
         // 调用后端API创建预约
-        const response = await axios.post('http://localhost:8080/api/appointments/create', appointmentData)
+        const response = await axios.post('/api/appointments/create', appointmentData)
         
         if (response.data && response.status === 200) {
           alert(`预约成功！您已预约${counselor.name}咨询师，请等待确认。`)
@@ -611,7 +612,7 @@ export default {
       
       try {
         // 调用后端API创建预约
-        const response = await axios.post('http://localhost:8080/api/appointments/create', appointmentData);
+        const response = await axios.post('/api/appointments/create', appointmentData);
         
         if (response.data && response.status === 200) {
           alert(`预约成功！您已预约${counselor.name}咨询师，请等待确认。`);
@@ -656,7 +657,7 @@ export default {
       if (confirm('确认取消此预约吗？')) {
         try {
           // 调用后端API取消预约
-          const response = await axios.post(`http://localhost:8080/api/appointments/cancel/${appointmentId}`);
+          const response = await axios.post(`/api/appointments/cancel/${appointmentId}`);
           
           if (response.data && response.status === 200) {
             alert('预约已成功取消');

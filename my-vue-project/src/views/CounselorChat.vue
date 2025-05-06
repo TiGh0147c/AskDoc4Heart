@@ -293,7 +293,7 @@ export default {
     // 从后端加载活跃会话列表
     const loadActiveChats = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/counselor/chats?counselorId=${counselorId.value}`)
+        const response = await axios.get(`/api/counselor/chats?counselorId=${counselorId.value}`)
         
         if (response.data) {
           activeChats.value = response.data
@@ -382,7 +382,7 @@ export default {
       try {
         // 使用GET请求获取所有消息，然后在前端过滤
         const response = await axios.get(
-          `http://localhost:8080/api/counselor/chats/${currentChat.value.id}`
+          `/api/counselor/chats/${currentChat.value.id}`
         )
         
         if (response.data && response.data.messages) {
@@ -418,7 +418,7 @@ export default {
     // 选择一个会话
     const selectChat = async (chat) => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/counselor/chats/${chat.id}`)
+        const response = await axios.get(`/api/counselor/chats/${chat.id}`)
         
         if (response.data) {
           currentChat.value = {
@@ -473,7 +473,7 @@ export default {
     const confirmEndConsultation = async () => {
       try {
         const response = await axios.put(
-          `http://localhost:8080/api/counselor/chats/${currentChat.value.id}/end`,
+          `/api/counselor/chats/${currentChat.value.id}/end`,
           null,
           {
             params: {
@@ -523,7 +523,7 @@ export default {
       try {
         // 通过HTTP API发送消息 - 修改为使用URL参数
         const response = await axios.post(
-          `http://localhost:8080/api/counselor/chats/${currentChat.value.id}/messages`,
+          `/api/counselor/chats/${currentChat.value.id}/messages`,
           null,  // 请求体为空
           {
             params: {  // 使用params传递URL参数

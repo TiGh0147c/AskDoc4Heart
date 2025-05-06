@@ -28,8 +28,7 @@
             <div class="avatar-section">
               <span class="info-label">头像：</span>
               <div class="avatar-container">
-                <img v-if="userInfo.avatar" :src="userInfo.avatar" alt="用户头像" class="avatar-image" />
-                <div v-else class="avatar-placeholder">无头像</div>
+                <img :src="'/basic_avatar/basic_male.jpg'" alt="用户头像" class="avatar-image" />
                 <input v-if="editing" type="file" @change="handleAvatarChange" accept="image/*" class="avatar-input" />
               </div>
             </div>
@@ -194,7 +193,7 @@ export default {
       try {
         loading.value = true
         const response = await axios.get(
-          'http://localhost:8080/api/profile-management/user/profile',
+          '/api/profile-management/user/profile',
           { params: { userId: userId.value } }
         )
         
@@ -208,7 +207,7 @@ export default {
             email: response.data.email || '',
             occupation: response.data.occupation || '',
             phoneNumber: response.data.phoneNumber || '',
-            avatar: response.data.avatar || null
+            avatar: '/basic_avatar/basic_male.jpg' // 始终使用静态头像
           })
         }
       } catch (error) {
@@ -226,10 +225,9 @@ export default {
       
       try {
         const formData = new FormData()
-        formData.append('userId', userId.value)
         
         // 添加用户信息到FormData
-        formData.append('userId', editForm.userId)
+        formData.append('userId', userId.value)
         if (editForm.nickname) formData.append('nickname', editForm.nickname)
         if (editForm.gender) formData.append('gender', editForm.gender)
         if (editForm.birthday) formData.append('birthday', editForm.birthday)
@@ -243,7 +241,7 @@ export default {
         }
         
         const response = await axios.post(
-          'http://localhost:8080/api/profile-management/user/modification',
+          '/api/profile-management/user/modification',
           formData,
           {
             headers: {
@@ -314,7 +312,7 @@ export default {
     const fetchAuditRecords = async () => {
       try {
         const response = await axios.get(
-          'http://localhost:8080/api/profile-management/user/modification-audits', 
+          '/api/profile-management/user/modification-audits', 
           {
             params: { 
               userId: userId.value,  // 使用userId.value获取实际值

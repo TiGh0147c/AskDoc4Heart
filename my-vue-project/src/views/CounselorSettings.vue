@@ -222,7 +222,7 @@ export default {
         console.log('正在获取咨询师信息，使用ID:', counselorId)
         
         const response = await axios.get(
-          'http://localhost:8080/api/profile-management/counselor/profile',
+          '/api/profile-management/counselor/profile',
           { params: { counselorId } }
         )
         
@@ -273,7 +273,7 @@ export default {
         }
         
         const response = await axios.post(
-          'http://localhost:8080/api/profile-management/counselor/modification',
+          '/api/profile-management/counselor/modification',
           formData,
           {
             headers: {
